@@ -1,28 +1,35 @@
 # ST2/ST3 compat
-from __future__ import print_function 
+from __future__ import print_function
 import sublime
+
+import os, os.path
+import sys
+sys.path.append(os.path.dirname(__file__))
+
 if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
+    import pybtex
+    import latex_chars
+    
+    import latex_commands_grammar
+    from latex_commands_grammar import remove_latex_commands
+
+    import kpsewhich
+    from kpsewhich import kpsewhich
 else:
     _ST3 = True
     from . import getTeXRoot
-
+    from . import latex_chars
+    from .latex_commands_grammar import remove_latex_commands
+    from .kpsewhich import kpsewhich
 
 import sublime_plugin
-import os, os.path
 import re
 import codecs
 
-import sys
-
-sys.path.append(os.path.dirname(__file__))
-
 from pybtex.database.input import bibtex
-import pyparsing
-from pyparsing import ZeroOrMore, OneOrMore, Word, Literal, Suppress, Forward
-import latex_chars
 
 # LaTeX -> Unicode decoder
 latex_chars.register()
@@ -90,37 +97,19 @@ def find_bib_files(rootdir, src, bibfiles):
         for bf in bfiles:
             if bf[-4:].lower() != '.bib':
                 bf = bf + '.bib'
-            # We join with rootdir - everything is off the dir of the master file
-            bf = os.path.normpath(os.path.join(rootdir,bf))
-            bibfiles.append(bf)
+            # We join with rootdir, the dir of the master file
+            candidate_file = os.path.normpath(os.path.join(rootdir,bf))
+            # if the file doesn't exist, search the default tex paths
+            if not os.path.exists(candidate_file):
+                candidate_file = kpsewhich(bf, 'mlbib')
+
+            if candidate_file is not None and os.path.exists(candidate_file):
+                bibfiles.append(candidate_file)
 
     # search through input tex files recursively
     for f in re.findall(r'\\(?:input|include)\{[^\}]+\}',src_content):
         input_f = re.search(r'\{([^\}]+)', f).group(1)
         find_bib_files(rootdir, input_f, bibfiles)
-
-def build_latex_command_parser():
-    # mini-grammar for LaTeX commands. Note we want to extract the raw text.
-    unicodePrintables = u''.join(chr(c) for c in range(65536) 
-                                        if not chr(c).isspace() and chr(c) != '}')
-
-    LBRACKET        = Suppress(Literal(u'{'))
-    RBRACKET        = Suppress(Literal(u'}'))
-    latex_command   = Forward()
-    brackets        = (LBRACKET + OneOrMore(Word(unicodePrintables) | latex_command) + RBRACKET)
-    latex_command   << (Suppress(Literal('\\')) + Suppress(Word(pyparsing.alphas)) + brackets)
-
-    def _remove_latex_commands(s):
-        result = latex_command.scanString(s)
-        if result:
-            for r in result:
-                tokens, preloc, nextloc = r
-                s = (s[:preloc])\
-                    + u' '.join(tokens) \
-                    + (u' ' + s[nextloc:])
-        return s
-    return _remove_latex_commands
-remove_latex_commands = build_latex_command_parser()
 
 def get_cite_completions(view, point, autocompleting=False):
     line = view.substr(sublime.Region(view.line(point).a, point))
@@ -249,6 +238,7 @@ def get_cite_completions(view, point, autocompleting=False):
             keywords = []
             titles = []
             authors = []
+            authors_short = []
             years = []
             journals = []
 
@@ -261,7 +251,8 @@ def get_cite_completions(view, point, autocompleting=False):
                 persons = bib_data.entries[key].persons
 
                 # locate the author or editor of the title
-                person = u'????'
+                author_short_string = u'????'
+                author_full_string = u'????'
                 people = None
                 if 'author' in persons:
                     people = persons['author']
@@ -276,9 +267,10 @@ def get_cite_completions(view, point, autocompleting=False):
                             people = crossref_persons['editor']
                 if people:
                     if len(people) <= 2:
-                        person = ' & '.join([' '.join(x.last()) for x in people])
+                        author_short_string = ' & '.join([' '.join(x.last()) for x in people])
                     else:
-                        person = ' '.join(people[0].last()) + ', et al.'
+                        author_short_string = ' '.join(people[0].last()) + ', et al.'
+                    author_full_string = ' and '.join([str(x) for x in people])
 
                 title = u'????'
                 if 'title' in fields:
@@ -302,8 +294,9 @@ def get_cite_completions(view, point, autocompleting=False):
                 
                 keywords.append(key)
                 titles.append(remove_latex_commands(codecs.decode(title, 'latex')))
-                years.append(codecs.decode(fields['year'], 'latex'))
-                authors.append(codecs.decode(person, 'latex'))
+                years.append(codecs.decode(fields['year'], 'latex') if 'year' in fields else u'????')
+                authors.append(remove_latex_commands(codecs.decode(author_full_string, 'latex')))
+                authors_short.append(remove_latex_commands(codecs.decode(author_short_string, 'latex')))
                 journals.append(journal)
 
         print ( "Found %d total bib entries" % (len(keywords),) )
@@ -314,7 +307,7 @@ def get_cite_completions(view, point, autocompleting=False):
         titles_short = [title[0:60] + '...' if len(title) > 60 else title for title in titles_short]
 
         # completions object
-        completions += zip(keywords, titles, authors, years, authors, titles_short, journals)
+        completions += zip(keywords, titles, authors, years, authors_short, titles_short, journals)
 
 
     #### END COMPLETIONS HERE ####
@@ -433,7 +426,11 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
 
         # get preferences for formating of quick panel
         s = sublime.load_settings("LaTeXTools.sublime-settings")
-        cite_panel_format = s.get("cite_panel_format", ["{title} ({keyword})", "{author}"])
+        if _ST3:
+            cite_panel_format = s.get("cite_panel_format", ["{title} ({keyword})", "{author}"])
+        else:
+            cite_panel_format = map(unicode, s.get("cite_panel_format", ["{title} ({keyword})", "{author}"]))
+
 
         # show quick
         view.window().show_quick_panel([[str.format(keyword=keyword, title=title, author=author, year=year, author_short=author_short, title_short=title_short, journal=journal) for str in cite_panel_format] \

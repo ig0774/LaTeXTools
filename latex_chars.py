@@ -14,10 +14,19 @@ become available by calling latex.register().
 We also make public a dictionary latex_equivalents,
 mapping ord(unicode char) to LaTeX code.
 
+Modified from http://code.activestate.com/recipes/252124-latex-codec/
+
 D. Eppstein, October 2003.
 """
 import codecs
 import re
+import sys
+
+if sys.version_info > (3, 0):
+    PYTHON_3 = True
+    unichr = chr
+else:
+    PYTHON_3 = False
 
 def register():
     """Enable encodings of the form 'latex+x' where x describes another encoding.
@@ -60,7 +69,16 @@ def _registry(encoding):
             if encoding:
                 input = codecs.decode(input,encoding,errors)
 
-            return ''.join([x for x in _unlatex(input)]), len(input)
+            # Note: we may get buffer objects here.
+            # It is not permussable to call join on buffer objects
+            # but we can make them joinable by calling unicode.
+            # This should always be safe since we are supposed
+            # to be producing unicode output anyway.
+            if PYTHON_3:
+                x = _unlatex(input)
+            else:
+                x = map(unicode,_unlatex(input))
+            return u''.join(x), len(input)
     
     class StreamWriter(Codec,codecs.StreamWriter):
         pass
@@ -75,7 +93,10 @@ def _tokenize(tex):
     start = 0
     try:
         # skip quickly across boring stuff
-        pos = _stoppers.finditer(tex).__next__().span()[0]
+        if PYTHON_3:
+            pos = _stoppers.finditer(tex).__next__().span()[0]
+        else:
+            pos = _stoppers.finditer(tex).next().span()[0]
     except StopIteration:
         yield tex
         return
@@ -129,7 +150,10 @@ class _unlatex:
         """Return token at offset n from current pos."""
         p = self.pos + n
         t = self.tex
-        return p < len(t) and t[p] or None
+        return t[p] if p < len(t) else None
+
+    def next(self):
+        return self.__next__()
 
     def __next__(self):
         """Find and return another piece of converted output."""
@@ -146,13 +170,13 @@ class _unlatex:
         for delta,c in self.candidates(0):
             if c in _l2u:
                 self.pos += delta
-                return chr(_l2u[c])
+                return unichr(_l2u[c])
             elif len(c) == 2 and c[1] == 'i' and (c[0],'\\i') in _l2u:
                 self.pos += delta       # correct failure to undot i
-                return chr(_l2u[(c[0],'\\i')])
+                return unichr(_l2u[(c[0],'\\i')])
             elif len(c) == 1 and c[0].startswith('\\char') and c[0][5:].isdigit():
                 self.pos += delta
-                return chr(int(c[0][5:]))
+                return unichr(int(c[0][5:]))
     
         # nothing matches, just pass through token as-is
         self.pos += 1
