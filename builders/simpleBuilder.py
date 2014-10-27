@@ -36,15 +36,17 @@ class SimpleBuilder(PdfBuilder):
 
 	def commands(self):
 		# Print greeting
-		self.display("\n\nSimpleBuilder: ")
+		self.display("\n\nSimpleBuilder:\n")
 
 		pdflatex = ["pdflatex", "-interaction=nonstopmode", "-synctex=1"]
 		bibtex = ["bibtex"]
+		biber = ["biber"]
 
 		# Regex to look for missing citations
 		# This works for plain latex; apparently natbib requires special handling
 		# TODO: does it work with biblatex?
 		citations_rx = re.compile(r"Warning: Citation `.+' on page \d+ undefined")
+		citations_biber = re.compile(r"Please \(re\)run Biber")
 
 		# We have commands in our PATH, and are in the same dir as the master file
 
@@ -57,7 +59,7 @@ class SimpleBuilder(PdfBuilder):
 
 		run = 1
 		brun = 0
-		yield (pdflatex + [self.base_name], "pdflatex run %d; " % (run, ))
+		yield (pdflatex + [self.base_name], "pdflatex run %d;\n" % (run, ))
 		display_results(run)
 
 		# Check for citations
@@ -65,25 +67,37 @@ class SimpleBuilder(PdfBuilder):
 		# We need to run pdflatex twice after bibtex
 		if citations_rx.search(self.out):
 			brun = brun + 1
-			yield (bibtex + [self.base_name], "bibtex run %d; " % (brun,))
+			yield (bibtex + [self.base_name], "bibtex run %d;\n" % (brun,))
 			display_results(1)
 			run = run + 1
-			yield (pdflatex + [self.base_name], "pdflatex run %d; " % (run, ))
+			yield (pdflatex + [self.base_name], "pdflatex run %d;\n" % (run, ))
 			display_results(run)
 			run = run + 1
-			yield (pdflatex + [self.base_name], "pdflatex run %d; " % (run, ))
+			yield (pdflatex + [self.base_name], "pdflatex run %d;\n" % (run, ))
+			display_results(run)
+
+		# Check if biber wants to be rerun
+		if citations_biber.search(self.out):
+			brun = brun + 1
+			yield (biber + [self.base_name], "biber run %d;\n" % (brun,))
+			display_results(1)
+			run = run + 1
+			yield (pdflatex + [self.base_name], "pdflatex run %d;\n" % (run, ))
+			display_results(run)
+			run = run + 1
+			yield (pdflatex + [self.base_name], "pdflatex run %d;\n" % (run, ))
 			display_results(run)
 
 		# Apparently natbib needs separate processing
 		if "Package natbib Warning: There were undefined citations." in self.out:
 			brun = brun + 1
-			yield (bibtex + [self.base_name], "bibtex run %d; " % (brun,))
+			yield (bibtex + [self.base_name], "bibtex run %d;\n" % (brun,))
 			display_results(2)
 			run = run + 1
-			yield (pdflatex + [self.base_name], "pdflatex run %d; " % (run, ))
+			yield (pdflatex + [self.base_name], "pdflatex run %d;\n" % (run, ))
 			display_results(run)
 			run = run + 1
-			yield (pdflatex + [self.base_name], "pdflatex run %d; " % (run, ))
+			yield (pdflatex + [self.base_name], "pdflatex run %d;\n" % (run, ))
 			display_results(run)
 
 		# Check for changed labels
