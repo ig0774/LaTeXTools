@@ -426,24 +426,44 @@ def get_cite_completions(view, point, autocompleting=False):
                     if 'title' in crossref_fields:
                         title = crossref_fields['title']
 
+                year = u'????'
+                if 'year' in fields:
+                    year = fields['year']
+                elif 'date' in fields:
+                    date_matcher = re.match(r'(\d{4})', fields['date'])
+                    if date_matcher:
+                        year = date_matcher.group(1)
+                if year == u'????' and 'crossref' in fields:
+                    crossref_fields = bib_data.entries[fields['crossref']].fields
+                    if 'year' in crossref_fields:
+                        year = crossref_fields['year']
+                    elif 'date' in crossref_fields:
+                        date_matcher = re.match(r'(\d{4})', crossref_fields['date'])
+                        if date_matcher:
+                            year = date_matcher.group(1)
+
                 journal = u'????'
                 if 'journal' in fields:
                     journal = fields['journal']
+                elif 'journaltitle' in fields:
+                    journal = fields['journaltitle']
                 elif 'eprint' in fields:
                     journal = fields['eprint']
                 elif 'crossref' in fields:
                     crossref_fields = bib_data.entries[fields['crossref']].fields
                     if 'journal' in crossref_fields:
                         journal = crossref_fields['journal']
+                    elif 'journaltitle' in crossref_fields:
+                        journal = crossref_fields['journaltitle']
                     elif 'eprint' in crossref_fields:
                         journal = crossref_fields['eprint']
                 
                 keywords.append(key)
                 titles.append(remove_latex_commands(codecs.decode(title, 'latex')))
-                years.append(codecs.decode(fields['year'], 'latex') if 'year' in fields else u'????')
+                years.append(codecs.decode(year, 'latex'))
                 authors.append(remove_latex_commands(codecs.decode(author_full_string, 'latex')))
                 authors_short.append(remove_latex_commands(codecs.decode(author_short_string, 'latex')))
-                journals.append(journal)
+                journals.append(remove_latex_commands(codecs.decode(journal, 'latex')))
 
         print ( "Found %d total bib entries" % (len(keywords),) )
 
