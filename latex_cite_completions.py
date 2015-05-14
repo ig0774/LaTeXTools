@@ -10,7 +10,6 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    import pybtex
     import latex_chars
     
     import latex_commands_grammar
@@ -25,7 +24,12 @@ import sublime_plugin
 import re
 import codecs
 
+import pybtex
+from pybtex.bibtex.utils import split_name_list
 from pybtex.database.input import bibtex
+
+from string import Formatter
+from collections import MutableMapping
 
 # LaTeX -> Unicode decoder
 latex_chars.register()
@@ -226,97 +230,136 @@ def get_cite_completions(view, point, autocompleting=False):
 
             print ('Loaded %d bibitems' % (len(bib_data.entries)))
 
-            keywords = []
-            titles = []
-            authors = []
-            authors_short = []
-            years = []
-            journals = []
+            entries = []
 
             for key in bib_data.entries:
                 entry = bib_data.entries[key]
                 if entry.type == 'xdata' or entry.type == 'comment' or entry.type == 'string':
                     continue
 
+                entries.append(EntryWrapper(entry))
+
                 fields  = bib_data.entries[key].fields
                 persons = bib_data.entries[key].persons
 
-                # locate the author or editor of the title
-                author_short_string = u'????'
-                author_full_string = u'????'
-                people = None
-
-                try:
-                    people = persons['author']
-                except KeyError:
-                    try:
-                        people = entry.get_crossref().persons['author']
-                    except KeyError:
-                        try:
-                            people = persons['editor']
-                        except KeyError:
-                            try:
-                                people = entry.get_crossref().persons['editor']
-                            except KeyError:
-                                pass
-
-                if people:
-                    if len(people) <= 2:
-                        author_short_string = ' & '.join([' '.join(x.last()) for x in people])
-                    else:
-                        author_short_string = ' '.join(people[0].last()) + ', et al.'
-                    author_full_string = ' and '.join([str(x) for x in people])
-
-                try:
-                    title = fields['title']
-                except KeyError:
-                    title = u'????'
-
-                try:
-                    year = fields['year']
-                except KeyError:
-                    try:
-                        date = fields['date']
-                        date_matcher = re.match(r'(\d{4})', date)
-                        if date_matcher:
-                            year = date_matcher.group(1)
-                        else:
-                            year = u'????'
-                    except KeyError:
-                        year = u'????'
-
-                try:
-                    journal = fields['journal']
-                except KeyError:
-                    try:
-                        journal = fields['journaltitle']
-                    except KeyError:
-                        try:
-                            journal = fields['eprint']
-                        except KeyError:
-                            journal = u'????'
-
-                keywords.append(key)
-                titles.append(remove_latex_commands(codecs.decode(title, 'latex')))
-                years.append(codecs.decode(year, 'latex'))
-                authors.append(remove_latex_commands(codecs.decode(author_full_string, 'latex')))
-                authors_short.append(remove_latex_commands(codecs.decode(author_short_string, 'latex')))
-                journals.append(remove_latex_commands(codecs.decode(journal, 'latex')))
-
-        print ( "Found %d total bib entries" % (len(keywords),) )
-
-        # short title
-        sep = re.compile(":|\.|\?")
-        titles_short = [sep.split(title)[0] for title in titles]
-        titles_short = [title[0:60] + '...' if len(title) > 60 else title for title in titles_short]
+        print ( "Found %d total bib entries" % (len(entries),) )
 
         # completions object
-        completions += zip(keywords, titles, authors, years, authors_short, titles_short, journals)
+        completions += entries
 
 
     #### END COMPLETIONS HERE ####
 
     return completions, prefix, post_brace, new_point_a, new_point_b
+
+if _ST3:
+    def _get_people_long(people):
+        return u' and '.join([str(x) for x in people])
+else:
+    def _get_people_long(people):
+        return u' and '.join([unicode(x) for x in people])
+
+def _get_people_short(people):
+    if len(people) <= 2:
+        return u' & '.join([u' '.join(x.last()) for x in people])
+    else:
+        return u' '.join(people[0].last()) + u', et al.'
+
+# wrapper to implement a dict-like interface for bibliographic entries
+# returning formatted value, if it is available
+class EntryWrapper(MutableMapping):
+    def __init__(self, entry):
+        self.entry = entry
+
+    def __getitem__(self, key):
+        if not key:
+            return u'????'
+
+        key = key.lower()
+        result = None
+
+        short = False
+        if key.endswith('_short'):
+            short = True
+            key = key[:-6]
+
+        if key == 'keyword':
+            return self.entry.key
+
+        if key in pybtex.database.Person.valid_roles:
+            try:
+                people = self.entry.persons[key]
+                if short:
+                    result = _get_people_short(people)
+                else:
+                    result = _get_people_long(people)
+            except KeyError:
+                if 'crossref' in self.entry.fields:
+                    try:
+                        people = self.entry.get_crossref().persons[key]
+                        if short:
+                            result = _get_people_short(people)
+                        else:
+                            result = _get_people_long(people)
+                    except KeyError:
+                        pass
+
+                if not result and key == 'author':
+                    if short:
+                        result = self['editor_short']
+                    else:
+                        result = self['editor']
+
+                if not result:
+                    return u'????'
+        elif key == 'translator':
+            try:
+                people = [pybtex.database.Person(name) for name in
+                    split_name_list(self.entry.fields[key])]
+                if short:
+                    result = _get_people_short(people)
+                else:
+                    result = _get_people_long(people)
+            except KeyError:
+                return u'????'
+
+        if not result:
+            try:
+                result = self.entry.fields[key]
+            except KeyError:
+                if key == 'year':
+                    try:
+                        date = self.entry.fields['date']
+                        date_matcher = re.match(r'(\d{4})', date)
+                        if date_matcher:
+                            result = date_matcher.group(1)
+                    except KeyError:
+                        pass
+                elif key == 'journal':
+                    return self['journaltitle']
+
+                if not result:
+                    return u'????'
+
+        if key == 'title' and short:
+            sep = re.compile(":|\.|\?")
+            result = sep.split(result)[0]
+            if len(result) > 60:
+                result = result[0:60] + '...'
+
+        return remove_latex_commands(codecs.decode(result, 'latex'))
+
+    def __delitem__(self, key):
+        raise KeyError
+
+    def __setitem__(self, key, value):
+        raise KeyError
+
+    def __iter__(self):
+        return iter(self.entry)
+
+    def __len__(self):
+        return len(self.entry)
 
 
 # Based on html_completions.py
@@ -369,10 +412,9 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
         s = sublime.load_settings("LaTeXTools.sublime-settings")
         cite_autocomplete_format = s.get("cite_autocomplete_format", "{keyword}: {title}")
 
-        r = [(prefix + cite_autocomplete_format.format(keyword=keyword, title=title, author=author, year=year, author_short=author_short, title_short=title_short, journal=journal),
-                keyword + post_brace) for (keyword, title, author, year, author_short, title_short, journal) in completions]
-
-        # print "%d bib entries matching %s" % (len(r), prefix)
+        formatter = Formatter()
+        r = [(prefix + formatter.vformat(cite_autocomplete_format, (), completion), 
+            completion['keyword'] + post_brace) for completion in completions]
 
         return r
 
@@ -435,7 +477,7 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
         else:
             cite_panel_format = map(unicode, s.get("cite_panel_format", ["{title} ({keyword})", "{author}"]))
 
-
         # show quick
-        view.window().show_quick_panel([[str.format(keyword=keyword, title=title, author=author, year=year, author_short=author_short, title_short=title_short, journal=journal) for str in cite_panel_format] \
-                                        for (keyword, title, author, year, author_short, title_short,journal) in completions], on_done)
+        formatter = Formatter()
+        view.window().show_quick_panel([[formatter.vformat(str, (), completion) for str in cite_panel_format] \
+                                        for completion in completions], on_done)
