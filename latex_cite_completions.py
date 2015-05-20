@@ -30,7 +30,6 @@ import codecs
 
 import pybtex
 from pybtex.bibtex.utils import split_name_list
-from pybtex.database.input import bibtex
 
 from string import Formatter
 from collections import MutableMapping
@@ -368,6 +367,8 @@ def get_cite_completions(view, point, autocompleting=False):
 
     print ("Files:")
     print (repr(bib_files))
+
+    from pybtex.database.input import bibtex
 
     completions = []
     parser = bibtex.Parser()
