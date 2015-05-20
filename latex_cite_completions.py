@@ -613,7 +613,7 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
             if i<0:
                 return
 
-            cite = completions[i][0] + post_brace
+            cite = completions[i]['keyword'] + post_brace
 
             #print("DEBUG: types of new_point_a and new_point_b are " + repr(type(new_point_a)) + " and " + repr(type(new_point_b)))
             # print "selected %s:%s by %s" % completions[i][0:3]
