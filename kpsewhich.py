@@ -5,22 +5,9 @@ import os
 import sublime
 import sys
 
-if sublime.version() < '3000':
-    _ST3 = False
-else:
-    _ST3 = True
+from get_texpath import get_texpath
 
 __all__ = ['kpsewhich']
-
-def get_texpath():
-    settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    platform_settings = settings.get(sublime.platform())
-    texpath = platform_settings['texpath']
-
-    if not _ST3:
-        return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
-    else:
-        return os.path.expandvars(texpath)
 
 def kpsewhich(filename, file_format=None):
     # build command
