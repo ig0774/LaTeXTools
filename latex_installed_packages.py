@@ -15,21 +15,13 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     strbase = basestring
+    from get_texpath import get_texpath
 else:
     _ST3 = True
     strbase = str
+    from .get_texpath import get_texpath
 
-__all__ = ['LatexGenPkgCacheCommand']
-
-def get_texpath():
-    settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    platform_settings = settings.get(sublime.platform())
-    texpath = platform_settings['texpath']
-
-    if not _ST3:
-        return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
-    else:
-        return os.path.expandvars(texpath)
+__all__ = ['LatexGenPkgCacheCommand']xw
 
 def _get_tex_searchpath(file_type):
     if file_type is None:

@@ -10,20 +10,16 @@ if sublime.version() < '3000':
     from latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from latex_input_completions import TEX_INPUT_FILE_REGEX
+    from get_Region import get_Region
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from .latex_input_completions import TEX_INPUT_FILE_REGEX
+    from .get_Region import get_Region
 
 # used to flag whether command is triggered for cite
 TRIGGER_CITE = False
-
-def get_Region(a, b):
-    if _ST3:
-        return sublime.Region(a, b)
-    else:
-        return sublime.Region(long(a), long(b))
 
 def get_current_word(view, point):
     line_prefix = view.substr(get_Region(view.line(point).a, point))[::-1]
