@@ -41,9 +41,9 @@ class UnrecognizedCiteFormatError(Exception): pass
 class NoBibFilesError(Exception): pass
 
 class BibParsingError(Exception):
-    def __init__(self, filename=""):
+    def __init__(self, filename="", message=""):
+        super(BibParsingError, self).__init__(message)
         self.filename = filename
-
 
 OLD_STYLE_CITE_REGEX = re.compile(r"([^_]*_)?([a-zX*]*?)etic(?:\\|\b)")
 # I apoligise profusely for this regex
@@ -381,8 +381,16 @@ def get_cite_completions(view, point, autocompleting=False):
             sublime.status_message("Cannot open bibliography file %s !" % (bibfname,))
             continue
         else:
-            bib_data = parser.parse_stream(bibf)
-            bibf.close()
+            try:
+                bib_data = parser.parse_stream(bibf)
+            except pybtex.scanner.PybtexSyntaxError as e:
+                message = 'Error while processing bibliography file {}! {}'.format(
+                    bibfname, e
+                )
+                print (message)
+                raise BibParsingError(bibfname, e)
+            finally:
+                bibf.close()
 
             print ('Loaded %d bibitems' % (len(bib_data.entries)))
 
@@ -557,7 +565,9 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
             sublime.status_message("No bib files found!")
             return []
         except BibParsingError as e:
-            sublime.status_message("Bibliography " + e.filename + " is broken!")
+            sublime.error_message("Bibliography {} is broken! {}".format(
+                e.filename, e
+            ))            
             return []
 
         if prefix:
@@ -598,7 +608,9 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
             sublime.error_message("No bib files found!")
             return
         except BibParsingError as e:
-            sublime.error_message("Bibliography " + e.filename + " is broken!")
+            sublime.error_message("Bibliography {} is broken! {}".format(
+                e.filename, e
+            ))
             return
 
         # filter against keyword, title, or author
