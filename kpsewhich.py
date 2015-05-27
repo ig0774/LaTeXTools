@@ -5,7 +5,10 @@ import os
 import sublime
 import sys
 
-from get_texpath import get_texpath
+if sublime.version() < '3000':
+    from get_texpath import get_texpath
+else:
+    from .get_texpath import get_texpath
 
 __all__ = ['kpsewhich']
 
