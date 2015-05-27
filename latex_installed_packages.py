@@ -21,7 +21,7 @@ else:
     strbase = str
     from .get_texpath import get_texpath
 
-__all__ = ['LatexGenPkgCacheCommand']xw
+__all__ = ['LatexGenPkgCacheCommand']
 
 def _get_tex_searchpath(file_type):
     if file_type is None:
