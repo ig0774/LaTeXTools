@@ -239,9 +239,6 @@ def get_cite_completions(view, point, autocompleting=False):
 
                 entries.append(EntryWrapper(entry))
 
-                fields  = bib_data.entries[key].fields
-                persons = bib_data.entries[key].persons
-
         print ( "Found %d total bib entries" % (len(entries),) )
 
         # completions object
