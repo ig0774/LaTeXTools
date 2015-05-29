@@ -67,11 +67,17 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
             prefix, suffix = get_current_word(view, point)
             current_word = prefix + suffix
             if current_word != '':
-                startpoint = point - len(prefix)
-                endpoint = point + len(suffix)
-                view.run_command('latex_tools_replace', {'a': startpoint, 'b': endpoint, 'replacement': ''})
-                view.run_command('latex_fill_input')
-            else:
+                current_word = prefix + suffix
+                if current_word != '':
+                    start_point = point - len(prefix)
+                    end_point   = point - len(suffix)
+                    view.run_command(
+                        'latex_tools_replace',
+                        {
+                            'a': start_point,
+                            'b': end_point,
+                            'replacement': ''
+                        })
                 view.run_command("latex_fill_input")
 
 class OnLatexFillAllReplacement(sublime_plugin.EventListener):
