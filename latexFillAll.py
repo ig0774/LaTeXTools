@@ -50,6 +50,18 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
             NEW_STYLE_CITE_REGEX.match(line) or
             OLD_STYLE_REF_REGEX.match(line)  or
             NEW_STYLE_REF_REGEX.match(line)):
+                prefix, suffix, nc_current_word = get_current_word(view, point)
+                current_word = prefix + suffix
+                if current_word != '':
+                    start_point = point - len(prefix)
+                    end_point   = point - len(suffix)
+                    view.run_command(
+                        'latex_tools_replace',
+                        {
+                            'a': start_point,
+                            'b': end_point,
+                            'replacement': ''
+                        })
                 view.run_command('latex_ref_cite')
 
         # if \input, \include or \includegraphics
