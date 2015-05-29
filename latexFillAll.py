@@ -29,13 +29,11 @@ def get_current_word(view, point):
     line_prefix = view.substr(get_Region(view.line(point).a, point))[::-1]
     line_suffix = view.substr(get_Region(point, view.line(point).b))
 
-    nc_current_word = ''
-
     # prefix is the characters before caret
     prefix = re.match(r'([^{}]*)\{', line_prefix).group(1)
     suffix = re.match(r'([^{}]*)\}', line_suffix).group(1)
 
-    return prefix[::-1], suffix, nc_current_word
+    return prefix[::-1], suffix
 
 class LatexFillAllCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -50,7 +48,7 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
             NEW_STYLE_CITE_REGEX.match(line) or
             OLD_STYLE_REF_REGEX.match(line)  or
             NEW_STYLE_REF_REGEX.match(line)):
-                prefix, suffix, nc_current_word = get_current_word(view, point)
+                prefix, suffix = get_current_word(view, point)
                 current_word = prefix + suffix
                 if current_word != '':
                     start_point = point - len(prefix)
@@ -66,7 +64,7 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
 
         # if \input, \include or \includegraphics
         if TEX_INPUT_FILE_REGEX.match(line):
-            prefix, suffix, nc_current_word = get_current_word(view, point)
+            prefix, suffix = get_current_word(view, point)
             current_word = prefix + suffix
             if current_word != '':
                 startpoint = point - len(prefix)
