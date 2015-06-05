@@ -3,27 +3,12 @@ from __future__ import print_function
 import sublime
 import sublime_plugin
 
-import os
-import subprocess
-from subprocess import Popen, PIPE
-
 if sublime.version() < '3000':
-    _ST3 = False
     strbase = basestring
-    import sys
+    from external_command import external_command
 else:
-    _ST3 = True
     strbase = str
-
-def get_texpath():
-    settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    platform_settings = settings.get(sublime.platform())
-    texpath = platform_settings['texpath']
-
-    if not _ST3:
-        return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
-    else:
-        return os.path.expandvars(texpath)
+    from .external_command import external_command
 
 def is_latex_doc(view):
     point = view.sel()[0].b
@@ -31,44 +16,6 @@ def is_latex_doc(view):
         view.score_selector(point, "text.tex.latex") > 0 or
         view.score_selector(point, "text.bibtex") > 0
     )
-
-def _view_texdoc(file):
-    if file is None:
-        raise Exception('File must be specified')
-    if not isinstance(file, strbase):
-        raise TypeError('File must be a string')
-
-    command = ['texdoc', file]
-
-    texpath = get_texpath() or os.environ['PATH']
-    env = dict(os.environ)
-    env['PATH'] = texpath
-
-    try:
-        # Windows-specific adjustments
-        startupinfo = None
-        shell = False
-        if sublime.platform() == 'windows':
-            # ensure console window doesn't show
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            shell = True
-
-        print('Running %s' % (' '.join(command)))
-        p = Popen(
-            command,
-            stdout=None,
-            stdin=None,
-            startupinfo=startupinfo,
-            shell=shell,
-            env=env
-        )
-
-        p.communicate()
-        if p.returncode != 0:
-            sublime.eror_message('An error occurred while trying to run texdoc.')
-    except OSError:
-        sublime.error_message('Could not run texdoc. Please ensure that your texpath setting is configured correctly in the LaTeXTools settings.')
 
 class LatexPkgDocCommand(sublime_plugin.WindowCommand):
     def run(self):
@@ -98,7 +45,19 @@ class LatexPkgDocCommand(sublime_plugin.WindowCommand):
 
 class LatexViewDocCommand(sublime_plugin.WindowCommand):
     def run(self, file):
-        _view_texdoc(file)
+        if file is None:
+            raise Exception('File must be specified')
+        if not isinstance(file, strbase):
+            raise TypeError('File must be a string')
+
+        command = ['texdoc', file]
+
+        try:
+            return_code, _, _ = external_command(command)
+            if return_code != 0:
+                sublime.eror_message('An error occurred while trying to run texdoc.')
+        except OSError:
+            sublime.error_message('Could not run texdoc. Please ensure that your texpath setting is configured correctly in the LaTeXTools settings.')
 
     def is_visible(self):
         return False  # hide this from menu

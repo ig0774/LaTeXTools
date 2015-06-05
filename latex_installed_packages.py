@@ -3,9 +3,6 @@ from __future__ import print_function
 import sublime
 import sublime_plugin
 
-import subprocess
-from subprocess import Popen, PIPE
-
 import os
 import json
 
@@ -15,11 +12,11 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     strbase = basestring
-    from get_texpath import get_texpath
+    from external_command import external_command
 else:
     _ST3 = True
     strbase = str
-    from .get_texpath import get_texpath
+    from .external_command import external_command
 
 __all__ = ['LatexGenPkgCacheCommand']
 
@@ -30,32 +27,9 @@ def _get_tex_searchpath(file_type):
     command = ['kpsewhich']
     command.append('--show-path={}'.format(file_type))
 
-    texpath = get_texpath() or os.environ['PATH']
-    env = dict(os.environ)
-    env['PATH'] = texpath
-
     try:
-        # Windows-specific adjustments
-        startupinfo = None
-        shell = False
-        if sublime.platform() == 'windows':
-            # ensure console window doesn't show
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            shell = True
-
-        print('Running %s' % (' '.join(command)))
-        p = Popen(
-            command,
-            stdout=PIPE,
-            stdin=PIPE,
-            startupinfo=startupinfo,
-            shell=shell,
-            env=env
-        )
-
-        paths = p.communicate()[0].decode('utf-8').rstrip()
-        if p.returncode == 0:
+        return_code, paths, _ = external_command(command)
+        if return_code == 0:
             return paths
         else:
             sublime.eror_message('An error occurred while trying to run kpsewhich. TEXMF tree could not be accessed.')
