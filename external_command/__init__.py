@@ -24,7 +24,7 @@ def _get_texpath():
         return settings.get('texpath', '')
 
     texpath = _get_texpath_setting(
-        sublime.active_window().active_view.settings()
+        sublime.active_window().active_view().settings()
     ) or _get_texpath_setting(
         sublime.load_settings('LaTeXTools.sublime-settings')
     )
