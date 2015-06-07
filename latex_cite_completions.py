@@ -515,10 +515,18 @@ class EntryWrapper(MutableMapping):
                     return u'????'
 
         if key == 'title' and short:
-            sep = re.compile(":|\.|\?")
-            result = sep.split(result)[0]
-            if len(result) > 60:
-                result = result[0:60] + '...'
+            try:
+                short_title = self.entry.fields['shorttitle']
+            except KeyError:
+                pass
+
+            if short_title:
+                result = short_title
+            else:
+                sep = re.compile(":|\.|\?")
+                result = sep.split(result)[0]
+                if len(result) > 60:
+                    result = result[0:60] + '...'
 
         return remove_latex_commands(codecs.decode(result, 'latex'))
 
