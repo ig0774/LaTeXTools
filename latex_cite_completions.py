@@ -515,6 +515,7 @@ class EntryWrapper(MutableMapping):
                     return u'????'
 
         if key == 'title' and short:
+            short_title = None
             try:
                 short_title = self.entry.fields['shorttitle']
             except KeyError:
