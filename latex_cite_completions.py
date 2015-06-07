@@ -444,8 +444,12 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
 
         # filter against keyword, title, or author
         if prefix:
-            completions = [comp for comp in completions if prefix.lower() in "%s %s %s" \
-                                                    % (comp[0].lower(), comp[1].lower(), comp[2].lower())]
+            completions = [comp for comp in completions if prefix.lower() in
+                            "{} {} {}".format(
+                                comp['keyword'],
+                                comp['title'],
+                                comp['author']
+                            )]
 
         # Note we now generate citation on the fly. Less copying of vectors! Win!
         def on_done(i):
