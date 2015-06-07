@@ -29,7 +29,7 @@ from pybtex.bibtex.utils import split_name_list
 from pybtex.database.input import bibtex
 
 from string import Formatter
-from collections import MutableMapping
+from collections import Mapping
 
 # LaTeX -> Unicode decoder
 latex_chars.register()
@@ -264,7 +264,7 @@ def _get_people_short(people):
 
 # wrapper to implement a dict-like interface for bibliographic entries
 # returning formatted value, if it is available
-class EntryWrapper(MutableMapping):
+class EntryWrapper(Mapping):
     def __init__(self, entry):
         self.entry = entry
 
@@ -354,12 +354,6 @@ class EntryWrapper(MutableMapping):
                     result = result[0:60] + '...'
 
         return remove_latex_commands(codecs.decode(result, 'latex'))
-
-    def __delitem__(self, key):
-        raise KeyError
-
-    def __setitem__(self, key, value):
-        raise KeyError
 
     def __iter__(self):
         return iter(self.entry)
