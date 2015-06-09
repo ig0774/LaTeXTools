@@ -249,7 +249,7 @@ def _latextools_module_hack():
 
     sys.modules['latextools_plugin'] = sys.modules[__name__]
     yield
-    del sys.modules['latextools_plugin']
+    sys.modules['latextools_plugin'] = None
 
     if old_latextools_plugin:
         sys.modules['latextools_plugin'] = old_latextools_plugin
