@@ -1,144 +1,159 @@
 from latextools_plugin import LaTeXToolsPlugin
 
+from latex_commands_grammar import remove_latex_commands
+
+import pybtex
+from pybtex.bibtex.utils import split_name_list
+from pybtex.database.input import bibtex
+
+import latex_chars
+
 import codecs
+from collections import Mapping
 import re
 
-KP = re.compile(r'@[^\{]+\{(.+),')
-# new and improved regex
-# we must have "title" then "=", possibly with spaces
-# then either {, maybe repeated twice, or "
-# then spaces and finally the title
-# # We capture till the end of the line as maybe entry is broken over several lines
-# # and in the end we MAY but need not have }'s and "s
-# tp = re.compile(r'\btitle\s*=\s*(?:\{+|")\s*(.+)', re.IGNORECASE)  # note no comma!
-# # Tentatively do the same for author
-# # Note: match ending } or " (surely safe for author names!)
-# ap = re.compile(r'\bauthor\s*=\s*(?:\{|")\s*(.+)(?:\}|"),?', re.IGNORECASE)
-# # Editors
-# ep = re.compile(r'\beditor\s*=\s*(?:\{|")\s*(.+)(?:\}|"),?', re.IGNORECASE)
-# # kp2 = re.compile(r'([^\t]+)\t*')
-# # and year...
-# # Note: year can be provided without quotes or braces (yes, I know...)
-# yp = re.compile(r'\byear\s*=\s*(?:\{+|"|\b)\s*(\d+)[\}"]?,?', re.IGNORECASE)
+import sublime
 
-# This may speed things up
-# So far this captures: the tag, and the THREE possible groups
-MULTIP = re.compile(r'\b(author|title|year|editor|journal|eprint)\s*=\s*(?:\{|"|\b)(.+?)(?:\}+|"|\b)\s*,?\s*\Z',re.IGNORECASE)
-TITLE_SEP = re.compile(':|\.|\?')
+# LaTeX -> Unicode decoder
+latex_chars.register()
 
-# format author field
-def format_author(authors):
-    # print(authors)
-    # split authors using ' and ' and get last name for 'last, first' format
-    authors = [a.split(", ")[0].strip(' ') for a in authors.split(" and ")]
-    # get last name for 'first last' format (preserve {...} text)
-    authors = [a.split(" ")[-1] if a[-1] != '}' or a.find('{') == -1 else re.sub(r'{|}', '', a[len(a) - a[::-1].index('{'):-1]) for a in authors]
-    #     authors = [a.split(" ")[-1] for a in authors]
-    # truncate and add 'et al.'
-    if len(authors) > 2:
-        authors = authors[0] + " et al."
+if sublime.version() < '3000':
+    def _get_people_long(people):
+        return u' and '.join([unicode(x) for x in people])
+else:
+    def _get_people_long(people):
+        return u' and '.join([str(x) for x in people])
+
+def _get_people_short(people):
+    if len(people) <= 2:
+        return u' & '.join([u' '.join(x.last()) for x in people])
     else:
-        authors = ' & '.join(authors)
-    # return formated string
-    # print(authors)
-    return authors
+        return u' '.join(people[0].last()) + u', et al.'
+
+# wrapper to implement a dict-like interface for bibliographic entries
+# returning formatted value, if it is available
+class EntryWrapper(Mapping):
+    def __init__(self, entry):
+        self.entry = entry
+
+    def __getitem__(self, key):
+        if not key:
+            return u'????'
+
+        key = key.lower()
+        result = None
+
+        short = False
+        if key.endswith('_short'):
+            short = True
+            key = key[:-6]
+
+        if key == 'keyword':
+            return self.entry.key
+
+        if key in pybtex.database.Person.valid_roles:
+            try:
+                people = self.entry.persons[key]
+                if short:
+                    result = _get_people_short(people)
+                else:
+                    result = _get_people_long(people)
+            except KeyError:
+                if 'crossref' in self.entry.fields:
+                    try:
+                        people = self.entry.get_crossref().persons[key]
+                        if short:
+                            result = _get_people_short(people)
+                        else:
+                            result = _get_people_long(people)
+                    except KeyError:
+                        pass
+
+                if not result and key == 'author':
+                    if short:
+                        result = self['editor_short']
+                    else:
+                        result = self['editor']
+
+                if not result:
+                    return u'????'
+        elif key == 'translator':
+            try:
+                people = [pybtex.database.Person(name) for name in
+                          split_name_list(self.entry.fields[key])]
+                if short:
+                    result = _get_people_short(people)
+                else:
+                    result = _get_people_long(people)
+            except KeyError:
+                return u'????'
+
+        if not result:
+            try:
+                result = self.entry.fields[key]
+            except KeyError:
+                if key == 'year':
+                    try:
+                        date = self.entry.fields['date']
+                        date_matcher = re.match(r'(\d{4})', date)
+                        if date_matcher:
+                            result = date_matcher.group(1)
+                    except KeyError:
+                        pass
+                elif key == 'journal':
+                    return self['journaltitle']
+
+                if not result:
+                    return u'????'
+
+        if key == 'title' and short:
+            short_title = None
+            try:
+                short_title = self.entry.fields['shorttitle']
+            except KeyError:
+                pass
+
+            if short_title:
+                result = short_title
+            else:
+                sep = re.compile(":|\.|\?")
+                result = sep.split(result)[0]
+                if len(result) > 60:
+                    result = result[0:60] + '...'
+
+        return remove_latex_commands(codecs.decode(result, 'latex'))
+
+    def __iter__(self):
+        return iter(self.entry)
+
+    def __len__(self):
+        return len(self.entry)
 
 class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
     def get_entries(self, *bib_files):
         entries = []
+        parser = bibtex.Parser()
         for bibfname in bib_files:
-            # # THIS IS NO LONGER NEEDED as find_bib_files() takes care of it
-            # if bibfname[-4:] != ".bib":
-            #     bibfname = bibfname + ".bib"
-            # texfiledir = os.path.dirname(view.file_name())
-            # # fix from Tobias Schmidt to allow for absolute paths
-            # bibfname = os.path.normpath(os.path.join(texfiledir, bibfname))
-            # print repr(bibfname)
             try:
-                bibf = codecs.open(bibfname,'r','UTF-8', 'ignore')  # 'ignore' to be safe
+                bibf = codecs.open(bibfname, 'r', 'UTF-8', 'ignore')  # 'ignore' to be safe
             except IOError:
-                print ("Cannot open bibliography file %s !" % (bibfname,))
+                print("Cannot open bibliography file %s !" % (bibfname,))
                 sublime.status_message("Cannot open bibliography file %s !" % (bibfname,))
                 continue
             else:
-                bib = bibf.readlines()
+                bib_data = parser.parse_stream(bibf)
                 bibf.close()
-            print ("%s has %s lines" % (repr(bibfname), len(bib)))
 
-            entry = {
-                        "keyword": "",
-                        "title": "",
-                        "author": "",
-                        "year": "",
-                        "editor": "",
-                        "journal": "",
-                        "eprint": ""
-                    }
+                print ('Loaded %d bibitems' % (len(bib_data.entries)))
 
-            for line in bib:
-                line = line.strip()
-                # Let's get rid of irrelevant lines first
-                if line == "" or line[0] == '%':
-                    continue
-                if line.lower()[0:8] == "@comment":
-                    continue
-                if line.lower()[0:7] == "@string":
-                    continue
-                if line.lower()[0:9] == "@preamble":
-                    continue
-                if line[0] == "@":
-                    # First, see if we can add a record; the keyword must be non-empty, other fields not
-                    if entry["keyword"]:
-                        entries.append(dict(entry))
+                for key in bib_data.entries:
+                    entry = bib_data.entries[key]
+                    if entry.type == 'xdata' or entry.type == 'comment' or entry.type == 'string':
+                        continue
 
-                        # Now reset for the next iteration
-                        entry["keyword"] = ""
-                        entry["title"] = ""
-                        entry["year"] = ""
-                        entry["author"] = ""
-                        entry["editor"] = ""
-                        entry["journal"] = ""
-                        entry["eprint"] = ""
-                    # Now see if we get a new keyword
-                    kp_match = KP.search(line)
-                    if kp_match:
-                        entry["keyword"] = kp_match.group(1)  # No longer decode. Was: .decode('ascii','ignore')
-                    else:
-                        print ("Cannot process this @ line: " + line)
-                        print ("Previous keyword (if any): " + entry["keyword"])
-                    continue
-                # Now test for title, author, etc.
-                # Note: we capture only the first line, but that's OK for our purposes
-                multip_match = MULTIP.search(line)
-                if multip_match:
-                    key = multip_match.group(1).lower()     # no longer decode. Was:    .decode('ascii','ignore')
-                    value = multip_match.group(2)           #                           .decode('ascii','ignore')
-                    entry[key] = value
-                continue
-
-            # at the end, we are left with one bib entry
-            entries.append(entry)
+                    entries.append(EntryWrapper(entry))
 
             print("Found %d total bib entries" % (len(entries),))
-
-            for entry in entries:
-                if not entry['author']:
-                    entry['author'] = entry['editor'] or '????'
-                if not entry['journal']:
-                    entry['journal'] = entry['eprint'] or '????'
-
-                # # Filter out }'s at the end. There should be no commas left
-                entry['title'] = \
-                    entry['title'].replace(
-                        '{\\textquoteright}', '').replace('{','').replace('}','')
-
-                entry['author_short'] = format_author(entry['author'])
-
-                # short title
-                title_short = TITLE_SEP.split(entry['title'])[0]
-                if len(title_short) > 60:
-                    title_short = title_short[:60] + '...'
-                entry['title_short'] = title_short
 
         return entries
 
