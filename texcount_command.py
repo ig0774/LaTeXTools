@@ -5,12 +5,8 @@ import sublime_plugin
 import os
 
 if sublime.version() < '3000':
-    from getTeXRoot import get_tex_root
-    from get_texpath import get_texpath
     from external_command import external_command
 else:
-    from .getTeXRoot import get_tex_root
-    from .get_texpath import get_texpath
     from .external_command import external_command
 
 class TexcountCommand(sublime_plugin.TextCommand):
