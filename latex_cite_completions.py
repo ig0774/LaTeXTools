@@ -41,6 +41,8 @@ import codecs
 from string import Formatter
 import collections
 
+import threading
+
 class UnrecognizedCiteFormatError(Exception): pass
 class NoBibFilesError(Exception): pass
 
@@ -133,6 +135,14 @@ def find_bib_files(rootdir, src, bibfiles):
 # will attempt to run a callable named `get_entries` passing it the arguments
 # (bib_files,) and get the result.
 def run_plugin_command(command, *args, **kwargs):
+    stop_on_first = True
+    expect_result = True
+
+    if 'stop_on_first' in kwargs:
+        stop_on_first = kwargs.pop('stop_on_first')
+    if 'expect_result' in kwargs:
+        expect_result = kwargs.pop('expect_result')
+
     def _run_command(plugin_name):
         plugin = None
         try:
@@ -190,10 +200,10 @@ def run_plugin_command(command, *args, **kwargs):
                 result = _run_command(plugin_name)
             except BibPluginError:
                 continue
-            if result is not None:
+            if stop_on_first and result is not None:
                 break
 
-        if result is None:
+        if expect_result and result is None:
             raise BibPluginError("Could not find a plugin to handle '{}'. See the console for more details".format(command))
 
     return result
@@ -440,8 +450,23 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
             print ("latex_cite_completion called with index %d" % (i,) )
 
             # Allow user to cancel
-            if i<0:
+            if i < 0:
                 return
+
+            keyword = completions[i]['keyword']
+            # notify any plugins
+            threading.Thread(
+                target=run_plugin_command,
+                args=(
+                    'on_insert_citation',
+                    keyword
+                ),
+                kwargs={
+                    'stop_on_first': False,
+                    'expect_result': False
+                },
+                daemon=True
+            ).start()
 
             cite = completions[i]['keyword'] + post_brace
 

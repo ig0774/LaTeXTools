@@ -141,3 +141,6 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                 entry['title_short'] = title_short
 
         return entries
+
+    def on_insert_citation(self, keyword):
+        print('Inserted {}'.format(keyword))
