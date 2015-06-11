@@ -169,13 +169,8 @@ def run_plugin_command(command, *args, **kwargs):
     either not implement the method or implement a version of the method which raises a
     NotImplementedError if that plugin should not handle the current situation.
     '''
-    stop_on_first = True
-    expect_result = True
-
-    if 'stop_on_first' in kwargs:
-        stop_on_first = kwargs.pop('stop_on_first')
-    if 'expect_result' in kwargs:
-        expect_result = kwargs.pop('expect_result')
+    stop_on_first = kwargs.pop('stop_on_first', True)
+    expect_result = kwargs.pop('expect_result', True)
 
     def _run_command(plugin_name):
         plugin = None
