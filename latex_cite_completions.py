@@ -522,10 +522,6 @@ def plugin_loaded():
     # load plugins from the bibliography_plugins dir of LaTeXTools if it exists
     # this allows us to have pre-packaged plugins that won't require any user
     # setup
-
-    # Plugins should implement a method called get_entries(), which takes a list of
-    # bibliography files and returns a list of maps corresponding to each entry,
-    # similar to the entry dict in the TraditionalBibliographyPlugin
     os_path = os.path
     latextools_plugin.add_plugin_path(
         os_path.join(os_path.dirname(__file__), 'bibliography_plugins'))
