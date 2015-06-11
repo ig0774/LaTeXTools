@@ -176,10 +176,10 @@ def run_plugin_command(command, *args, **kwargs):
                 result = _run_command(plugin_name)
             except BibPluginError:
                 continue
-            if result:
+            if result is not None:
                 break
 
-        if not result:
+        if result is None:
             raise BibPluginError("Could not find a plugin to handle '{}'. See the console for more details".format(command))
 
     return result
