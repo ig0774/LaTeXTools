@@ -1,3 +1,24 @@
+'''
+This module implements the cite-completion behaviour, largely by relying on implementations
+registered with latextools_plugin and configured using the `bibliograph_plugins`
+configuration key.
+
+At present, there are two supported methods on custom plugins.
+
+`get_entries`:
+    This method should take a sequence of bib_files and return a sequence of Mapping-like
+    objects where the key corresponds to a Bib(La)TeX key and returns the matching value.
+    To maintain compatibility with previous cite-panel formats, the citekey should be mapped
+    to the `keyword key`. Additionally, a sensible value should be set for the `author_short`
+    key and the `title_short` key, though in the future some of that behaviour might be
+    best implemented here.
+
+`on_insert_citation`:
+    This method should take a single string value indicating the citekey of the entry that
+    has just been cited. This is provided to allow the plugin to react to the insertion event.
+    This method will be called on a separate thread and should not interact with the Sublime
+    view if possible, as this may cause a race condition.
+'''
 # ST2/ST3 compat
 from __future__ import print_function 
 import sublime
@@ -120,21 +141,34 @@ def find_bib_files(rootdir, src, bibfiles):
         input_f = re.search(r'\{([^\}]+)', f).group(1)
         find_bib_files(rootdir, input_f, bibfiles)
 
-# intended to run a given command, passed as a string, with the given args
-# and kwargs. this function handles looking up any bibliography plugins
-# configured in the user settings and attempting to run the command against
-# each of them in defined order, stopping after a valid result has been
-# obtained, i.e., the first plugin to successfully return something besides
-# `None`. Plugins that do not implement the given command (either by not
-# not defining the attribute, not binding the attribute to a Python callable,
-# implementing a callable that does not take the correct arguments, or
-# implementing a callable that raises a NotImplementedError will be bypassed.)
-#
-# for example:
-#   run_plugin_command('get_entries',(bib_files,))
-# will attempt to run a callable named `get_entries` passing it the arguments
-# (bib_files,) and get the result.
 def run_plugin_command(command, *args, **kwargs):
+    '''
+    This function is intended to run a command against a user-configurable list of
+    bibliography plugins set using the `bibliography_plugins` setting.
+
+    Parameters:
+        `command`: a string representing the command to invoke, which should generally
+            be the name of a function to be called on the plugin class.
+        `*args`: the args to pass to the function
+        `**kwargs`: the keyword args to pass to the function
+
+    Additionally, the following keyword parameters can be specified to control how this
+    function works:
+        `stop_on_first`: if True (default), no more attempts will be made to run the
+            command after the first plugin that returns a non-None result
+        `expect_result`: if True (default), a BibPluginError will be raised if no plugin
+            returns a non-None result
+
+    Example:
+        run_plugin_command('get_entries', *bib_files)
+        This will attempt to invoke the `get_entries` method of any configured plugin,
+        passing in the discovered bib_files, and returning the result.
+
+    The general assumption of this function is that we only care about the first valid
+    result returned from a plugin and that plugins that should not handle a request will
+    either not implement the method or implement a version of the method which raises a
+    NotImplementedError if that plugin should not handle the current situation.
+    '''
     stop_on_first = True
     expect_result = True
 
