@@ -22,6 +22,7 @@ At present, there are two supported methods on custom plugins.
 # ST2/ST3 compat
 from __future__ import print_function
 import sublime
+import sublime_plugin
 
 import os, os.path
 import sys
@@ -30,10 +31,6 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    import latex_chars
-    
-    import latex_commands_grammar
-    from latex_commands_grammar import remove_latex_commands
 
     import kpsewhich
     from kpsewhich import kpsewhich
@@ -48,8 +45,6 @@ if sublime.version() < '3000':
 else:
     _ST3 = True
     from . import getTeXRoot
-    from . import latex_chars
-    from .latex_commands_grammar import remove_latex_commands
     from .kpsewhich import kpsewhich
     from . import latextools_plugin
 
@@ -62,6 +57,8 @@ else:
         raise value
 
     strbase = str
+
+import re
 
 from string import Formatter
 import collections
