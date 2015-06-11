@@ -58,6 +58,7 @@ else:
 
     strbase = str
 
+import codecs
 import re
 
 from string import Formatter
