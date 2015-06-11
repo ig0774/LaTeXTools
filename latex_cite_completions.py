@@ -118,6 +118,20 @@ def find_bib_files(rootdir, src, bibfiles):
         input_f = re.search(r'\{([^\}]+)', f).group(1)
         find_bib_files(rootdir, input_f, bibfiles)
 
+# intended to run a given command, passed as a string, with the given args
+# and kwargs. this function handles looking up any bibliography plugins
+# configured in the user settings and attempting to run the command against
+# each of them in defined order, stopping after a valid result has been
+# obtained, i.e., the first plugin to successfully return something besides
+# `None`. Plugins that do not implement the given command (either by not
+# not defining the attribute, not binding the attribute to a Python callable,
+# implementing a callable that does not take the correct arguments, or
+# implementing a callable that raises a NotImplementedError will be bypassed.)
+#
+# for example:
+#   run_plugin_command('get_entries',(bib_files,))
+# will attempt to run a callable named `get_entries` passing it the arguments
+# (bib_files,) and get the result.
 def run_plugin_command(command, *args, **kwargs):
     def _run_command(plugin_name):
         plugin = None
