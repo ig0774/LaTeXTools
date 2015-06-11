@@ -188,7 +188,7 @@ def run_plugin_command(command, *args, **kwargs):
         try:
             result = getattr(plugin, command)(*args, **kwargs)
         except TypeError as e:
-            if "'{}()'".format(command) in e.message:
+            if "'{}()'".format(command) in str(e):
                 error_message = '{1} is not properly implemented by {0}.'.format(
                     type(plugin).__name__,
                     command
@@ -199,7 +199,7 @@ def run_plugin_command(command, *args, **kwargs):
             else:
                 reraise(*sys.exec_info())
         except AttributeError as e:
-            if "'{}'".format(command) in e.message:
+            if "'{}'".format(command) in str(e):
                 error_message = '{} does not implement `{}`'.format(
                     type(plugin).__name__,
                     command
