@@ -1,10 +1,30 @@
+'''
+This module implements the cite-completion behaviour, largely by relying on implementations
+registered with latextools_plugin and configured using the `bibliograph_plugins`
+configuration key.
+
+At present, there are two supported methods on custom plugins.
+
+`get_entries`:
+    This method should take a sequence of bib_files and return a sequence of Mapping-like
+    objects where the key corresponds to a Bib(La)TeX key and returns the matching value.
+    To maintain compatibility with previous cite-panel formats, the citekey should be mapped
+    to the `keyword key`. Additionally, a sensible value should be set for the `author_short`
+    key and the `title_short` key, though in the future some of that behaviour might be
+    best implemented here.
+
+`on_insert_citation`:
+    This method should take a single string value indicating the citekey of the entry that
+    has just been cited. This is provided to allow the plugin to react to the insertion event.
+    This method will be called on a separate thread and should not interact with the Sublime
+    view if possible, as this may cause a race condition.
+'''
 # ST2/ST3 compat
 from __future__ import print_function
 import sublime
 
 import os, os.path
 import sys
-sys.path.append(os.path.dirname(__file__))
 
 if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
@@ -17,25 +37,36 @@ if sublime.version() < '3000':
 
     import kpsewhich
     from kpsewhich import kpsewhich
+    import latextools_plugin
+
+    # reraise implementation from 6
+    exec("""def reraise(tp, value, tb=None):
+    raise tp, value, tb
+""")
+
+    strbase = basestring
 else:
     _ST3 = True
     from . import getTeXRoot
     from . import latex_chars
     from .latex_commands_grammar import remove_latex_commands
     from .kpsewhich import kpsewhich
+    from . import latextools_plugin
 
-import sublime_plugin
-import re
-import codecs
+    # reraise implementation from 6
+    def reraise(tp, value, tb=None):
+        if value is None:
+            value = tp()
+        if value.__traceback__ is not tb:
+            raise value.with_traceback(tb)
+        raise value
 
-import pybtex
-from pybtex.bibtex.utils import split_name_list
+    strbase = str
 
 from string import Formatter
-from collections import Mapping
+import collections
 
-# LaTeX -> Unicode decoder
-latex_chars.register()
+import threading
 
 class UnrecognizedCiteFormatError(Exception): pass
 class NoBibFilesError(Exception): pass
@@ -44,6 +75,8 @@ class BibParsingError(Exception):
     def __init__(self, filename="", message=""):
         super(BibParsingError, self).__init__(message)
         self.filename = filename
+
+class BibPluginError(Exception): pass
 
 OLD_STYLE_CITE_REGEX = re.compile(r"([^_]*_)?([a-zX*]*?)etic(?:\\|\b)")
 # I apoligise profusely for this regex
@@ -261,6 +294,122 @@ def find_bib_files(rootdir, src, bibfiles):
         input_f = re.search(r'\{([^\}]+)', f).group(1)
         find_bib_files(rootdir, input_f, bibfiles)
 
+def run_plugin_command(command, *args, **kwargs):
+    '''
+    This function is intended to run a command against a user-configurable list of
+    bibliography plugins set using the `bibliography_plugins` setting.
+
+    Parameters:
+        `command`: a string representing the command to invoke, which should generally
+            be the name of a function to be called on the plugin class.
+        `*args`: the args to pass to the function
+        `**kwargs`: the keyword args to pass to the function
+
+    Additionally, the following keyword parameters can be specified to control how this
+    function works:
+        `stop_on_first`: if True (default), no more attempts will be made to run the
+            command after the first plugin that returns a non-None result
+        `expect_result`: if True (default), a BibPluginError will be raised if no plugin
+            returns a non-None result
+
+    Example:
+        run_plugin_command('get_entries', *bib_files)
+        This will attempt to invoke the `get_entries` method of any configured plugin,
+        passing in the discovered bib_files, and returning the result.
+
+    The general assumption of this function is that we only care about the first valid
+    result returned from a plugin and that plugins that should not handle a request will
+    either not implement the method or implement a version of the method which raises a
+    NotImplementedError if that plugin should not handle the current situation.
+    '''
+    stop_on_first = kwargs.pop('stop_on_first', True)
+    expect_result = kwargs.pop('expect_result', True)
+
+    def _run_command(plugin_name):
+        plugin = None
+        try:
+            plugin = latextools_plugin.get_plugin(plugin_name)
+        except latextools_plugin.NoSuchPluginException:
+            pass
+
+        if not plugin:
+            error_message = 'Could not find bibliography plugin named {}. Please ensure your LaTeXTools.sublime-settings is configured correctly.'.format(
+                plugin_name)
+            print(error_message)
+            raise BibPluginError(error_message)
+
+        try:
+            result = getattr(plugin, command)(*args, **kwargs)
+        except TypeError as e:
+            if "'{}()'".format(command) in str(e):
+                error_message = '{1} is not properly implemented by {0}.'.format(
+                    type(plugin).__name__,
+                    command
+                )
+
+                print(error_message)
+                raise BibPluginError(error_message)
+            else:
+                reraise(*sys.exec_info())
+        except AttributeError as e:
+            if "'{}'".format(command) in str(e):
+                error_message = '{} does not implement `{}`'.format(
+                    type(plugin).__name__,
+                    command
+                )
+
+                print(error_message)
+                raise BibPluginError(error_message)
+            else:
+                reraise(*sys.exec_info())
+        except NotImplementedError:
+            pass
+
+        return result
+
+    settings = sublime.load_settings('LaTeXTools.sublime-settings')
+    plugins = settings.get('bibliography_plugins', ['traditional_bibliography'])
+    if not plugins:
+        print('bibliography_plugins is blank. Loading traditional plugin.')
+        plugins = ['traditional_bibliography']
+
+    result = None
+    if type(plugins) == strbase:
+        result = _run_command(plugins)
+    else:
+        for plugin_name in plugins:
+            try:
+                result = _run_command(plugin_name)
+            except BibPluginError:
+                continue
+            if stop_on_first and result is not None:
+                break
+
+        if expect_result and result is None:
+            raise BibPluginError("Could not find a plugin to handle '{}'. See the console for more details".format(command))
+
+    return result
+
+class CompletionWrapper(collections.Mapping):
+    '''
+    Wraps the returned completions so that we can properly handle any KeyErrors that
+    occur
+    '''
+    def __init__(self, entry):
+        self._entry = entry
+
+    def __getitem__(self, key):
+        try:
+            return self._entry[key]
+        except KeyError:
+            return '????'
+
+    def __iter__(self):
+        return iter(self._entry)
+
+    def __len__(self):
+        return len(self._entry)
+
 def get_cite_completions(view, point, autocompleting=False):
     line = view.substr(sublime.Region(view.line(point).a, point))
     # print line
@@ -380,163 +529,13 @@ def get_cite_completions(view, point, autocompleting=False):
     print ("Files:")
     print (repr(bib_files))
 
-    from pybtex.database.input import bibtex
-
-    completions = []
-    parser = bibtex.Parser()
-
-    for bibfname in bib_files:
-        try:
-            bibf = codecs.open(bibfname,'r','UTF-8', 'ignore')  # 'ignore' to be safe
-        except IOError:
-            print ("Cannot open bibliography file %s !" % (bibfname,))
-            sublime.status_message("Cannot open bibliography file %s !" % (bibfname,))
-            continue
-        else:
-            try:
-                bib_data = parser.parse_stream(bibf)
-            except pybtex.scanner.PybtexSyntaxError as e:
-                message = 'Error while processing bibliography file {}! {}'.format(
-                    bibfname, e
-                )
-                print (message)
-                raise BibParsingError(bibfname, e)
-            finally:
-                bibf.close()
-
-            print ('Loaded %d bibitems' % (len(bib_data.entries)))
-
-            entries = []
-
-            for key in bib_data.entries:
-                entry = bib_data.entries[key]
-                if entry.type == 'xdata' or entry.type == 'comment' or entry.type == 'string':
-                    continue
-
-                entries.append(EntryWrapper(entry))
-
-        print ( "Found %d total bib entries" % (len(entries),) )
-
-        # completions object
-        completions += entries
-
+    completions = run_plugin_command('get_entries', *bib_files)
 
     #### END COMPLETIONS HERE ####
 
+    completions = [CompletionWrapper(completion) for completion in completions]
+
     return completions, prefix, post_brace, new_point_a, new_point_b
-
-if _ST3:
-    def _get_people_long(people):
-        return u' and '.join([str(x) for x in people])
-else:
-    def _get_people_long(people):
-        return u' and '.join([unicode(x) for x in people])
-
-def _get_people_short(people):
-    if len(people) <= 2:
-        return u' & '.join([u' '.join(x.last()) for x in people])
-    else:
-        return u' '.join(people[0].last()) + u', et al.'
-
-# wrapper to implement a dict-like interface for bibliographic entries
-# returning formatted value, if it is available
-class EntryWrapper(Mapping):
-    def __init__(self, entry):
-        self.entry = entry
-
-    def __getitem__(self, key):
-        if not key:
-            return u'????'
-
-        key = key.lower()
-        result = None
-
-        short = False
-        if key.endswith('_short'):
-            short = True
-            key = key[:-6]
-
-        if key == 'keyword':
-            return self.entry.key
-
-        if key in pybtex.database.Person.valid_roles:
-            try:
-                people = self.entry.persons[key]
-                if short:
-                    result = _get_people_short(people)
-                else:
-                    result = _get_people_long(people)
-            except KeyError:
-                if 'crossref' in self.entry.fields:
-                    try:
-                        people = self.entry.get_crossref().persons[key]
-                        if short:
-                            result = _get_people_short(people)
-                        else:
-                            result = _get_people_long(people)
-                    except KeyError:
-                        pass
-
-                if not result and key == 'author':
-                    if short:
-                        result = self['editor_short']
-                    else:
-                        result = self['editor']
-
-                if not result:
-                    return u'????'
-        elif key == 'translator':
-            try:
-                people = [pybtex.database.Person(name) for name in
-                    split_name_list(self.entry.fields[key])]
-                if short:
-                    result = _get_people_short(people)
-                else:
-                    result = _get_people_long(people)
-            except KeyError:
-                return u'????'
-
-        if not result:
-            try:
-                result = self.entry.fields[key]
-            except KeyError:
-                if key == 'year':
-                    try:
-                        date = self.entry.fields['date']
-                        date_matcher = re.match(r'(\d{4})', date)
-                        if date_matcher:
-                            result = date_matcher.group(1)
-                    except KeyError:
-                        pass
-                elif key == 'journal':
-                    return self['journaltitle']
-
-                if not result:
-                    return u'????'
-
-        if key == 'title' and short:
-            short_title = None
-            try:
-                short_title = self.entry.fields['shorttitle']
-            except KeyError:
-                pass
-
-            if short_title:
-                result = short_title
-            else:
-                sep = re.compile(":|\.|\?")
-                result = sep.split(result)[0]
-                if len(result) > 60:
-                    result = result[0:60] + '...'
-
-        return remove_latex_commands(codecs.decode(result, 'latex'))
-
-    def __iter__(self):
-        return iter(self.entry)
-
-    def __len__(self):
-        return len(self.entry)
-
 
 # Based on html_completions.py
 # see also latex_ref_completions.py
@@ -582,8 +581,12 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
             ))            
             return []
 
+        # filter against keyword or title
         if prefix:
-            completions = [comp for comp in completions if prefix.lower() in "%s %s" % (comp[0].lower(), comp[1].lower())]
+            completions = [comp for comp in completions if prefix.lower() in "%s %s" %
+                                                    (
+                                                        comp['keyword'].lower(),
+                                                        comp['title'].lower())]
             prefix += " "
 
         # get preferences for formating of autocomplete entries
@@ -591,9 +594,10 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
         cite_autocomplete_format = s.get("cite_autocomplete_format", "{keyword}: {title}")
 
         formatter = Formatter()
-        r = [(prefix + formatter.vformat(cite_autocomplete_format, (), completion), 
-            completion['keyword'] + post_brace) for completion in completions]
+        r = [(prefix + formatter.vformat(cite_autocomplete_format, (), completion),
+              completion['keyword'] + post_brace) for completion in completions]
 
+        # print "%d bib entries matching %s" % (len(r), prefix)
         return r
 
 
@@ -624,23 +628,39 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
                 e.filename, e
             ))
             return
+        except BibParsingError as e:
+            sublime.error_message(e.message)
+            return
 
         # filter against keyword, title, or author
         if prefix:
-            completions = [comp for comp in completions if prefix.lower() in
-                            "{} {} {}".format(
-                                comp['keyword'],
-                                comp['title'],
-                                comp['author']
-                            )]
-
+            completions = [comp for comp in completions if prefix.lower() in "%s %s %s" % 
+                                                    (
+                                                        comp['keyword'].lower(),
+                                                        comp['title'].lower(),
+                                                        comp['author'].lower())]
         # Note we now generate citation on the fly. Less copying of vectors! Win!
         def on_done(i):
             print ("latex_cite_completion called with index %d" % (i,) )
 
             # Allow user to cancel
-            if i<0:
+            if i < 0:
                 return
+
+            keyword = completions[i]['keyword']
+            # notify any plugins
+            threading.Thread(
+                target=run_plugin_command,
+                args=(
+                    'on_insert_citation',
+                    keyword
+                ),
+                kwargs={
+                    'stop_on_first': False,
+                    'expect_result': False
+                },
+                daemon=True
+            ).start()
 
             cite = completions[i]['keyword'] + post_brace
 
@@ -663,5 +683,17 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
 
         # show quick
         formatter = Formatter()
-        view.window().show_quick_panel([[formatter.vformat(str, (), completion) for str in cite_panel_format] \
+        view.window().show_quick_panel([[formatter.vformat(s, (), completion) for s in cite_panel_format] \
                                         for completion in completions], on_done)
+
+def plugin_loaded():
+    # load plugins from the bibliography_plugins dir of LaTeXTools if it exists
+    # this allows us to have pre-packaged plugins that won't require any user
+    # setup
+
+    # Plugins should implement a method called get_entries(), which takes a list of
+    # bibliography files and returns a list of maps corresponding to each entry,
+    # similar to the entry dict in the TraditionalBibliographyPlugin
+    os_path = os.path
+    latextools_plugin.add_plugin_path(
+        os_path.join(os_path.dirname(__file__), 'bibliography_plugins'))
