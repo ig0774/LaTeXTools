@@ -484,7 +484,7 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
 
             keyword = completions[i]['keyword']
             # notify any plugins
-            threading.Thread(
+            notification_thread = threading.Thread(
                 target=run_plugin_command,
                 args=(
                     'on_insert_citation',
@@ -493,9 +493,11 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
                 kwargs={
                     'stop_on_first': False,
                     'expect_result': False
-                },
-                daemon=True
-            ).start()
+                }
+            )
+
+            notification_thread.daemon = True
+            notification_thread.start()
 
             cite = completions[i]['keyword'] + post_brace
 
