@@ -384,7 +384,7 @@ def run_plugin_command(command, *args, **kwargs):
                 break
 
         if expect_result and result is None:
-            raise BibPluginError("Could not find a plugin to handle '{}'. See the console for more details".format(command))
+            raise BibPluginError("Could not find a plugin to handle '{0}'. See the console for more details".format(command))
 
     return result
 
