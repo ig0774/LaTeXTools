@@ -137,20 +137,20 @@ def _tokenize(tex):
                 while pos < len(tex) and tex[pos].isdigit():
                     pos += 1
 
-class _unlatex:
+class _unlatex(object):
     """Convert tokenized tex into sequence of unicode strings.  Helper for decode()."""
+
+    def __init__(self, tex):
+        """Create a new token converter from a string."""
+        self.tex = tuple(_tokenize(tex))  # turn tokens into indexable list
+        self.pos = 0                    # index of first unprocessed token 
+        self.lastoutput = 'x'           # lastoutput must always be nonempty string
 
     def __iter__(self):
         """Turn self into an iterator.  It already is one, nothing to do."""
         return self
 
-    def __init__(self,tex):
-        """Create a new token converter from a string."""
-        self.tex = tuple(_tokenize(tex))  # turn tokens into indexable list
-        self.pos = 0                    # index of first unprocessed token 
-        self.lastoutput = 'x'           # lastoutput must always be nonempty string
-    
-    def __getitem__(self,n):
+    def __getitem__(self, n):
         """Return token at offset n from current pos."""
         p = self.pos + n
         t = self.tex
