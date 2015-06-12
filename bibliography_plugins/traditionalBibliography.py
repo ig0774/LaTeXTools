@@ -143,4 +143,4 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
         return entries
 
     def on_insert_citation(self, keyword):
-        print('Inserted {}'.format(keyword))
+        print('Inserted {0}'.format(keyword))
