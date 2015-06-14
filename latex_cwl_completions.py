@@ -253,7 +253,7 @@ class CwlParsingHandler(object):
                     os.path.normpath(os.path.join(
                         sublime.packages_path(), 'LaTeX-cwl', cwl_file))):
                     cwl_file_list.append(cwl_file)
-        self.callback(cwl_file_list, self.file_name)
+        self.callback(parse_cwl_file(cwl_file_list), self.file_name)
 
 def parse_cwl_file(cwl_file_list):
     CLW_COMMENT = re.compile(r'#[^#]*')
