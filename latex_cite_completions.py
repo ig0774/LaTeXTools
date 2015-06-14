@@ -44,7 +44,7 @@ if sublime.version() < '3000':
 """)
 
     strbase = basestring
-    else:
+else:
     _ST3 = True
     from . import getTeXRoot
 
