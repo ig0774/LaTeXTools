@@ -4,7 +4,10 @@ import codecs
 import os
 import re
 
-import sublime
+try:
+    from ..latextools_utils import is_tex_file, get_tex_extensions
+except:
+    from latextools_utils import is_tex_file, get_tex_extensions
 
 INPUT_FILE = re.compile(r'\\(?:input|include)\{([^\}]+)\}')
 DOCUMENT_START = re.compile(r'\\begin{document}')
@@ -15,8 +18,15 @@ DOCUMENT_START = re.compile(r'\\begin{document}')
 def walk_subfiles(rootdir, src, preamble_only=False):
     # rootdir has to be passed along because \input and \include
     # are relative to the root file
-    if src[-4:].lower() != ".tex":
-        src = src + ".tex"
+    if not is_tex_file(src):
+        src_tex_file = None
+        for ext in get_tex_extensions():
+            src_tex_file = ''.join((src, ext))
+            if os.path.exists(os.path.join(rootdir, src_tex_file)):
+                src = src_tex_file
+        if src != src_tex_file:
+            print("Could not find file {0}".format(src))
+            return
 
     file_path = os.path.normpath(os.path.join(rootdir, src))
     print("Scanning file: " + repr(file_path))
