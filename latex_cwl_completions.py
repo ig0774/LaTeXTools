@@ -15,12 +15,14 @@ if sublime.version() < '3000':
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from getRegion import get_Region
     from getTeXRoot import get_tex_root
+    from latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from .getRegion import get_Region
     from .getTeXRoot import get_tex_root
+    from .latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
 
 # Do not do completions in these envrioments
 ENV_DONOT_AUTO_COM = [
@@ -148,8 +150,16 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
                 g_settings.set("auto_complete_triggers", acts)
 
 def get_packages(root, src, packages):
-    if src[-4:].lower() != ".tex":
-        src = src + ".tex"
+    if not is_tex_file(src):
+        src_tex_file = None
+        for ext in get_tex_extensions():
+            src_tex_file = ''.join((src, ext))
+            if os.path.exists(os.path.join(rootdir, src_tex_file)):
+                src = src_tex_file
+                break
+        if src != src_tex_file:
+            print("Could not find file {0}".format(src))
+            return
 
     file_path = os.path.normpath(os.path.join(root, src))
     print("Searching file: " + repr(file_path))
