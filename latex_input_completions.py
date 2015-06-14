@@ -12,9 +12,11 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
+    from latextools_utils.is_tex_file import get_tex_extensions
 else:
     _ST3 = True
     from . import getTeXRoot
+    from .latextools_utils.is_tex_file import get_tex_extensions
 
 
 # Only work for \include{} and \input{} and \includegraphics
@@ -34,12 +36,10 @@ def get_file_list(root, types):
     path = os.path.dirname(root)
 
     def file_match(f):
-        filename, extname = os.path.splitext(f)
-        # ensure file has extension and its in the list of types
-        if extname and not extname[1:].lower() in types:
-            return False
-
-        return True
+        for ext in types:
+            if f.endswith(ext):
+                return True
+        return False
 
     completions = []
     for dir_name, dirs, files in os.walk(path):
@@ -85,11 +85,11 @@ def parse_completions(view, point):
     if include_filter is not None:
         # if is \include
         prefix = include_filter[::-1]
-        input_file_types = ['tex']
+        input_file_types = get_tex_extensions()
     elif input_filter is not None:
         # if is \input search type set to tex
         prefix = input_filter[::-1]
-        input_file_types = ['tex']
+        input_file_types = get_tex_extensions()
     elif image_filter is not None:
         # if is \includegraphics
         prefix = image_filter[::-1]
@@ -98,7 +98,7 @@ def parse_completions(view, point):
         # LaTeXTools.sublime-settings configure files.
         settings = sublime.load_settings("LaTeXTools.sublime-settings")
         input_file_types = settings.get('image_types', [
-            'pdf', 'png', 'jpeg', 'jpg', 'eps'
+            '.pdf', '.png', '.jpeg', '.jpg', '.eps'
         ])
     elif addbib_filter is not None or bib_filter is not None:
         # For bibliography
@@ -106,7 +106,7 @@ def parse_completions(view, point):
             prefix = addbib_filter[::-1]
         else:
             bib_filter[::-1]
-        input_file_types = ['bib']
+        input_file_types = ['.bib']
     elif cls_filter is not None or pkg_filter is not None or bst_filter is not None:
         # for packages, classes and bsts
         if _ST3:
