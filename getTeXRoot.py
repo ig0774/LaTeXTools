@@ -4,10 +4,10 @@ import sublime
 if sublime.version() < '3000':
 	# we are on ST2 and Python 2.X
 	_ST3 = False
-	from latextools_utils.is_tex_file import get_tex_extensions
+	from latextools_utils import get_tex_extensions
 else:
 	_ST3 = True
-	from .latextools_utils.is_tex_file import get_tex_extensions
+	from .latextools_utils import get_tex_extensions
 
 
 import os.path, re
