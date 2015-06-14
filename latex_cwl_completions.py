@@ -119,11 +119,32 @@ def parse_cwl_file():
             finally:
                 f.close()
 
+        # we need some state tracking to ignore keyval data
+        # it could be useful at a later date
+        KEYVAL = False
         for line in s.split('\n'):
-            if line.lstrip()[0] == '#':
+            line = line.lstrip()
+            if line == '':
                 continue
 
-            keyword = line.strip()
+            if line[0] == '#':
+                if line.startswith('#keyvals'):
+                    KEYVAL = True
+                if line.startswith('#endkeyvals'):
+                    KEYVAL = False
+
+                continue
+
+            # ignore TeXStudio's keyval structures
+            if KEYVAL:
+                continue
+
+            # remove everything after the comment hash
+            # again TeXStudio uses this for interesting
+            # tracking purposes, but we can ignore it
+            line = line.split('#', 1)[0]
+
+            keyword = line.rstrip()
             method = os.path.splitext(os.path.basename(cwl))[0]
             item = (u'%s\t%s' % (keyword, method), parse_keyword(keyword))
             completions.append(item)
