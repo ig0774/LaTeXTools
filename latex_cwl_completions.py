@@ -4,6 +4,7 @@ import sublime_plugin
 import os
 import re
 import codecs
+import threading
 
 index = 0
 
@@ -34,6 +35,26 @@ CWL_COMPLETION = False
 
 class LatexCwlCompletion(sublime_plugin.EventListener):
 
+    def __init__(self):
+        self.started = False
+        self.completed = False
+        self.completions = None
+        self._WLOCK = threading.RLock()
+
+    def hack(self):
+        sublime.active_window().run_command("hide_auto_complete")
+        def hack2():
+            sublime.active_window().run_command("auto_complete")
+        sublime.set_timeout(hack2, 1)
+
+    def on_completions(self, completions):
+        with self._WLOCK:
+            self.started = False
+            self.completed = True
+            self.completions = completions
+        if len(completions) != 0:
+            sublime.set_timeout(self.hack)
+
     def on_query_completions(self, view, prefix, locations):
         # settings = sublime.load_settings("LaTeXTools.sublime-settings")
         # cwl_completion = settings.get('cwl_completion')
@@ -45,7 +66,6 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         if not view.score_selector(point, "text.tex.latex"):
             return []
 
-        point = locations[0]
         line = view.substr(get_Region(view.line(point).a, point))
         line = line[::-1]
 
@@ -54,8 +74,16 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             if match(rex, line) != None:
                 return []
 
-        completions = parse_cwl_file()
-        return (completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+        if self.completed:
+            return (self.completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+        elif self.started:
+            return
+
+        with self._WLOCK:
+            self.started = True
+            t = threading.Thread(target=parse_cwl_file, args=(self.on_completions,))
+            t.daemon = True
+            t.start()
 
     # This functions is to determine whether LaTeX-cwl is installed,
     # if so, trigger auto-completion in latex buffers by '\'
@@ -180,7 +208,7 @@ def get_cwl_file_list():
 
     return cwl_file_list
 
-def parse_cwl_file():
+def parse_cwl_file(callback):
     CLW_COMMENT = re.compile(r'#[^#]*')
     cwl_file_list = get_cwl_file_list()
 
@@ -211,7 +239,7 @@ def parse_cwl_file():
                 item = (u'%s\t%s' % (keyword, method), parse_keyword(keyword))
                 completions.append(item)
 
-    return completions
+    callback(completions)
 
 
 def parse_keyword(keyword):
