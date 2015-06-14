@@ -154,7 +154,7 @@ def get_packages(root, src, packages):
         src_tex_file = None
         for ext in get_tex_extensions():
             src_tex_file = ''.join((src, ext))
-            if os.path.exists(os.path.join(rootdir, src_tex_file)):
+            if os.path.exists(os.path.join(root, src_tex_file)):
                 src = src_tex_file
                 break
         if src != src_tex_file:
