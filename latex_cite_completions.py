@@ -9,13 +9,14 @@ if sublime.version() < '3000':
     from kpsewhich import kpsewhich
     from latextools_utils import is_tex_buffer
     from latextools_utils.subfiles import walk_subfiles
+    from latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
 else:
     _ST3 = True
     from . import getTeXRoot
     from .kpsewhich import kpsewhich
     from .latextools_utils import is_tex_buffer
     from .latextools_utils.subfiles import walk_subfiles
-
+    from .latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
 
 import sublime_plugin
 import os, os.path
@@ -45,6 +46,7 @@ def match(rex, str):
 # recursively search all linked tex files to find all
 # included bibliography tags in the document and extract
 # the absolute filepaths of the bib files
+<<<<<<< HEAD
 def find_bib_files(rootdir, src):
     bib_files = []
     for content in walk_subfiles(rootdir, src):
