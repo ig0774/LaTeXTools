@@ -16,7 +16,7 @@ if sublime.version() < '3000':
     from latex_input_completions import TEX_INPUT_FILE_REGEX
     from getRegion import get_Region
     from getTeXRoot import get_tex_root
-    from latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
+    from latextools_utils import is_tex_file, get_tex_extensions
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
@@ -24,7 +24,7 @@ else:
     from .latex_input_completions import TEX_INPUT_FILE_REGEX
     from .getRegion import get_Region
     from .getTeXRoot import get_tex_root
-    from .latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
+    from .latextools_utils import is_tex_file, get_tex_extensions
 
 # Do not do completions in these envrioments
 ENV_DONOT_AUTO_COM = [
