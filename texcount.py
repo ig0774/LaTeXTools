@@ -37,7 +37,7 @@ class TexcountCommand(sublime_plugin.TextCommand):
                 self.view.window().show_quick_panel(result.splitlines()[1:-4], None)
             else:
                 sublime.error_message(
-                    'Error while running TeXCount: {}'.format(
+                    'Error while running TeXCount: {0}'.format(
                         str(stderr)
                     )
                 )
