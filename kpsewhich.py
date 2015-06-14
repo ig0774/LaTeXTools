@@ -3,9 +3,9 @@ from __future__ import print_function
 import sublime
 
 if sublime.version() < '3000':
-    from external_command import external_command
+    from latextools_utils.external_command import external_command
 else:
-    from .external_command import external_command
+    from .latextools_utils.external_command import external_command
 
 __all__ = ['kpsewhich']
 
