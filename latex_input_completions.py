@@ -94,7 +94,7 @@ def parse_completions(view, point):
         # if is \includegraphics
         prefix = image_filter[::-1]
         # Load image types from configurations
-        # In order to user input, "image_types" must be set in 
+        # In order to user input, "image_types" must be set in
         # LaTeXTools.sublime-settings configuration file or the
         # project settings for the current view.
         view = sublime.active_window().active_view()
@@ -130,8 +130,8 @@ def parse_completions(view, point):
 
         cache = None
         if not os.path.exists(pkg_cache_file):
-            gen_cache = sublime.ok_cancel_dialog("Cache files for installed packages, " 
-                + "classes and bibliographystyles do not exists, " 
+            gen_cache = sublime.ok_cancel_dialog("Cache files for installed packages, "
+                + "classes and bibliographystyles do not exists, "
                 + "would you like to generate it? After generating complete, please re-run this completion action!"
             )
 
@@ -140,12 +140,12 @@ def parse_completions(view, point):
                 completions = []
         else:
             with open(pkg_cache_file) as f:
-                cache = json.load(f)   
+                cache = json.load(f)
 
-        if cache != None:
-            if cls_filter != None:
+        if cache is not None:
+            if cls_filter is not None:
                 installed_cls = cache.get("cls")
-            elif bst_filter != None:
+            elif bst_filter is not None:
                 installed_bst = cache.get("bst")
             else:
                 installed_pkg = cache.get("pkg")
@@ -172,8 +172,7 @@ class LatexFillInputCommand(sublime_plugin.TextCommand):
         point = view.sel()[0].b
         # Only trigger within LaTeX
         # Note using score_selector rather than match_selector
-        if not view.score_selector(point,
-                "text.tex.latex"):
+        if not view.score_selector(point, "text.tex.latex"):
             return
 
         prefix, completions = parse_completions(view, point)
