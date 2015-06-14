@@ -200,10 +200,10 @@ def get_packages(root, src, packages):
     for l in src_content.splitlines():
         # packages can only be defined in the preamble, so stop when we find
         # the start of the document
-        if re.match(r'\\begin{document}', l):
+        if re.search(r'\\begin{document}', l):
             break
         else:
-            for f in re.findall(r'\\(?:input|include)\{([^\{\}]+)\}', src_content):
+            for f in re.findall(r'\\(?:input|include)\{([^\{\}]+)\}', l):
                 get_packages(root, f, packages)
 
 # bit of a hack as these are all one cwl file
