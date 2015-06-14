@@ -138,8 +138,7 @@ def get_packages(root, src, packages):
     try:
         src_file = codecs.open(file_path, "r", 'UTF-8')
     except IOError:
-        sublime.status_message("LaTeXTools WARNING: cannot open included file " + file_path)
-        print ("WARNING! I can't find it! Check your \\include's and \\input's.")
+        print ("LaTeXTools WARNING: cannot open included file " + file_path)
         return
 
     src_content = re.sub("%.*", "", src_file.read())
