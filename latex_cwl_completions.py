@@ -39,6 +39,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         self.started = False
         self.completed = False
         self.completions = None
+        self.current_file = None
         self._WLOCK = threading.RLock()
 
     def hack(self):
@@ -47,12 +48,17 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             sublime.active_window().run_command("auto_complete")
         sublime.set_timeout(hack2, 1)
 
-    def on_completions(self, completions):
+    def on_completions(self, completions, file_name):
         with self._WLOCK:
             self.started = False
-            self.completed = True
-            self.completions = completions
-        if len(completions) != 0:
+            # we're still on the same file
+            if self.file_name == file_name:
+                self.completed = True
+                self.completions = completions
+            else:
+                return
+
+        if len(self.completions) != 0:
             sublime.set_timeout(self.hack)
 
     def on_query_completions(self, view, prefix, locations):
@@ -76,12 +82,13 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
 
         if self.completed:
             return (self.completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
-        elif self.started:
+        elif self.started and self.file_name == view.file_name():
             return
 
         with self._WLOCK:
             self.started = True
-            t = threading.Thread(target=parse_cwl_file, args=(self.on_completions,))
+            self.current_file = view.file_name()
+            t = threading.Thread(target=parse_cwl_file, args=(self.on_completions, view.file_name()))
             t.daemon = True
             t.start()
 
@@ -208,7 +215,7 @@ def get_cwl_file_list():
 
     return cwl_file_list
 
-def parse_cwl_file(callback):
+def parse_cwl_file(callback, file_name):
     CLW_COMMENT = re.compile(r'#[^#]*')
     cwl_file_list = get_cwl_file_list()
 
@@ -239,7 +246,7 @@ def parse_cwl_file(callback):
                 item = (u'%s\t%s' % (keyword, method), parse_keyword(keyword))
                 completions.append(item)
 
-    callback(completions)
+    callback(completions, file_name)
 
 
 def parse_keyword(keyword):
