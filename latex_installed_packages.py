@@ -8,6 +8,8 @@ import json
 
 from collections import defaultdict
 
+import threading
+
 if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
@@ -25,14 +27,14 @@ def _get_tex_searchpath(file_type):
         raise Exception('file_type must be set for _get_tex_searchpath')
 
     command = ['kpsewhich']
-    command.append('--show-path={}'.format(file_type))
+    command.append('--show-path={0}'.format(file_type))
 
     try:
         return_code, paths, _ = external_command(command)
         if return_code == 0:
             return paths
         else:
-            sublime.eror_message('An error occurred while trying to run kpsewhich. TEXMF tree could not be accessed.')
+            sublime.error_message('An error occurred while trying to run kpsewhich. TEXMF tree could not be accessed.')
     except OSError:
         sublime.error_message('Could not run kpsewhich. Please ensure that your texpath setting is configured correctly in the LaTeXTools settings.')
 
@@ -45,8 +47,12 @@ def _get_files_matching_extensions(paths, extensions=[]):
     matched_files = defaultdict(lambda: [])
 
     for path in paths.split(os.pathsep):
+        # bad idea... also our current directory isn't meaningful from a WindowCommand
+        if path == '.':
+            continue
+
         # !! sometimes occurs in the results on POSIX; remove them
-        path = path.replace('!!', '')
+        path = path.replace(u'!!', u'')
         path = os.path.normpath(path)
         if not os.path.exists(path):  # ensure path exists
             continue
@@ -55,17 +61,62 @@ def _get_files_matching_extensions(paths, extensions=[]):
             for _, _, files in os.walk(path):
                 for f in files:
                     for ext in extensions:
-                        if f.endswith(''.join((os.extsep, ext))):
+                        if f.endswith(u''.join((os.extsep, ext))):
                             matched_files[ext].append(os.path.splitext(f)[0])
         else:
             for _, _, files in os.walk(path):
                 for f in files:
                     matched_files['*'].append(os.path.splitext(f)[0])
 
-    matched_files = dict([(key, sorted(set(value))) 
+    matched_files = dict([(key, sorted(set(value), key=lambda s: s.lower()))
         for key, value in matched_files.items()])
 
     return matched_files
+
+def _generate_package_cache():
+    installed_tex_items = _get_files_matching_extensions(
+        _get_tex_searchpath('tex'),
+        ['sty', 'cls']
+    )
+
+    installed_bst = _get_files_matching_extensions(
+        _get_tex_searchpath('bst'),
+        ['bst']
+    )
+
+    # create the cache object
+    pkg_cache = {
+        'pkg': installed_tex_items['sty'],
+        'bst': installed_bst['bst'],
+        'cls': installed_tex_items['cls']
+    }
+
+    # For ST3, put the cache files in cache dir
+    # and for ST2, put it in the user packages dir
+    # and change the name
+    if _ST3:
+        cache_path = os.path.normpath(
+            os.path.join(
+                sublime.cache_path(),
+                "LaTeXTools"
+            ))
+    else:
+        cache_path = os.path.normpath(
+            os.path.join(
+                sublime.packages_path(),
+                "User"
+            ))
+
+    if not os.path.exists(cache_path):
+        os.makedirs(cache_path)
+
+    pkg_cache_file = os.path.normpath(
+        os.path.join(cache_path, 'pkg_cache.cache' if _ST3 else 'latextools_pkg_cache.cache'))
+
+    with open(pkg_cache_file, 'w+') as f:
+        json.dump(pkg_cache, f)
+
+    sublime.status_message('Finished generating LaTeX package cache')
 
 # Generates a cache for installed latex packages, classes and bst.
 # Used for fill all command for \documentclass, \usepackage and
@@ -73,43 +124,11 @@ def _get_files_matching_extensions(paths, extensions=[]):
 class LatexGenPkgCacheCommand(sublime_plugin.WindowCommand):
 
     def run(self):
-        installed_tex_items = _get_files_matching_extensions(
-            _get_tex_searchpath('tex'),
-            ['sty', 'cls']
-        )
-
-        installed_bst = _get_files_matching_extensions(
-            _get_tex_searchpath('bst'),
-            ['bst']
-        )
-
-        # create the cache object
-        pkg_cache = {
-            'pkg': installed_tex_items['sty'],
-            'bst': installed_bst['bst'],
-            'cls': installed_tex_items['cls']
-        }
-
-        # For ST3, put the cache files in cache dir
-        # and for ST2, put it in package dir
         if _ST3:
-            cache_path = os.path.normpath(
-                os.path.join(
-                    sublime.cache_path(),
-                    "LaTeXTools"
-                ))
+            # on ST3+, use a separate thread to generate the package cache
+            thread = threading.Thread(target=_generate_package_cache)
+            thread.daemon = True
+            thread.start()
         else:
-            cache_path = os.path.normpath(
-                os.path.join(
-                    sublime.packages_path(),
-                    "LaTeXTools"
-                ))
-
-        if not os.path.exists(cache_path):
-            os.makedirs(cache_path)
-
-        pkg_cache_file = os.path.normpath(
-            os.path.join(cache_path, 'pkg_cache.cache'))
-
-        with open(pkg_cache_file, 'w+') as f:
-            json.dump(pkg_cache, f)
+            # on ST2, sublime API must be accessed from main thread so...
+            _generate_package_cache()
