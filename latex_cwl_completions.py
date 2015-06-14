@@ -55,14 +55,14 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         with self._WLOCK:
             self.started = False
             # we're still on the same file
-            if self.file_name == file_name:
+            if self.current_file == file_name:
                 self.completed = True
                 self.completions = completions
             else:
                 return
 
         if len(self.completions) != 0:
-            sublime.set_timeout(self.hack)
+            sublime.set_timeout(self.hack, 1)
 
     def on_query_completions(self, view, prefix, locations):
         # settings = sublime.load_settings("LaTeXTools.sublime-settings")
@@ -89,9 +89,34 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             return
 
         with self._WLOCK:
+            # Get cwl file list
+            # cwl_path = sublime.packages_path() + "/LaTeX-cwl"
+            settings = sublime.load_settings("LaTeXTools.sublime-settings")
+            cwl_file_list = view.settings().get('cwl_list',
+                settings.get(
+                    'cwl_list',
+                    [
+                        "tex.cwl",
+                        "latex-209.cwl",
+                        "latex-document.cwl",
+                        "latex-l2tabu.cwl",
+                        "latex-mathsymbols.cwl"
+                    ]))
+
+            cwl_autoload = view.settings().get(
+                'cwl_autoload', settings.get('cwl_autoload', False))
+
             self.started = True
             self.current_file = view.file_name()
-            t = threading.Thread(target=parse_cwl_file, args=(self.on_completions, view.file_name()))
+            t = threading.Thread(
+                target=CwlParsingHandler(),
+                args=(
+                    self.on_completions,
+                    view.file_name(),
+                    cwl_file_list,
+                    cwl_autoload
+                )
+            )
             t.daemon = True
             t.start()
 
@@ -105,7 +130,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         # Checking whether LaTeX-cwl is installed
         global CWL_COMPLETION
         if os.path.exists(sublime.packages_path() + "/LaTeX-cwl") or \
-            os.path.exists(sublime.installed_packages_path() + "/LaTeX-cwl.sublime-package"):
+           os.path.exists(sublime.installed_packages_path() + "/LaTeX-cwl.sublime-package"):
             CWL_COMPLETION = True
 
         if CWL_COMPLETION:
@@ -174,26 +199,33 @@ def get_packages(root, src, packages):
 # bit of a hack as these are all one cwl file
 KOMA_SCRIPT_CLASSES = set(('class-scrartcl', 'class-scrreprt', 'class-book'))
 
-def get_cwl_file_list():
-    # Get cwl file list
-    # cwl_path = sublime.packages_path() + "/LaTeX-cwl"
-    settings = sublime.load_settings("LaTeXTools.sublime-settings")
-    view = sublime.active_window().active_view()
-    cwl_file_list = view.settings().get('cwl_list',
-        settings.get(
-            'cwl_list',
-            [
-                "tex.cwl",
-                "latex-209.cwl",
-                "latex-document.cwl",
-                "latex-l2tabu.cwl",
-                "latex-mathsymbols.cwl"
-            ]))
+class CwlParsingHandler(object):
+    def __init__(self):
+        self.callback = None
+        self.file_name = None
+        self.cwl_file_list = []
 
-    # cwl autoload
-    # guess that we need to load a cwl file based on a corresponding package
-    if view.settings().get('cwl_autoload', settings.get('cwl_autoload', False)):
-        root = get_tex_root(view)
+    def get_root_file(self):
+        root = get_tex_root(sublime.active_window().active_view())
+        t = threading.Thread(
+            target=self.on_autoload,
+            args=(root,)
+        )
+        t.daemon = True
+        t.start()
+
+    def __call__(self, callback, file_name, cwl_file_list, cwl_autoload):
+        if cwl_autoload:
+            self.callback = callback
+            self.file_name = file_name
+            self.cwl_file_list = cwl_file_list
+            sublime.set_timeout(self.get_root_file)
+        else:  # not autoloading... vanillla handler
+            callback(parse_cwl_file(cwl_file_list), file_name)
+
+    def on_autoload(self, root):
+        cwl_file_list = self.cwl_file_list
+
         packages = []
         get_packages(os.path.dirname(root), root, packages)
 
@@ -214,12 +246,10 @@ def get_cwl_file_list():
                     os.path.normpath(os.path.join(
                         sublime.packages_path(), 'LaTeX-cwl', cwl_file))):
                     cwl_file_list.append(cwl_file)
+        self.callback(cwl_file_list, self.file_name)
 
-    return cwl_file_list
-
-def parse_cwl_file(callback, file_name):
+def parse_cwl_file(cwl_file_list):
     CLW_COMMENT = re.compile(r'#[^#]*')
-    cwl_file_list = get_cwl_file_list()
 
     # ST3 can use load_resource api, while ST2 do not has this api
     # so a little different with implementation of loading cwl files.
@@ -248,7 +278,7 @@ def parse_cwl_file(callback, file_name):
                 item = (u'%s\t%s' % (keyword, method), parse_keyword(keyword))
                 completions.append(item)
 
-    callback(completions, file_name)
+    return completions
 
 
 def parse_keyword(keyword):
