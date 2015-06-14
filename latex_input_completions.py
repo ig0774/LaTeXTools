@@ -12,12 +12,11 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    from latextools_utils.is_tex_file import get_tex_extensions
+    from latextools_utils import is_tex_buffer, get_tex_extensions
 else:
     _ST3 = True
     from . import getTeXRoot
-    from .latextools_utils.is_tex_file import get_tex_extensions
-
+    from .latextools_utils import is_tex_buffer, get_tex_extensions
 
 # Only work for \include{} and \input{} and \includegraphics
 TEX_INPUT_FILE_REGEX = re.compile(
@@ -168,11 +167,11 @@ def parse_completions(view, point):
 
 class LatexFillInputCommand(sublime_plugin.TextCommand):
     def run(self, edit):
+        # get view and location of first selection, which we expect to be just the cursor position
         view = self.view
         point = view.sel()[0].b
         # Only trigger within LaTeX
-        # Note using score_selector rather than match_selector
-        if not view.score_selector(point, "text.tex.latex"):
+        if not is_tex_buffer(view, point):
             return
 
         prefix, completions = parse_completions(view, point)

@@ -8,12 +8,11 @@ import os
 if sublime.version() < '3000':
     _ST3 = False
     strbase = basestring
-    import sys
-    from external_command import external_command
+    from latextools_utils.external_command import external_command
 else:
     _ST3 = True
     strbase = str
-    from .external_command import external_command
+    from .latextools_utils.external_command import external_command
 
 def is_latex_doc(view):
     point = view.sel()[0].b

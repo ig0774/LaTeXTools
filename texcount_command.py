@@ -5,10 +5,10 @@ import sublime_plugin
 import os
 
 if sublime.version() < '3000':
-    from external_command import external_command
+    from latextools_utils.external_command import external_command
     from getTeXRoot import get_tex_root
 else:
-    from .external_command import external_command
+    from .latextools_utils.external_command import external_command
     from .getTeXRoot import get_tex_root
 
 class TexcountCommand(sublime_plugin.TextCommand):

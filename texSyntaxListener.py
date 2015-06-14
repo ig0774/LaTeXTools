@@ -2,9 +2,9 @@ import sublime
 import sublime_plugin
 
 try:
-    from latextools_utils.is_tex_file import is_tex_file
+    from latextools_utils import is_tex_file
 except ImportError:
-    from .latextools_utils.is_tex_file import is_tex_file
+    from .latextools_utils import is_tex_file
 
 LATEX_SYNTAX = 'Packages/LaTeX/LaTeX.tmLanguage'
 

@@ -32,10 +32,11 @@ if sublime.version() < '3000':
     _ST3 = False
     import getTeXRoot
 
-    import kpsewhich
     from kpsewhich import kpsewhich
+
     import latextools_plugin
-    from latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
+    from latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions
+    from latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
     exec("""def reraise(tp, value, tb=None):
@@ -43,12 +44,15 @@ if sublime.version() < '3000':
 """)
 
     strbase = basestring
-else:
+    else:
     _ST3 = True
     from . import getTeXRoot
+
     from .kpsewhich import kpsewhich
+    
     from . import latextools_plugin
-    from .latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
+    from .latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions
+    from .latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
     def reraise(tp, value, tb=None):
@@ -239,68 +243,27 @@ def match(rex, str):
 # recursively search all linked tex files to find all
 # included bibliography tags in the document and extract
 # the absolute filepaths of the bib files
-def find_bib_files(rootdir, src, bibfiles):
-    if not is_tex_file(src):
-        src_tex_file = None
-        for ext in get_tex_extensions():
-            src_tex_file = ''.join((src, ext))
-            if os.path.exists(os.path.join(rootdir, src_tex_file)):
-                src = src_tex_file
-                break
-        if src != src_tex_file:
-            print("Could not find file {0}".format(src))
-            return
+def find_bib_files(rootdir, src):
+    bib_files = []
+    for content in walk_subfiles(rootdir, src):
+        bibtags =  re.findall(r'\\bibliography\{([^\}]+)\}', content)
+        bibtags += re.findall(r'\\addbibresource\{([^\}]+.bib)\}', content)
 
-    file_path = os.path.normpath(os.path.join(rootdir,src))
-    print("Searching file: " + repr(file_path))
-    # See latex_ref_completion.py for why the following is wrong:
-    #dir_name = os.path.dirname(file_path)
+        # extract absolute filepath for each bib file
+        for tag in bibtags:
+            bfiles = tag.split(',')
+            for bf in bfiles:
+                if bf[-4:].lower() != '.bib':
+                    bf = bf + '.bib'
+                # We join with rootdir, the dir of the master file
+                candidate_file = os.path.normpath(os.path.join(rootdir, bf))
+                # if the file doesn't exist, search the default tex paths
+                if not os.path.exists(candidate_file):
+                    candidate_file = kpsewhich(bf, 'mlbib')
 
-    # read src file and extract all bibliography tags
-    try:
-        src_file = codecs.open(file_path, "r", 'UTF-8')
-    except IOError:
-        sublime.status_message("LaTeXTools WARNING: cannot open included file " + file_path)
-        print ("WARNING! I can't find it! Check your \\include's and \\input's.")
-        return
-
-    src_content = re.sub("%.*","",src_file.read())
-    src_file.close()
-
-    m = re.search(r"\\usepackage\[(.*?)\]\{inputenc\}", src_content)
-    if m:
-        f = None
-        try:
-            f = codecs.open(file_path, "r", m.group(1))
-            src_content = re.sub("%.*", "", f.read())
-        except:
-            pass
-        finally:
-            if f and not f.closed:
-                f.close()
-
-    bibtags =  re.findall(r'\\bibliography\{[^\}]+\}', src_content)
-    bibtags += re.findall(r'\\addbibresource\{[^\}]+.bib\}', src_content)
-
-    # extract absolute filepath for each bib file
-    for tag in bibtags:
-        bfiles = re.search(r'\{([^\}]+)', tag).group(1).split(',')
-        for bf in bfiles:
-            if bf[-4:].lower() != '.bib':
-                bf = bf + '.bib'
-            # We join with rootdir, the dir of the master file
-            candidate_file = os.path.normpath(os.path.join(rootdir,bf))
-            # if the file doesn't exist, search the default tex paths
-            if not os.path.exists(candidate_file):
-                candidate_file = kpsewhich(bf, 'mlbib')
-
-            if candidate_file is not None and os.path.exists(candidate_file):
-                bibfiles.append(candidate_file)
-
-    # search through input tex files recursively
-    for f in re.findall(r'\\(?:input|include)\{[^\}]+\}',src_content):
-        input_f = re.search(r'\{([^\}]+)', f).group(1)
-        find_bib_files(rootdir, input_f, bibfiles)
+                if candidate_file is not None and os.path.exists(candidate_file):
+                    bib_files.append(candidate_file)
+    return bib_files
 
 def run_plugin_command(command, *args, **kwargs):
     '''
@@ -521,10 +484,7 @@ def get_cite_completions(view, point, autocompleting=False):
         raise NoBibFilesError()
 
     print ("TEX root: " + repr(root))
-    bib_files = []
-    find_bib_files(os.path.dirname(root), root, bib_files)
-    # remove duplicate bib files
-    bib_files = list(set(bib_files))
+    bib_files = list(set(find_bib_files(os.path.dirname(root), root)))
     print ("Bib files found: ")
     print (repr(bib_files))
 
@@ -570,8 +530,7 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         # Only trigger within LaTeX
-        if not view.match_selector(locations[0],
-                "text.tex.latex"):
+        if not is_tex_buffer(view):
             return []
 
         point = locations[0]
@@ -616,11 +575,8 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
         # get view and location of first selection, which we expect to be just the cursor position
         view = self.view
         point = view.sel()[0].b
-        print (point)
         # Only trigger within LaTeX
-        # Note using score_selector rather than match_selector
-        if not view.score_selector(point,
-                "text.tex.latex"):
+        if not is_tex_buffer(view):
             return
 
         try:
