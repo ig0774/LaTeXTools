@@ -78,7 +78,7 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
                             'b': end_point,
                             'replacement': ''
                         })
-                view.run_command("latex_fill_input")
+            view.run_command("latex_fill_input")
 
 class OnLatexFillAllReplacement(sublime_plugin.EventListener):
     # This trigger is used to delete the last "}"
