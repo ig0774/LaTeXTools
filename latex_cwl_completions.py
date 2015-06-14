@@ -13,11 +13,13 @@ if sublime.version() < '3000':
     from latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from getRegion import get_Region
+    from getTeXRoot import get_tex_root
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from .getRegion import get_Region
+    from .getTeXRoot import get_tex_root
 
 # Do not do completions in these envrioments
 ENV_DONOT_AUTO_COM = [
@@ -85,8 +87,57 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
                 })
                 g_settings.set("auto_complete_triggers", acts)
 
-def parse_cwl_file():
-    CLW_COMMENT = re.compile(r'#[^#]*')
+def get_packages(root, src, packages):
+    if src[-4:].lower() != ".tex":
+        src = src + ".tex"
+
+    file_path = os.path.normpath(os.path.join(root, src))
+    print("Searching file: " + repr(file_path))
+    # See latex_ref_completion.py for why the following is wrong:
+    # dir_name = os.path.dirname(file_path)
+
+    # read src file and extract all bibliography tags
+    try:
+        src_file = codecs.open(file_path, "r", 'UTF-8')
+    except IOError:
+        sublime.status_message("LaTeXTools WARNING: cannot open included file " + file_path)
+        print ("WARNING! I can't find it! Check your \\include's and \\input's.")
+        return
+
+    src_content = re.sub("%.*", "", src_file.read())
+    src_file.close()
+
+    m = re.search(r"\\usepackage\[(.*?)\]\{inputenc\}", src_content)
+    if m:
+        f = None
+        try:
+            f = codecs.open(file_path, "r", m.group(1))
+            src_content = re.sub("%.*", "", f.read())
+        except:
+            pass
+        finally:
+            if f and not f.closed:
+                f.close()
+
+    document_classes = re.findall(r'\\documentclass(?:\[[^\]]+\])?\{([^\}]+)\}', src_content)
+    packages.extend(['class-{0}'.format(dc) for dc in document_classes])
+
+    packages.extend(re.findall(r'\\usepackage(?:\[[^\]]+\])?\{([^\}]+)\}', src_content))
+
+    # search through input tex files recursively
+    for l in src_content.splitlines():
+        # packages can only be defined in the preamble, so stop when we find
+        # the start of the document
+        if re.match(r'\\begin{document}', l):
+            break
+        else:
+            for f in re.findall(r'\\(?:input|include)\{([^\{\}]+)\}', src_content):
+                get_packages(root, f, packages)
+
+# bit of a hack as these are all one cwl file
+KOMA_SCRIPT_CLASSES = set(('class-scrartcl', 'class-scrreprt', 'class-book'))
+
+def get_cwl_file_list():
     # Get cwl file list
     # cwl_path = sublime.packages_path() + "/LaTeX-cwl"
     settings = sublime.load_settings("LaTeXTools.sublime-settings")
@@ -101,6 +152,37 @@ def parse_cwl_file():
                 "latex-l2tabu.cwl",
                 "latex-mathsymbols.cwl"
             ]))
+
+    # cwl autoload
+    # guess that we need to load a cwl file based on a corresponding package
+    if view.settings().get('cwl_autoload', settings.get('cwl_autoload', False)):
+        root = get_tex_root(view)
+        packages = []
+        get_packages(os.path.dirname(root), root, packages)
+
+        for package in packages:
+            cwl_file = "{0}.cwl".format(package)
+            if cwl_file in cwl_file_list:
+                continue
+            elif package in KOMA_SCRIPT_CLASSES:
+                # basic KOMA-Script classes are in one cwl file
+                if 'class-scrartcl,scrreprt,scrbook.cwl' not in cwl_file_list:
+                    cwl_file_list.append('class-scrartcl,scrreprt,scrbook.cwl')
+            elif package == 'polyglossia':
+                # polyglossia is more or less babel
+                if 'babel.cwl' not in cwl_file_list:
+                    cwl_file_list.append('babel.cwl')
+            else:
+                if os.path.exists(
+                    os.path.normpath(os.path.join(
+                        sublime.packages_path(), 'LaTeX-cwl', cwl_file))):
+                    cwl_file_list.append(cwl_file)
+
+    return cwl_file_list
+
+def parse_cwl_file():
+    CLW_COMMENT = re.compile(r'#[^#]*')
+    cwl_file_list = get_cwl_file_list()
 
     # ST3 can use load_resource api, while ST2 do not has this api
     # so a little different with implementation of loading cwl files.
