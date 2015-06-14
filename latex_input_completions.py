@@ -37,7 +37,7 @@ def get_file_list(root, types):
 
     def file_match(f):
         for ext in types:
-            if f.endswith(ext):
+            if f.lower().endswith(ext):
                 return True
         return False
 
