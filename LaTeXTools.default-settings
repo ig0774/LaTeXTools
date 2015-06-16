@@ -27,6 +27,10 @@
 	// Sync PDF to current editor position after building (true) or not 
 	"forward_sync": true,
 
+	// set to true to use BibLaTeX instead of BibTex
+	// can also be set on a per-project basis
+	"use_biblatex": false,
+
 
 // ------------------------------------------------------------------
 // Platform settings: adapt as needed for your machine
