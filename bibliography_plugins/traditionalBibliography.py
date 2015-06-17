@@ -24,24 +24,6 @@ KP = re.compile(r'@[^\{]+\{(.+),')
 # This may speed things up
 # So far this captures: the tag, and the THREE possible groups
 MULTIP = re.compile(r'\b(author|title|year|editor|journal|eprint)\s*=\s*(?:\{|"|\b)(.+?)(?:\}+|"|\b)\s*,?\s*\Z',re.IGNORECASE)
-TITLE_SEP = re.compile(':|\.|\?')
-
-# format author field
-def format_author(authors):
-    # print(authors)
-    # split authors using ' and ' and get last name for 'last, first' format
-    authors = [a.split(", ")[0].strip(' ') for a in authors.split(" and ")]
-    # get last name for 'first last' format (preserve {...} text)
-    authors = [a.split(" ")[-1] if a[-1] != '}' or a.find('{') == -1 else re.sub(r'{|}', '', a[len(a) - a[::-1].index('{'):-1]) for a in authors]
-    #     authors = [a.split(" ")[-1] for a in authors]
-    # truncate and add 'et al.'
-    if len(authors) > 2:
-        authors = authors[0] + " et al."
-    else:
-        authors = ' & '.join(authors)
-    # return formated string
-    # print(authors)
-    return authors
 
 class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
     def get_entries(self, *bib_files):
@@ -122,23 +104,12 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
             print("Found %d total bib entries" % (len(entries),))
 
             for entry in entries:
-                if not entry['author']:
-                    entry['author'] = entry['editor'] or '????'
-                if not entry['journal']:
-                    entry['journal'] = entry['eprint'] or '????'
-
                 # # Filter out }'s at the end. There should be no commas left
                 entry['title'] = \
                     entry['title'].replace(
                         '{\\textquoteright}', '').replace('{','').replace('}','')
 
                 entry['author_short'] = format_author(entry['author'])
-
-                # short title
-                title_short = TITLE_SEP.split(entry['title'])[0]
-                if len(title_short) > 60:
-                    title_short = title_short[:60] + '...'
-                entry['title_short'] = title_short
 
         return entries
 
