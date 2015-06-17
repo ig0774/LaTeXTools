@@ -462,6 +462,8 @@ class CompletionWrapper(collections.Mapping):
                     date_matcher = re.match(r'\d{4}-(\d{2})', date)
                     if date_matcher:
                         return date_matcher.group(1)
+                except KeyError:
+                    pass
 
             return u'????'
 
