@@ -20,13 +20,6 @@ D. Eppstein, October 2003.
 """
 import codecs
 import re
-import sys
-
-if sys.version_info > (3, 0):
-    PYTHON_3 = True
-    unichr = chr
-else:
-    PYTHON_3 = False
 
 def register():
     """Enable encodings of the form 'latex+x' where x describes another encoding.
@@ -46,13 +39,14 @@ def _registry(encoding):
         encoding = encoding[6:]
     else:
         return None
-    
+
     # something akin to http://bugs.python.org/issue14847 appears to
     # occur in ST3 b3083; this apparently-redundant reimport resolves
     # the issue
     import codecs
+
     class Codec(codecs.Codec):
-        def encode(self,input,errors='strict'):
+        def encode(self, input, errors='strict'):
             """Convert unicode string to latex."""
             output = []
             for c in input:
@@ -67,8 +61,8 @@ def _registry(encoding):
                 else:
                     output += ['{\\char', str(ord(c)), '}']
             return ''.join(output), len(input)
-            
-        def decode(self,input,errors='strict'):
+
+        def decode(self, input, errors='strict'):
             """Convert latex source string to unicode."""
             if encoding:
                 input = codecs.decode(input,encoding,errors)
@@ -78,29 +72,31 @@ def _registry(encoding):
             # but we can make them joinable by calling unicode.
             # This should always be safe since we are supposed
             # to be producing unicode output anyway.
-            if PYTHON_3:
+            try:
+                x = map(unicode, _unlatex(input))
+            except NameError:
+                # Python 3
                 x = _unlatex(input)
-            else:
-                x = map(unicode,_unlatex(input))
             return u''.join(x), len(input)
-    
-    class StreamWriter(Codec,codecs.StreamWriter):
-        pass
-            
-    class StreamReader(Codec,codecs.StreamReader):
+
+    class StreamWriter(Codec, codecs.StreamWriter):
         pass
 
-    return (Codec().encode,Codec().decode,StreamReader,StreamWriter)
+    class StreamReader(Codec, codecs.StreamReader):
+        pass
+
+    return (Codec().encode, Codec().decode, StreamReader, StreamWriter)
 
 def _tokenize(tex):
     """Convert latex source into sequence of single-token substrings."""
     start = 0
     try:
         # skip quickly across boring stuff
-        if PYTHON_3:
-            pos = _stoppers.finditer(tex).__next__().span()[0]
-        else:
+        try:
             pos = _stoppers.finditer(tex).next().span()[0]
+        except AttributeError:
+            # Python 3
+            pos = _stoppers.finditer(tex).__next__().span()[0]
     except StopIteration:
         yield tex
         return
@@ -109,7 +105,7 @@ def _tokenize(tex):
         if pos > start:
             yield tex[start:pos]
             if tex[start] == '\\' and not (tex[pos-1].isdigit() and tex[start+1].isalpha()):
-                while pos < len(tex) and tex[pos].isspace(): # skip blanks after csname
+                while pos < len(tex) and tex[pos].isspace():  # skip blanks after csname
                     pos += 1
 
         while pos < len(tex) and tex[pos] in _ignore:
@@ -117,7 +113,7 @@ def _tokenize(tex):
         if pos >= len(tex):
             return
         start = pos
-        if tex[pos:pos+2] in {'$$':None, '/~':None}:    # protect ~ in urls
+        if tex[pos:pos+2] in {'$$': None, '/~': None}:    # protect ~ in urls
             pos += 2
         elif tex[pos].isdigit():
             while pos < len(tex) and tex[pos].isdigit():
@@ -143,8 +139,8 @@ class _unlatex(object):
     def __init__(self, tex):
         """Create a new token converter from a string."""
         self.tex = tuple(_tokenize(tex))  # turn tokens into indexable list
-        self.pos = 0                    # index of first unprocessed token 
-        self.lastoutput = 'x'           # lastoutput must always be nonempty string
+        self.pos = 0                      # index of first unprocessed token 
+        self.lastoutput = 'x'             # lastoutput must always be nonempty string
 
     def __iter__(self):
         """Turn self into an iterator.  It already is one, nothing to do."""
@@ -168,25 +164,34 @@ class _unlatex(object):
             nextoutput = ' ' + nextoutput   # add extra space to terminate csname
         self.lastoutput = nextoutput
         return nextoutput
-    
+
     def chunk(self):
         """Grab another set of input tokens and convert them to an output string."""
-        for delta,c in self.candidates(0):
+        for delta, c in self.candidates(0):
             if c in _l2u:
                 self.pos += delta
-                return unichr(_l2u[c])
-            elif len(c) == 2 and c[1] == 'i' and (c[0],'\\i') in _l2u:
+                try:
+                    return unichr(_l2u[c])
+                except NameError:
+                    return chr(_l2u[c])
+            elif len(c) == 2 and c[1] == 'i' and (c[0], '\\i') in _l2u:
                 self.pos += delta       # correct failure to undot i
-                return unichr(_l2u[(c[0],'\\i')])
+                try:
+                    return unichr(_l2u[(c[0], '\\i')])
+                except NameError:
+                    return chr(_l2u[(c[0], '\\i')])
             elif len(c) == 1 and c[0].startswith('\\char') and c[0][5:].isdigit():
                 self.pos += delta
-                return unichr(int(c[0][5:]))
-    
+                try:
+                    return unichr(int(c[0][5:]))
+                except NameError:
+                    return chr(int(c[0][5:]))
+
         # nothing matches, just pass through token as-is
         self.pos += 1
         return self[-1]
-    
-    def candidates(self,offset):
+
+    def candidates(self, offset):
         """Generate pairs delta,c where c is a token or tuple of tokens from tex
         (after deleting extraneous brackets starting at pos) and delta
         is the length of the tokens prior to bracket deletion.
@@ -195,20 +200,20 @@ class _unlatex(object):
         if t in _blacklist:
             return
         elif t == '{':
-            for delta,c in self.candidates(offset+1):
+            for delta, c in self.candidates(offset+1):
                 if self[offset+delta+1] == '}':
-                    yield delta+2,c
+                    yield delta+2, c
         elif t == '\\mbox':
-            for delta,c in self.candidates(offset+1):
-                yield delta+1,c
+            for delta, c in self.candidates(offset+1):
+                yield delta+1, c
         elif t == '$' and self[offset+2] == '$':
-            yield 3, (t,self[offset+1],t)
+            yield 3, (t, self[offset+1], t)
         else:
             q = self[offset+1]
             if q == '{' and self[offset+3] == '}':
-                yield 4, (t,self[offset+2])
+                yield 4, (t, self[offset+2])
             elif q:
-                yield 2, (t,q)
+                yield 2, (t, q)
             yield 1, t
 
 latex_equivalents = {
@@ -297,7 +302,7 @@ latex_equivalents = {
     0x00fc: '{\\"u}',
     0x00fd: "{\\'y}",
     0x00ff: '{\\"y}',
-    
+
     0x0100: '{\\=A}',
     0x0101: '{\\=a}',
     0x0102: '{\\u{A}}',
@@ -456,13 +461,13 @@ latex_equivalents = {
     0x02dd: '{\\H{}}',
     0x02db: '{\\c{}}',
     0x02c7: '{\\v{}}',
-    
+
     0x03c0: '{\\mbox{$\\pi$}}',
     # consider adding more Greek here
-    
+
     0xfb01: '{fi}',
     0xfb02: '{fl}',
-    
+
     0x2013: '{--}',
     0x2014: '{---}',
     0x2018: "{`}",
@@ -488,7 +493,7 @@ latex_equivalents = {
 for _i in range(0x0020):
     if _i not in latex_equivalents:
         latex_equivalents[_i] = ''
-for _i in range(0x0020,0x007f):
+for _i in range(0x0020, 0x007f):
     if _i not in latex_equivalents:
         latex_equivalents[_i] = chr(_i)
 
@@ -503,7 +508,7 @@ _blacklist.add(None)    # shortcut candidate generation at end of data
 
 # Construction of inverse translation table
 _l2u = {
-    '\ ':ord(' ')   # unexpanding space makes no sense in non-TeX contexts
+    '\ ': ord(' ')   # unexpanding space makes no sense in non-TeX contexts
 }
 
 for _tex in latex_equivalents:
@@ -519,7 +524,7 @@ for _tex in latex_equivalents:
     if _toks[0] == '\\mbox' and _toks[1] == '{' and _toks[-1] == '}':
         _toks = _toks[2:-1]
     if len(_toks) == 4 and _toks[1] == '{' and _toks[3] == '}':
-        _toks = (_toks[0],_toks[2])
+        _toks = (_toks[0], _toks[2])
     if len(_toks) == 1:
         _toks = _toks[0]
     _l2u[_toks] = _tex
@@ -532,12 +537,12 @@ for _tex in latex_equivalents:
 # be defined in order to call _tokenize, however it is safe to
 # delay filling it out until now.
 
-for i in range(0x0020,0x007f):
+for i in range(0x0020, 0x007f):
     _blacklist.add(chr(i))
 _blacklist.remove('{')
 _blacklist.remove('$')
 for candidate in _l2u:
-    if isinstance(candidate,tuple):
+    if isinstance(candidate, tuple):
         if not candidate or not candidate[0]:
             continue
         firstchar = candidate[0][0]
