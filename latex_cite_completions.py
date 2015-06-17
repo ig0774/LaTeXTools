@@ -44,7 +44,6 @@ def match(rex, str):
 # recursively search all linked tex files to find all
 # included bibliography tags in the document and extract
 # the absolute filepaths of the bib files
-<<<<<<< HEAD
 def find_bib_files(rootdir, src):
     bib_files = []
     for content in walk_subfiles(rootdir, src):
