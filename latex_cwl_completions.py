@@ -15,14 +15,14 @@ if sublime.version() < '3000':
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from getRegion import get_Region
     from getTeXRoot import get_tex_root
-    from latextools_utils import is_tex_file, get_tex_extensions
+    from latextools_utils.subfiles import walk_subfiles
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from .getRegion import get_Region
     from .getTeXRoot import get_tex_root
-    from .latextools_utils import is_tex_file, get_tex_extensions
+    from .latextools_utils.subfiles import walk_subfiles
 
 # Do not do completions in these envrioments
 ENV_DONOT_AUTO_COM = [
@@ -149,59 +149,14 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
                 })
                 g_settings.set("auto_complete_triggers", acts)
 
-def get_packages(root, src, packages):
-    if not is_tex_file(src):
-        src_tex_file = None
-        for ext in get_tex_extensions():
-            src_tex_file = ''.join((src, ext))
-            if os.path.exists(os.path.join(root, src_tex_file)):
-                src = src_tex_file
-                break
-        if src != src_tex_file:
-            print("Could not find file {0}".format(src))
-            return
+def get_packages(root, src):
+    packages = []
+    for content in walk_subfiles(root, src, preamble_only=True):
+        document_classes = re.findall(r'\\documentclass(?:\[[^\]]+\])?\{([^\}]+)\}', content)
+        packages.extend(['class-{0}'.format(dc) for dc in document_classes])
 
-    file_path = os.path.normpath(os.path.join(root, src))
-    print("Searching file: " + repr(file_path))
-    # See latex_ref_completion.py for why the following is wrong:
-    # dir_name = os.path.dirname(file_path)
-
-    # read src file and extract all bibliography tags
-    try:
-        src_file = codecs.open(file_path, "r", 'UTF-8')
-    except IOError:
-        print ("LaTeXTools WARNING: cannot open included file " + file_path)
-        return
-
-    src_content = re.sub("%.*", "", src_file.read())
-    src_file.close()
-
-    m = re.search(r"\\usepackage\[(.*?)\]\{inputenc\}", src_content)
-    if m:
-        f = None
-        try:
-            f = codecs.open(file_path, "r", m.group(1))
-            src_content = re.sub("%.*", "", f.read())
-        except:
-            pass
-        finally:
-            if f and not f.closed:
-                f.close()
-
-    document_classes = re.findall(r'\\documentclass(?:\[[^\]]+\])?\{([^\}]+)\}', src_content)
-    packages.extend(['class-{0}'.format(dc) for dc in document_classes])
-
-    packages.extend(re.findall(r'\\usepackage(?:\[[^\]]+\])?\{([^\}]+)\}', src_content))
-
-    # search through input tex files recursively
-    for l in src_content.splitlines():
-        # packages can only be defined in the preamble, so stop when we find
-        # the start of the document
-        if re.search(r'\\begin{document}', l):
-            break
-        else:
-            for f in re.findall(r'\\(?:input|include)\{([^\{\}]+)\}', l):
-                get_packages(root, f, packages)
+        packages.extend(re.findall(r'\\usepackage(?:\[[^\]]+\])?\{([^\}]+)\}', content))
+    return packages
 
 # bit of a hack as these are all one cwl file
 KOMA_SCRIPT_CLASSES = set(('class-scrartcl', 'class-scrreprt', 'class-book'))
@@ -233,8 +188,7 @@ class CwlParsingHandler(object):
     def on_autoload(self, root):
         cwl_file_list = self.cwl_file_list
 
-        packages = []
-        get_packages(os.path.dirname(root), root, packages)
+        packages = get_packages(os.path.dirname(root), root)
 
         for package in packages:
             cwl_file = "{0}.cwl".format(package)
