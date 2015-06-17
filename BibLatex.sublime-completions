@@ -1,0 +1,501 @@
+{
+  "scope": "text.biblatex meta.entry.braces.bibtex",
+  "completions": [
+    {
+      "trigger": "abstract",
+      "contents": "abstract = {${1:Abstract}},"
+    },
+    {
+      "trigger": "address",
+      "contents": "address = {${1:Address}},"
+    },
+    {
+      "trigger": "addendum",
+      "contents": "addendum = {${1:Addendum}},"
+    },
+    {
+      "trigger": "afterword",
+      "contents": "afterword = {${1:Afterword}},"
+    },
+    {
+      "trigger": "annotation",
+      "contents": "annotation = {${1:Annotation}},"
+    },
+    {
+      "trigger": "annotator",
+      "contents": "annotator = {${1:Annotator}},"
+    },
+    {
+      "trigger": "annote",
+      "contents": "annote = {${1:Annote}},"
+    },
+    {
+      "trigger": "archiveprefix",
+      "contents": "archiveprefix = {${1:Archiveprefix}},"
+    },
+    {
+      "trigger": "author",
+      "contents": "author = {${1:Author}},"
+    },
+    {
+      "trigger": "authortype",
+      "contents": "authortype = {${1:Authortype}},"
+    },
+    {
+      "trigger": "bookauthor",
+      "contents": "bookauthor = {${1:Bookauthor}},"
+    },
+    {
+      "trigger": "bookpagination",
+      "contents": "bookpagination = {${1:Bookpagination}},"
+    },
+    {
+      "trigger": "booksubtitle",
+      "contents": "booksubtitle = {${1:Booksubtitle}},"
+    },
+    {
+      "trigger": "booktitle",
+      "contents": "booktitle = {${1:Booktitle}},"
+    },
+    {
+      "trigger": "booktitleaddon",
+      "contents": "booktitleaddon = {${1:Booktitleaddon}},"
+    },
+    {
+      "trigger": "chapter",
+      "contents": "chapter = {${1:Chapter}},"
+    },
+    {
+      "trigger": "commentator",
+      "contents": "commentator = {${1:Commentator}},"
+    },
+    {
+      "trigger": "crossref",
+      "contents": "crossref = {${1:Crossref}},"
+    },
+    {
+      "trigger": "date",
+      "contents": "date = {${1:Date}},"
+    },
+    {
+      "trigger": "doi",
+      "contents": "doi = {${1:Doi}},"
+    },
+    {
+      "trigger": "edition",
+      "contents": "edition = {${1:Edition}},"
+    },
+    {
+      "trigger": "editor",
+      "contents": "editor = {${1:Editor}},"
+    },
+    {
+      "trigger": "editora",
+      "contents": "editora = {${1:Editora}},"
+    },
+    {
+      "trigger": "editorb",
+      "contents": "editorb = {${1:Editorb}},"
+    },
+    {
+      "trigger": "editorc",
+      "contents": "editorc = {${1:Editorc}},"
+    },
+    {
+      "trigger": "editortype",
+      "contents": "editortype = {${1:Editortype}},"
+    },
+    {
+      "trigger": "editoratype",
+      "contents": "editoratype = {${1:Editoratype}},"
+    },
+    {
+      "trigger": "editorbtype",
+      "contents": "editorbtype = {${1:Editorbtype}},"
+    },
+    {
+      "trigger": "editorctype",
+      "contents": "editorctype = {${1:Editorctype}},"
+    },
+    {
+      "trigger": "eid",
+      "contents": "eid = {${1:Eid}},"
+    },
+    {
+      "trigger": "entryset",
+      "contents": "entryset = {${1:Entryset}},"
+    },
+    {
+      "trigger": "entrysubtype",
+      "contents": "entrysubtype = {${1:Entrysubtype}},"
+    },
+    {
+      "trigger": "eprint",
+      "contents": "eprint = {${1:Eprint}},"
+    },
+    {
+      "trigger": "eprintclass",
+      "contents": "eprintclass = {${1:Eprintclass}},"
+    },
+    {
+      "trigger": "eprinttype",
+      "contents": "eprinttype = {${1:Eprinttype}},"
+    },
+    {
+      "trigger": "eventdate",
+      "contents": "eventdate = {${1:Eventdate}},"
+    },
+    {
+      "trigger": "eventitle",
+      "contents": "eventitle = {${1:Eventtitle}},"
+    },
+    {
+      "trigger": "eventitleaddon",
+      "contents": "eventitleaddon = {${1:Eventitleaddon}},"
+    },
+    {
+      "trigger": "file",
+      "contents": "file = {${1:File}},"
+    },
+    {
+      "trigger": "forward",
+      "contents": "forward = {${1:Forward}},"
+    },
+    {
+      "trigger": "gender",
+      "contents": "gender = {${1:Gender}},"
+    },
+    {
+      "trigger": "holder",
+      "contents": "holder = {${1:Holder}},"
+    },
+    {
+      "trigger": "howpublished",
+      "contents": "howpublished = {${1:Howpublished}},"
+    },
+    {
+      "trigger": "ids",
+      "contents": "ids = {${1:Ids}},"
+    },
+    {
+      "trigger": "indextitle",
+      "contents": "indextitle = {${1:Indextitle}},"
+    },
+    {
+      "trigger": "indexsorttitle",
+      "contents": "indexsorttitle = {${1:Indexsorttitle}},"
+    },
+    {
+      "trigger": "institution",
+      "contents": "institution = {${1:Institution}},"
+    },
+    {
+      "trigger": "introduction",
+      "contents": "introduction = {${1:Introduction}},"
+    },
+    {
+      "trigger": "isan",
+      "contents": "isan = {${1:Isan}},"
+    },
+    {
+      "trigger": "isbn",
+      "contents": "isbn = {${1:Isbn}},"
+    },
+    {
+      "trigger": "ismn",
+      "contents": "ismn = {${1:Ismn}},"
+    },
+    {
+      "trigger": "isrn",
+      "contents": "isrn = {${1:Isrn}},"
+    },
+    {
+      "trigger": "issn",
+      "contents": "issn = {${1:Issn}},"
+    },
+    {
+      "trigger": "issue",
+      "contents": "issue = {${1:Issue}},"
+    },
+    {
+      "trigger": "issuesubtitle",
+      "contents": "issuesubtitle = {${1:Issuesubtitle}},"
+    },
+    {
+      "trigger": "issuetitle",
+      "contents": "issuetitle = {${1:Issuetitle}},"
+    },
+    {
+      "trigger": "iswc",
+      "contents": "iswc = {${1:Iswc}},"
+    },
+    {
+      "trigger": "journal",
+      "contents": "journal = {${1:Journal}},"
+    },
+    {
+      "trigger": "journalsubtitle",
+      "contents": "journalsubtitle = {${1:Journalsubtitle}},"
+    },
+    {
+      "trigger": "journaltitle",
+      "contents": "journaltitle = {${1:Journaltitle}},"
+    },
+    {
+      "trigger": "key",
+      "contents": "key = {${1:Key}},"
+    },
+    {
+      "trigger": "keywords",
+      "contents": "keywords = {${1:Keywords}},"
+    },
+    {
+      "trigger": "label",
+      "contents": "label = {${1:Label}},"
+    },
+    {
+      "trigger": "langid",
+      "contents": "langid = {${1:Langid}},"
+    },
+    {
+      "trigger": "langidopts",
+      "contents": "langidopts = {${1:Langidopts}},"
+    },
+    {
+      "trigger": "language",
+      "contents": "language = {${1:Language}},"
+    },
+    {
+      "trigger": "library",
+      "contents": "library = {${1:Library}},"
+    },
+    {
+      "trigger": "location",
+      "contents": "location = {${1:Location}},"
+    },
+    {
+      "trigger": "mainsubtitle",
+      "contents": "mainsubtitle = {${1:Mainsubtitle}},"
+    },
+    {
+      "trigger": "maintitle",
+      "contents": "maintitle = {${1:Maintitle}},"
+    },
+    {
+      "trigger": "maintitleaddon",
+      "contents": "maintitleaddon = {${1:Maintitleaddon}},"
+    },
+    {
+      "trigger": "month",
+      "contents": "month = {${1:Month}},"
+    },
+    {
+      "trigger": "nameaddon",
+      "contents": "nameaddon = {${1:Nameaddon}},"
+    },
+    {
+      "trigger": "note",
+      "contents": "note = {${1:Note}},"
+    },
+    {
+      "trigger": "number",
+      "contents": "number = {${1:Number}},"
+    },
+    {
+      "trigger": "options",
+      "contents": "options = {${1:Options}},"
+    },
+    {
+      "trigger": "organization",
+      "contents": "organization = {${1:Organization}},"
+    },
+    {
+      "trigger": "origdate",
+      "contents": "origdate = {${1:Origdate}},"
+    },
+    {
+      "trigger": "origlanguage",
+      "contents": "origlanguage = {${1:Origlanguage}},"
+    },
+    {
+      "trigger": "origlocation",
+      "contents": "origlocation = {${1:Origlocation}},"
+    },
+    {
+      "trigger": "origpublisher",
+      "contents": "origpublisher = {${1:Origpublisher}},"
+    },
+    {
+      "trigger": "origtitle",
+      "contents": "origtitle = {${1:Origtitle}},"
+    },
+    {
+      "trigger": "pages",
+      "contents": "pages = {${1:Pages}},"
+    },
+    {
+      "trigger": "pagetotal",
+      "contents": "pagetotal = {${1:Pagetotal}},"
+    },
+    {
+      "trigger": "pagination",
+      "contents": "pagination = {${1:Pagination}},"
+    },
+    {
+      "trigger": "part",
+      "contents": "part = {${1:Part}},"
+    },
+    {
+      "trigger": "pdf",
+      "contents": "pdf = {${1:Pdf}},"
+    },
+    {
+      "trigger": "presort",
+      "contents": "presort = {${1:Presort}},"
+    },
+    {
+      "trigger": "primaryclass",
+      "contents": "primaryclass = {${1:Primaryclass}},"
+    },
+    {
+      "trigger": "publisher",
+      "contents": "publisher = {${1:Publisher}},"
+    },
+    {
+      "trigger": "pubstate",
+      "contents": "pubstate = {${1:Pubstate}},"
+    },
+    {
+      "trigger": "related",
+      "contents": "related = {${1:Related}},"
+    },
+    {
+      "trigger": "relatedoptions",
+      "contents": "relatedoptions = {${1:Relatedoptions}},"
+    },
+    {
+      "trigger": "relatedtype",
+      "contents": "relatedtype = {${1:Relatedtype}},"
+    },
+    {
+      "trigger": "relatedstring",
+      "contents": "relatedstring = {${1:Relatedstring}},"
+    },
+    {
+      "trigger": "reprinttitle",
+      "contents": "reprinttitle = {${1:Reprinttitle}},"
+    },
+    {
+      "trigger": "school",
+      "contents": "school = {${1:School}},"
+    },
+    {
+      "trigger": "series",
+      "contents": "series = {${1:Series}},"
+    },
+    {
+      "trigger": "shortauthor",
+      "contents": "shortauthor = {${1:Shortauthor}},"
+    },
+    {
+      "trigger": "shorteditor",
+      "contents": "shorteditor = {${1:Shorteditor}},"
+    },
+    {
+      "trigger": "shorthand",
+      "contents": "shorthand = {${1:Shorthand}},"
+    },
+    {
+      "trigger": "shorthandintro",
+      "contents": "shorthandintro = {${1:Shorthandintro}},"
+    },
+    {
+      "trigger": "shortjournal",
+      "contents": "shortjournal = {${1:Shortjournal}},"
+    },
+    {
+      "trigger": "shortseries",
+      "contents": "shortseries = {${1:Shortseries}},"
+    },
+    {
+      "trigger": "shorttitle",
+      "contents": "shorttitle = {${1:Shorttitle}},"
+    },
+    {
+      "trigger": "sortkey",
+      "contents": "sortkey = {${1:Sortkey}},"
+    },
+    {
+      "trigger": "sortname",
+      "contents": "sortname = {${1:Sortname}},"
+    },
+    {
+      "trigger": "sortshorthand",
+      "contents": "sortshorthand = {${1:Sortshorthand}},"
+    },
+    {
+      "trigger": "sorttitle",
+      "contents": "sorttitle = {${1:Sorttitle}},"
+    },
+    {
+      "trigger": "sortyear",
+      "contents": "sortyear = {${1:Sortyear}},"
+    },
+    {
+      "trigger": "subtitle",
+      "contents": "subtitle = {${1:Subtitle}},"
+    },
+    {
+      "trigger": "title",
+      "contents": "title = {${1:Title}},"
+    },
+    {
+      "trigger": "titleaddon",
+      "contents": "titleaddon = {${1:Titleaddon}},"
+    },
+    {
+      "trigger": "translator",
+      "contents": "translator = {${1:Translator}},"
+    },
+    {
+      "trigger": "type",
+      "contents": "type = {${1:Type}},"
+    },
+    {
+      "trigger": "url",
+      "contents": "url = {${1:Url}},"
+    },
+    {
+      "trigger": "urldate",
+      "contents": "urldate = {${1:Urldate}},"
+    },
+    {
+      "trigger": "venue",
+      "contents": "venue = {${1:Venue}},"
+    },
+    {
+      "trigger": "version",
+      "contents": "version = {${1:Version}},"
+    },
+    {
+      "trigger": "volume",
+      "contents": "volume = {${1:Volume}},"
+    },
+    {
+      "trigger": "volumes",
+      "contents": "volumes = {${1:Volumes}},"
+    },
+    {
+      "trigger": "year",
+      "contents": "year = {${1:Year}},"
+    },
+    {
+      "trigger": "xdata",
+      "contents": "xdata = {${1:Xdata}},"
+    },
+    {
+      "trigger": "xref",
+      "contents": "xref = {${1:Xref}},"
+    }
+  ]
+}
