@@ -20,13 +20,6 @@ D. Eppstein, October 2003.
 """
 import codecs
 import re
-import sys
-
-if sys.version_info > (3, 0):
-    PYTHON_3 = True
-    unichr = chr
-else:
-    PYTHON_3 = False
 
 def register():
     """Enable encodings of the form 'latex+x' where x describes another encoding.
@@ -78,10 +71,11 @@ def _registry(encoding):
             # but we can make them joinable by calling unicode.
             # This should always be safe since we are supposed
             # to be producing unicode output anyway.
-            if PYTHON_3:
+            try:
+                x = map(unicode, _unlatex(input))
+            except NameError:
+                # Python 3
                 x = _unlatex(input)
-            else:
-                x = map(unicode,_unlatex(input))
             return u''.join(x), len(input)
     
     class StreamWriter(Codec,codecs.StreamWriter):
@@ -97,10 +91,11 @@ def _tokenize(tex):
     start = 0
     try:
         # skip quickly across boring stuff
-        if PYTHON_3:
-            pos = _stoppers.finditer(tex).__next__().span()[0]
-        else:
+        try:
             pos = _stoppers.finditer(tex).next().span()[0]
+        except AttributeError:
+            # Python 3
+            pos = _stoppers.finditer(tex).__next__().span()[0]
     except StopIteration:
         yield tex
         return
@@ -174,14 +169,23 @@ class _unlatex(object):
         for delta,c in self.candidates(0):
             if c in _l2u:
                 self.pos += delta
-                return unichr(_l2u[c])
-            elif len(c) == 2 and c[1] == 'i' and (c[0],'\\i') in _l2u:
+                try:
+                    return unichr(_l2u[c])
+                except NameError:
+                    return chr(_l2u[c])
+            elif len(c) == 2 and c[1] == 'i' and (c[0], '\\i') in _l2u:
                 self.pos += delta       # correct failure to undot i
-                return unichr(_l2u[(c[0],'\\i')])
+                try:
+                    return unichr(_l2u[(c[0], '\\i')])
+                except NameError:
+                    return chr(_l2u[(c[0], '\\i')])
             elif len(c) == 1 and c[0].startswith('\\char') and c[0][5:].isdigit():
                 self.pos += delta
-                return unichr(int(c[0][5:]))
-    
+                try:
+                    return unichr(int(c[0][5:]))
+                except NameError:
+                    return chr(int(c[0][5:]))
+
         # nothing matches, just pass through token as-is
         self.pos += 1
         return self[-1]
