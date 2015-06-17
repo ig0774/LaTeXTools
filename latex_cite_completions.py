@@ -35,7 +35,7 @@ if sublime.version() < '3000':
     from kpsewhich import kpsewhich
 
     import latextools_plugin
-    from latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions
+    from latextools_utils import is_tex_buffer
     from latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
@@ -49,9 +49,9 @@ else:
     from . import getTeXRoot
 
     from .kpsewhich import kpsewhich
-    
+
     from . import latextools_plugin
-    from .latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions
+    from .latextools_utils import is_tex_buffer
     from .latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
