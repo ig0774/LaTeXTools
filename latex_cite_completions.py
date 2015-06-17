@@ -7,13 +7,13 @@ if sublime.version() < '3000':
     import getTeXRoot
     import kpsewhich
     from kpsewhich import kpsewhich
-    from latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions
+    from latextools_utils import is_tex_buffer
     from latextools_utils.subfiles import walk_subfiles
 else:
     _ST3 = True
     from . import getTeXRoot
     from .kpsewhich import kpsewhich
-    from .latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions
+    from .latextools_utils import is_tex_buffer
     from .latextools_utils.subfiles import walk_subfiles
 
 import sublime_plugin
