@@ -38,7 +38,7 @@ class EntryWrapper(Mapping):
 
     def __getitem__(self, key):
         if not key:
-            return u'????'
+            return u''
 
         key = key.lower()
         result = None
@@ -76,7 +76,7 @@ class EntryWrapper(Mapping):
                         result = self['editor']
 
                 if not result:
-                    return u'????'
+                    return u''
         elif key == 'translator':
             try:
                 people = [pybtex.database.Person(name) for name in
@@ -86,40 +86,13 @@ class EntryWrapper(Mapping):
                 else:
                     result = _get_people_long(people)
             except KeyError:
-                return u'????'
+                return u''
 
         if not result:
             try:
                 result = self.entry.fields[key]
             except KeyError:
-                if key == 'year':
-                    try:
-                        date = self.entry.fields['date']
-                        date_matcher = re.match(r'(\d{4})', date)
-                        if date_matcher:
-                            result = date_matcher.group(1)
-                    except KeyError:
-                        pass
-                elif key == 'journal':
-                    return self['journaltitle']
-
-                if not result:
-                    return u'????'
-
-        if key == 'title' and short:
-            short_title = None
-            try:
-                short_title = self.entry.fields['shorttitle']
-            except KeyError:
-                pass
-
-            if short_title:
-                result = short_title
-            else:
-                sep = re.compile(":|\.|\?")
-                result = sep.split(result)[0]
-                if len(result) > 60:
-                    result = result[0:60] + '...'
+                return u''
 
         return remove_latex_commands(codecs.decode(result, 'latex'))
 
