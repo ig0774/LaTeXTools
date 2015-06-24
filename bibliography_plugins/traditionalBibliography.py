@@ -1,6 +1,9 @@
 from latextools_plugin import LaTeXToolsPlugin
+from latextools_utils.subfiles import walk_subfiles
+from kpsewhich import kpsewhich
 
 import codecs
+import os
 import re
 
 KP = re.compile(r'@[^\{]+\{(.+),')
@@ -44,6 +47,30 @@ def format_author(authors):
     return authors
 
 class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
+    def find_bibliography_files(self, root_file):
+        bib_files = []
+
+        root_dir = os.path.dirname(root_file)
+        for content in walk_subfiles(root_dir, root_file):
+            bibtags =  re.findall(r'\\bibliography\{([^\}]+)\}', content)
+            bibtags += re.findall(r'\\addbibresource\{([^\}]+.bib)\}', content)
+
+            # extract absolute filepath for each bib file
+            for tag in bibtags:
+                bfiles = tag.split(',')
+                for bf in bfiles:
+                    if bf[-4:].lower() != '.bib':
+                        bf = bf + '.bib'
+                    # We join with root_dir, the dir of the master file
+                    candidate_file = os.path.normpath(os.path.join(root_dir, bf))
+                    # if the file doesn't exist, search the default tex paths
+                    if not os.path.exists(candidate_file):
+                        candidate_file = kpsewhich(bf, 'mlbib')
+
+                    if candidate_file is not None and os.path.exists(candidate_file):
+                        bib_files.append(candidate_file)
+        return bib_files
+
     def get_entries(self, *bib_files):
         entries = []
         for bibfname in bib_files:

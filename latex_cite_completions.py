@@ -3,7 +3,12 @@ This module implements the cite-completion behaviour, largely by relying on impl
 registered with latextools_plugin and configured using the `bibliograph_plugins`
 configuration key.
 
-At present, there are two supported methods on custom plugins.
+At present, there are three supported methods on custom plugins.
+
+`find_bibliography_files`:
+    This method should take the name of the root file and return a sequence of full path
+    names corresponding to whatever .bib files are to be used as the bibliography. This
+    list of files will be cleaned-up and passed to `get_entries`.
 
 `get_entries`:
     This method should take a sequence of bib_files and return a sequence of Mapping-like
@@ -26,11 +31,8 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    import kpsewhich
-    from kpsewhich import kpsewhich
 
     from latextools_utils import is_tex_buffer
-    from latextools_utils.subfiles import walk_subfiles
     import latextools_plugin
 
     # reraise implementation from 6
@@ -42,10 +44,8 @@ if sublime.version() < '3000':
 else:
     _ST3 = True
     from . import getTeXRoot
-    from .kpsewhich import kpsewhich
 
     from .latextools_utils import is_tex_buffer
-    from .latextools_utils.subfiles import walk_subfiles
     from . import latextools_plugin
 
     # reraise implementation from 6
@@ -87,31 +87,6 @@ def match(rex, str):
         return m.group(0)
     else:
         return None
-
-# recursively search all linked tex files to find all
-# included bibliography tags in the document and extract
-# the absolute filepaths of the bib files
-def find_bib_files(rootdir, src):
-    bib_files = []
-    for content in walk_subfiles(rootdir, src):
-        bibtags =  re.findall(r'\\bibliography\{([^\}]+)\}', content)
-        bibtags += re.findall(r'\\addbibresource\{([^\}]+.bib)\}', content)
-
-        # extract absolute filepath for each bib file
-        for tag in bibtags:
-            bfiles = tag.split(',')
-            for bf in bfiles:
-                if bf[-4:].lower() != '.bib':
-                    bf = bf + '.bib'
-                # We join with rootdir, the dir of the master file
-                candidate_file = os.path.normpath(os.path.join(rootdir, bf))
-                # if the file doesn't exist, search the default tex paths
-                if not os.path.exists(candidate_file):
-                    candidate_file = kpsewhich(bf, 'mlbib')
-
-                if candidate_file is not None and os.path.exists(candidate_file):
-                    bib_files.append(candidate_file)
-    return bib_files
 
 def run_plugin_command(command, *args, **kwargs):
     '''
@@ -321,7 +296,10 @@ def get_cite_completions(view, point, autocompleting=False):
         raise NoBibFilesError()
 
     print ("TEX root: " + repr(root))
-    bib_files = list(set(find_bib_files(os.path.dirname(root), root)))
+    # load the list of included bibliography files from a plugin
+    bib_files = list(set(
+        run_plugin_command('find_bibliography_files', root)
+    ))
     print ("Bib files found: ")
     print (repr(bib_files))
 
