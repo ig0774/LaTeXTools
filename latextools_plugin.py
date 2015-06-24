@@ -1,15 +1,27 @@
 '''
 Plugin auto-discovery system intended for use in LaTeXTools package.
 
+The easiest way to make this system aware of a plugin is to create a file with the
+.latextools-plugin extension containing the plugin code. However, alternative loading
+mechanisms are provided.
+
 Configuration options:
     `plugin_paths`: in the standard user configuration.
-         A list of paths to search for plugins. Defaults to an empty list, in which
-         case nothing will be done.
+         A list of either directories to search for plugins or paths to plugins.
+         Defaults to an empty list, in which case nothing will be done.
 
         Paths can either be specified as absolute paths, paths relative to the
         LaTeXTools package or paths relative to the User package. Paths in the
         User package will mask paths in the LaTeXTools package. This is intended to
         emulate the behaviour of ST.
+
+        If the default glob of *.py is unexceptable, the path can instead be specified
+        as a tuple consisting of the path and the glob to use. The glob *must* be compatible
+        with the Python glob module. E.g.,
+        ```json
+            "plugin_paths": [['latextools_plugins', '*.py3']]
+        ```
+        will load all .py3 files in the `latextools_plugins` subdirectory of the User package.
 
     `plugins_whitelist`: in the standard user configuration.
         A list of modules from the LaTeXTools directory that will be exposed to
@@ -83,6 +95,8 @@ if sys.version_info < (3, 0):
             if f:
                 f.close()
         return module
+
+    strbase = basestr
 else:
     from importlib.machinery import PathFinder
 
@@ -101,6 +115,7 @@ else:
         loader.name = module_name
         return loader.load_module()
 
+    strbase = str
 
 if sublime.version() < '3000':
     import latextools_plugin_internal as internal
@@ -212,7 +227,7 @@ class LaTeXToolsPluginMeta(type):
             return
 
         try:
-            if not LaTeXToolsPlugin in bases:
+            if LaTeXToolsPlugin not in bases:
                 return
         except NameError:
             return
@@ -248,14 +263,26 @@ def _load_plugin(name, *paths):
     return None
 
 def _load_plugins():
-    for path in _get_plugin_paths():
+    def _resolve_plugin_path(path):
         if not os.path.isabs(path):
-            path = os.path.normpath(
+            p = os.path.normpath(
                 os.path.join(sublime.packages_path(), 'User', path))
-            if not os.path.exists(path):
-                path = os.path.normpath(
+            if not os.path.exists(p):
+                p = os.path.normpath(
                     os.path.join(sublime.packages_path(), 'LaTeXTools', path))
-        add_plugin_path(path)
+            return p
+        return path
+
+    for path in _get_plugin_paths():
+        if type(path) == strbase:
+            add_plugin_path(_resolve_plugin_path(path))
+        else:
+            try:
+                # assume path is a tuple of [<path>, <glob>]
+                add_plugin_path(_resolve_plugin_path(path[0]), path[1])
+            except:
+                print('An error occurred while trying to add the plugin path {0}'.format(path))
+                traceback.print_exc()
 
 def get_plugin(name):
     '''
@@ -345,14 +372,24 @@ def add_plugin_path(path, glob='*.py'):
     with _latextools_module_hack():
         if not os.path.exists(path):
             return
-        for file in _glob.iglob(os.path.join(path, glob)):
-            plugin_dir = os.path.dirname(file)
+
+        if os.path.isfile(path):
+            plugin_dir = os.path.dirname(path)
             sys.path.insert(0, plugin_dir)
 
             _load_plugin(os.path.splitext(
-                os.path.basename(file))[0], plugin_dir)
+                os.path.basename(path))[0], plugin_dir)
 
             sys.path.pop(0)
+        else:
+            for file in _glob.iglob(os.path.join(path, glob)):
+                plugin_dir = os.path.dirname(file)
+                sys.path.insert(0, plugin_dir)
+
+                _load_plugin(os.path.splitext(
+                    os.path.basename(file))[0], plugin_dir)
+
+                sys.path.pop(0)
 
     print('Loaded LaTeXTools plugins {0} from path {1}'.format(
         list(set(internal._REGISTRY.keys()) - previous_plugins),
@@ -367,6 +404,9 @@ def plugin_loaded():
 
     for path, glob in internal._REGISTERED_PATHS_TO_LOAD:
         add_plugin_path(path, glob)
+
+    # by default load anything in the User package with a .latextools-plugin extension
+    add_plugin_path(os.path.join(sublime.packages_path(), 'User'), '*.latextools-plugin')
 
 # when this plugin is unloaded, unload all custom plugins from sys.modules
 def plugin_unloaded():
