@@ -1,11 +1,6 @@
 import sublime
 import sublime_plugin
 
-try:
-    from latextools_utils import is_tex_file
-except ImportError:
-    from .latextools_utils import is_tex_file
-
 BIBLATEX_SYNTAX = 'Packages/LaTeXTools/BibLaTeX.tmLanguage'
 
 # simple listener to default bib files to BibLaTeX syntax if the
