@@ -1,7 +1,5 @@
 from latextools_plugin import LaTeXToolsPlugin
 
-from latex_commands_grammar import remove_latex_commands
-
 import pybtex
 from pybtex.bibtex.utils import split_name_list
 from pybtex.database.input import bibtex
@@ -28,6 +26,46 @@ def _get_people_short(people):
         return u' & '.join([u' '.join(x.last()) for x in people])
     else:
         return u' '.join(people[0].last()) + u', et al.'
+
+def remove_latex_commands(s):
+    u'''
+    Simple function to remove any LaTeX commands or brackets from the string,
+    replacing it with its contents.
+
+    >>> remove_latex_commands(u'A Marxist Schelling')
+    u'A Marxist Schelling'
+
+    >>> remove_latex_commands(u'A {Marxist} Schelling')
+    u'A Marxist Schelling'
+
+    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus}')
+    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
+
+    >>> remove_latex_commands(ur'A \\emph{Marxist} Schelling')
+    u'A Marxist Schelling'
+
+    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu \\emph{Ernst Blochs} spekulativen Materialismus}')
+    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
+
+    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu \\emph{Ernst {Blochs}} spekulativen Materialismus}')
+    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
+    '''
+    chars = []
+    FOUND_SLASH = False
+
+    for c in s:
+        if c == '{':
+            # i.e., we are entering the contents of the command
+            if FOUND_SLASH:
+                FOUND_SLASH = False
+        elif c == '}':
+            pass
+        elif c == '\\':
+            FOUND_SLASH = True
+        elif not FOUND_SLASH:
+            chars.append(c)
+
+    return ''.join(chars)
 
 # wrapper to implement a dict-like interface for bibliographic entries
 # returning formatted value, if it is available
