@@ -3,15 +3,20 @@ This module implements the cite-completion behaviour, largely by relying on impl
 registered with latextools_plugin and configured using the `bibliograph_plugins`
 configuration key.
 
-At present, there are two supported methods on custom plugins.
+At present, there are three supported methods on custom plugins.
+
+`find_bibliography_files`:
+    This method should take a single argument, the full path the to root document and return
+    a list of absolute filenames for the various bibliography files to be used. This list
+    will be passed to `get_entries`.
 
 `get_entries`:
     This method should take a sequence of bib_files and return a sequence of Mapping-like
     objects where the key corresponds to a Bib(La)TeX key and returns the matching value. We
     provide default fallbacks for any of the quick panel formatting options that might not
     be automatically mapped to a field, e.g., `author_short`, etc. or to deal with missing
-    data, e.g. entries that have no `journal` but use the `journaltitle` field. Plugins can 
-    override this behaviour, however, by explicitly setting a value for whatever key they like. 
+    data, e.g. entries that have no `journal` but use the `journaltitle` field. Plugins can
+    override this behaviour, however, by explicitly setting a value for whatever key they like.
 
 `on_insert_citation`:
     This method should take a single string value indicating the citekey of the entry that
@@ -26,8 +31,6 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    import kpsewhich
-    from kpsewhich import kpsewhich
     import latextools_plugin
 
     # reraise implementation from 6
@@ -39,7 +42,6 @@ if sublime.version() < '3000':
 else:
     _ST3 = True
     from . import getTeXRoot
-    from .kpsewhich import kpsewhich
     from . import latextools_plugin
 
     # reraise implementation from 6
@@ -82,64 +84,6 @@ def match(rex, str):
         return m.group(0)
     else:
         return None
-
-# recursively search all linked tex files to find all
-# included bibliography tags in the document and extract
-# the absolute filepaths of the bib files
-def find_bib_files(rootdir, src, bibfiles):
-    if src[-4:].lower() != ".tex":
-        src = src + ".tex"
-
-    file_path = os.path.normpath(os.path.join(rootdir,src))
-    print("Searching file: " + repr(file_path))
-    # See latex_ref_completion.py for why the following is wrong:
-    #dir_name = os.path.dirname(file_path)
-
-    # read src file and extract all bibliography tags
-    try:
-        src_file = codecs.open(file_path, "r", 'UTF-8')
-    except IOError:
-        sublime.status_message("LaTeXTools WARNING: cannot open included file " + file_path)
-        print ("WARNING! I can't find it! Check your \\include's and \\input's.")
-        return
-
-    src_content = re.sub("%.*","",src_file.read())
-    src_file.close()
-
-    m = re.search(r"\\usepackage\[(.*?)\]\{inputenc\}", src_content)
-    if m:
-        f = None
-        try:
-            f = codecs.open(file_path, "r", m.group(1))
-            src_content = re.sub("%.*", "", f.read())
-        except:
-            pass
-        finally:
-            if f and not f.closed:
-                f.close()
-
-    bibtags =  re.findall(r'\\bibliography\{[^\}]+\}', src_content)
-    bibtags += re.findall(r'\\addbibresource\{[^\}]+.bib\}', src_content)
-
-    # extract absolute filepath for each bib file
-    for tag in bibtags:
-        bfiles = re.search(r'\{([^\}]+)', tag).group(1).split(',')
-        for bf in bfiles:
-            if bf[-4:].lower() != '.bib':
-                bf = bf + '.bib'
-            # We join with rootdir, the dir of the master file
-            candidate_file = os.path.normpath(os.path.join(rootdir,bf))
-            # if the file doesn't exist, search the default tex paths
-            if not os.path.exists(candidate_file):
-                candidate_file = kpsewhich(bf, 'mlbib')
-
-            if candidate_file is not None and os.path.exists(candidate_file):
-                bibfiles.append(candidate_file)
-
-    # search through input tex files recursively
-    for f in re.findall(r'\\(?:input|include)\{[^\}]+\}',src_content):
-        input_f = re.search(r'\{([^\}]+)', f).group(1)
-        find_bib_files(rootdir, input_f, bibfiles)
 
 def run_plugin_command(command, *args, **kwargs):
     '''
@@ -425,8 +369,8 @@ def get_cite_completions(view, point, autocompleting=False):
         raise NoBibFilesError()
 
     print ("TEX root: " + repr(root))
-    bib_files = []
-    find_bib_files(os.path.dirname(root), root, bib_files)
+    bib_files = run_plugin_command('find_bibliography_files', root)
+
     # remove duplicate bib files
     bib_files = list(set(bib_files))
     print ("Bib files found: ")

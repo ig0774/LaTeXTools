@@ -1,6 +1,9 @@
 from latextools_plugin import LaTeXToolsPlugin
 
+from kpsewhich import kpsewhich
+
 import codecs
+import os
 import re
 
 KP = re.compile(r'@[^\{]+\{(.+),')
@@ -26,6 +29,67 @@ KP = re.compile(r'@[^\{]+\{(.+),')
 MULTIP = re.compile(r'\b(author|title|year|editor|journal|eprint)\s*=\s*(?:\{|"|\b)(.+?)(?:\}+|"|\b)\s*,?\s*\Z',re.IGNORECASE)
 
 class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
+    def find_bibliography_files(self, root_file):
+        bib_files = []
+
+        rootdir = os.path.dirname(root_file)
+
+        # recursively search all linked tex files to find all
+        # included bibliography tags in the document and extract
+        # the absolute filepaths of the bib files
+        def _find_bib_files(src):
+            if src[-4:].lower() != ".tex":
+                src = src + ".tex"
+
+            file_path = os.path.normpath(os.path.join(rootdir, src))
+            print("Searching file: " + repr(file_path))
+
+            # read src file and extract all bibliography tags
+            try:
+                src_file = codecs.open(file_path, "r", 'UTF-8')
+            except IOError:
+                print ("LaTeXTools WARNING: cannot open included file " + file_path)
+                return
+
+            src_content = re.sub("%.*", "", src_file.read())
+            src_file.close()
+
+            m = re.search(r"\\usepackage\[(.*?)\]\{inputenc\}", src_content)
+            if m:
+                f = None
+                try:
+                    f = codecs.open(file_path, "r", m.group(1))
+                    src_content = re.sub("%.*", "", f.read())
+                except:
+                    pass
+                finally:
+                    if f and not f.closed:
+                        f.close()
+
+            bibtags =  re.findall(r'\\bibliography\{[^\}]+\}', src_content)
+            bibtags += re.findall(r'\\addbibresource\{[^\}]+.bib\}', src_content)
+
+            # extract absolute filepath for each bib file
+            for tag in bibtags:
+                bfiles = re.search(r'\{([^\}]+)', tag).group(1).split(',')
+                for bf in bfiles:
+                    if bf[-4:].lower() != '.bib':
+                        bf = bf + '.bib'
+                    # We join with rootdir, the dir of the master file
+                    candidate_file = os.path.normpath(os.path.join(rootdir, bf))
+                    # if the file doesn't exist, search the default tex paths
+                    if not os.path.exists(candidate_file):
+                        candidate_file = kpsewhich(bf, 'mlbib')
+
+                    if candidate_file is not None and os.path.exists(candidate_file):
+                        bib_files.append(candidate_file)
+
+            # search through input tex files recursively
+            for f in re.findall(r'\\(?:input|include)\{[^\}]+\}', src_content):
+                input_file = re.search(r'\{([^\}]+)', f).group(1)
+                _find_bib_files(input_file)
+        return bib_files
+
     def get_entries(self, *bib_files):
         entries = []
         for bibfname in bib_files:
