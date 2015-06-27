@@ -434,6 +434,28 @@ def get_names(contents):
     >>> get_names("""
     ...     @article {
     ...         title = {A Long Disquisition on Nothing},
+    ...         author = {Coddlington, Simon 
+    ...               and Gary Winchester},
+    ...         date = {2014/08/01}
+    ...     }
+    ... """)
+    [u'Coddlington, Simon', u'Winchester, Gary']
+
+    >>> get_names("""
+    ...     @article {
+    ...         title = {A Long Disquisition on Nothing},
+    ...         author = {
+    ...             Coddlington, Simon 
+    ...             and 
+    ...                     Gary Winchester},
+    ...         date = {2014/08/01}
+    ...     }
+    ... """)
+    [u'Coddlington, Simon', u'Winchester, Gary']
+
+    >>> get_names("""
+    ...     @article {
+    ...         title = {A Long Disquisition on Nothing},
     ...         author = {Winchester, Gary},
     ...         editor = {Coddlington, Simon},
     ...         date = {2014/08/01}
