@@ -32,6 +32,8 @@ if sublime.version() < '3000':
     _ST3 = False
     import getTeXRoot
     import latextools_plugin
+    from latextools_utils import is_tex_buffer
+    from latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
     exec("""def reraise(tp, value, tb=None):
@@ -43,6 +45,8 @@ else:
     _ST3 = True
     from . import getTeXRoot
     from . import latextools_plugin
+    from .latextools_utils import is_tex_buffer
+    from .latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
     def reraise(tp, value, tb=None):
@@ -53,7 +57,6 @@ else:
         raise value
 
     strbase = str
-
 
 import sublime_plugin
 import os, os.path
@@ -419,8 +422,7 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         # Only trigger within LaTeX
-        if not view.match_selector(locations[0],
-                "text.tex.latex"):
+        if not is_tex_buffer(view):
             return []
 
         point = locations[0]
@@ -464,11 +466,8 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
         # get view and location of first selection, which we expect to be just the cursor position
         view = self.view
         point = view.sel()[0].b
-        print (point)
         # Only trigger within LaTeX
-        # Note using score_selector rather than match_selector
-        if not view.score_selector(point,
-                "text.tex.latex"):
+        if not is_tex_buffer(view):
             return
 
         try:
