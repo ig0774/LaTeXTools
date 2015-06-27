@@ -227,7 +227,7 @@ class CompletionWrapper(collections.Mapping):
                 return self._entry[key]
             else:
                 value = self._entry[key]
-                return value or '????'
+                return value or u'????'
         except KeyError:
             if key == 'author':
                 try:
@@ -271,8 +271,24 @@ class CompletionWrapper(collections.Mapping):
                     return self._entry['citekey']
                 except KeyError:
                     pass
+            elif key == 'year':
+                try:
+                    date = self._entry['date']
+                    date_matcher = re.match(r'(\d{4})', date)
+                    if date_matcher:
+                        return date_matcher.group(1)
+                except KeyError:
+                    pass
+            elif key == 'month':
+                try:
+                    date = self._entry['date']
+                    date_matcher = re.match(r'\d{4}-(\d{2})', date)
+                    if date_matcher:
+                        return date_matcher.group(1)
+                except KeyError:
+                    pass
 
-            return '????'
+            return u'????'
 
     def __iter__(self):
         return iter(self._entry)
