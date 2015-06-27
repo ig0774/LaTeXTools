@@ -334,7 +334,7 @@ def run_plugin_command(command, *args, **kwargs):
             else:
                 reraise(*sys.exec_info())
         except NotImplementedError:
-            pass
+            return None
 
         return result
 
