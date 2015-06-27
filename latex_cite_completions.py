@@ -3,15 +3,20 @@ This module implements the cite-completion behaviour, largely by relying on impl
 registered with latextools_plugin and configured using the `bibliograph_plugins`
 configuration key.
 
-At present, there are two supported methods on custom plugins.
+At present, there are three supported methods on custom plugins.
+
+`find_bibliography_files`:
+    This method should take a single argument, the full path the to root document and return
+    a list of absolute filenames for the various bibliography files to be used. This list
+    will be passed to `get_entries`.
 
 `get_entries`:
     This method should take a sequence of bib_files and return a sequence of Mapping-like
     objects where the key corresponds to a Bib(La)TeX key and returns the matching value. We
     provide default fallbacks for any of the quick panel formatting options that might not
     be automatically mapped to a field, e.g., `author_short`, etc. or to deal with missing
-    data, e.g. entries that have no `journal` but use the `journaltitle` field. Plugins can 
-    override this behaviour, however, by explicitly setting a value for whatever key they like. 
+    data, e.g. entries that have no `journal` but use the `journaltitle` field. Plugins can
+    override this behaviour, however, by explicitly setting a value for whatever key they like.
 
 `on_insert_citation`:
     This method should take a single string value indicating the citekey of the entry that
@@ -31,9 +36,6 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-
-    from kpsewhich import kpsewhich
-
     import latextools_plugin
     from latextools_utils import is_tex_buffer
     from latextools_utils.subfiles import walk_subfiles
@@ -47,9 +49,6 @@ if sublime.version() < '3000':
 else:
     _ST3 = True
     from . import getTeXRoot
-
-    from .kpsewhich import kpsewhich
-
     from . import latextools_plugin
     from .latextools_utils import is_tex_buffer
     from .latextools_utils.subfiles import walk_subfiles
@@ -63,6 +62,10 @@ else:
         raise value
 
     strbase = str
+
+import sublime_plugin
+import os, os.path
+import sys
 
 import codecs
 import re
@@ -239,31 +242,6 @@ def match(rex, str):
         return m.group(0)
     else:
         return None
-
-# recursively search all linked tex files to find all
-# included bibliography tags in the document and extract
-# the absolute filepaths of the bib files
-def find_bib_files(rootdir, src):
-    bib_files = []
-    for content in walk_subfiles(rootdir, src):
-        bibtags =  re.findall(r'\\bibliography\{([^\}]+)\}', content)
-        bibtags += re.findall(r'\\addbibresource\{([^\}]+.bib)\}', content)
-
-        # extract absolute filepath for each bib file
-        for tag in bibtags:
-            bfiles = tag.split(',')
-            for bf in bfiles:
-                if bf[-4:].lower() != '.bib':
-                    bf = bf + '.bib'
-                # We join with rootdir, the dir of the master file
-                candidate_file = os.path.normpath(os.path.join(rootdir, bf))
-                # if the file doesn't exist, search the default tex paths
-                if not os.path.exists(candidate_file):
-                    candidate_file = kpsewhich(bf, 'mlbib')
-
-                if candidate_file is not None and os.path.exists(candidate_file):
-                    bib_files.append(candidate_file)
-    return bib_files
 
 def run_plugin_command(command, *args, **kwargs):
     '''
@@ -576,7 +554,10 @@ def get_cite_completions(view, point, autocompleting=False):
         raise NoBibFilesError()
 
     print ("TEX root: " + repr(root))
-    bib_files = list(set(find_bib_files(os.path.dirname(root), root)))
+    bib_files = run_plugin_command('find_bibliography_files', root)
+
+    # remove duplicate bib files
+    bib_files = list(set(bib_files))
     print ("Bib files found: ")
     print (repr(bib_files))
 

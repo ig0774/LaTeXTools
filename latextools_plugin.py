@@ -352,7 +352,8 @@ def _latextools_module_hack():
     '''
     # add any white-listed plugins to sys.modules under their own name
     settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    plugins_whitelist = settings.get('plugins_whitelist', ['getTeXRoot', 'kpsewhich', 'latex_chars'])
+    plugins_whitelist = settings.get('plugins_whitelist', ['getTeXRoot', 'kpsewhich', 'latex_chars', 'latextools_utils'])
+
     # always include latextools_pluing
     plugins_whitelist.append('latextools_plugin')
     overwritten_modules = {}

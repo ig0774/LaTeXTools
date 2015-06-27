@@ -1,5 +1,8 @@
 from latextools_plugin import LaTeXToolsPlugin
 
+from kpsewhich import kpsewhich
+from latextools_utils.subfiles import walk_subfiles
+
 import pybtex
 from pybtex.bibtex.utils import split_name_list
 from pybtex.database.input import bibtex
@@ -140,6 +143,31 @@ class EntryWrapper(Mapping):
         return len(self.entry)
 
 class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
+    def find_bibliography_files(self, root_file):
+        bib_files = []
+
+        rootdir = os.path.dirname(root_file)
+
+        for content in walk_subfiles(rootdir, root_file):
+            bibtags =  re.findall(r'\\bibliography\{([^\}]+)\}', content)
+            bibtags += re.findall(r'\\addbibresource\{([^\}]+.bib)\}', content)
+
+            # extract absolute filepath for each bib file
+            for tag in bibtags:
+                bfiles = tag.split(',')
+                for bf in bfiles:
+                    if bf[-4:].lower() != '.bib':
+                        bf = bf + '.bib'
+                    # We join with rootdir, the dir of the master file
+                    candidate_file = os.path.normpath(os.path.join(rootdir, bf))
+                    # if the file doesn't exist, search the default tex paths
+                    if not os.path.exists(candidate_file):
+                        candidate_file = kpsewhich(bf, 'mlbib')
+
+                    if candidate_file is not None and os.path.exists(candidate_file):
+                        bib_files.append(candidate_file)
+        return bib_files
+
     def get_entries(self, *bib_files):
         entries = []
         parser = bibtex.Parser()
