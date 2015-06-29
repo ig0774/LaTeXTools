@@ -12,6 +12,9 @@ import latex_chars
 import codecs
 from collections import Mapping
 
+import re
+import os
+
 import sublime
 
 # LaTeX -> Unicode decoder
