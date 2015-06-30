@@ -222,18 +222,6 @@ class Name(object):
     u'''
     Represents a BibLaTeX name entry. __str__ will return a name formatted in
     the preferred format
-
-    >>> str(Name('Jean-Paul Sartre'))
-    'Sartre, Jean-Paul'
-
-    >>> str(Name('Simon~Coddlington'))
-    'Coddlington, Simon'
-
-    >>> str(Name('de la Vall{\\\'e}~Poussin, Jean Charles~Gabriel'))
-    "de la Vall{\'e}~Poussin, Jean Charles~Gabriel"
-
-    >>> str(Name('Gloria van auf der Rissen'))
-    'van auf der Rissen, Gloria'
     '''
     def __init__(self, name_str):
         self.first = None
@@ -518,6 +506,31 @@ except ImportError:
             self.assertEqual(
                 tokenize_name(u'{Robert and Sons, Inc.}'),
                 NameResult(first='{Robert and Sons, Inc.}', middle='', prefix='', last='', generation='')
+            )
+
+    class TestNameClass(unittest.TestCase):
+        def test_simple(self):
+            self.assertEqual(
+                str(Name('Simon~Coddlington')),
+                'Coddlington, Simon'
+            )
+
+        def test_hyphenation(self):
+            self.assertEqual(
+                str(Name('Jean-Paul Sartre')),
+                'Sartre, Jean-Paul'
+            )
+
+        def test_prefixed_surname(self):
+            self.assertEqual(
+                str(Name('Gloria van auf der Rissen')),
+                'van auf der Rissen, Gloria'
+            )
+
+        def test_complex_name(self):
+            self.assertEqual(
+                str(Name('de la Vall{\\\'e}e~Poussin, Jean Charles~Gabriel')),
+                "de la Vall{\\'e}e Poussin, Jean Charles Gabriel"
             )
 
     class TestGetNames(unittest.TestCase):
