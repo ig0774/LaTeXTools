@@ -313,7 +313,7 @@ def get_names(contents):
     return sorted(set(names))
 
 # isolate sublime-dependent code to allow testing with unittest
-if __name__ != '__main__':
+try:
     import sublime
     import sublime_plugin
 
@@ -332,8 +332,8 @@ if __name__ != '__main__':
                         sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
             return []
-
-if __name__ == '__main__':
+except ImportError:
+    # Assume we are not in sublime
     import unittest
 
     class TestTokenizeList(unittest.TestCase):
@@ -661,4 +661,5 @@ if __name__ == '__main__':
 
             self.assertEqual(result, [u'Coddlington, Simon'])
 
+if __name__ == '__main__':
     unittest.main()
