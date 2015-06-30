@@ -2,9 +2,6 @@
 
 from __future__ import print_function
 
-import sublime
-import sublime_plugin
-
 from collections import namedtuple
 
 import re
@@ -532,21 +529,26 @@ def get_names(contents):
 
     return sorted(set(names))
 
-class BiblatexNameCompletions(sublime_plugin.EventListener):
-    def on_query_completions(self, view, prefix, locations):
-        if not is_bib_file(view):
+# isolate sublime-dependent code to allow testing with unittest
+if __name__ != '__main__':
+    import sublime
+    import sublime_plugin
+
+    class BiblatexNameCompletions(sublime_plugin.EventListener):
+        def on_query_completions(self, view, prefix, locations):
+            if not is_bib_file(view):
+                return []
+
+            current_line = get_text_to_cursor(view)[::-1]
+
+            matcher = ON_NAME_FIELD_REGEX.match(current_line)
+            if matcher:
+                return ([(name, _get_replacement(matcher, name))
+                        for name in get_names_from_view(view)],
+                        sublime.INHIBIT_WORD_COMPLETIONS |
+                        sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+
             return []
-
-        current_line = get_text_to_cursor(view)[::-1]
-
-        matcher = ON_NAME_FIELD_REGEX.match(current_line)
-        if matcher:
-            return ([(name, _get_replacement(matcher, name))
-                    for name in get_names_from_view(view)],
-                    sublime.INHIBIT_WORD_COMPLETIONS |
-                    sublime.INHIBIT_EXPLICIT_COMPLETIONS)
-
-        return []
 
 if __name__ == '__main__':
     import doctest
