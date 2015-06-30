@@ -84,7 +84,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
 
         if self.completed:
             return (self.completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
-        elif self.started and self.file_name == view.file_name():
+        elif self.started and self.current_file == view.file_name():
             return
 
         with self._WLOCK:
