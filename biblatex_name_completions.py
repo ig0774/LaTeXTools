@@ -113,9 +113,15 @@ def tokenize_name(name_str):
     Takes a string representing a name and returns a NameResult breaking that
     string into its component parts, as defined in the LaTeX book and BibTeXing.
 
-    Note that while this should preserve non-breaking spaces within a given name
-    component, preserving them where they act as a separator between two name
-    components require a more complex data structure than we use here.
+    The supported formats are thus:
+
+    First von Last
+    von Last, First
+    von Last, Jr, First
+
+    We try to follow the rules in BibTeXing relatively strictly, meaning that the
+    first of these formats can result in unexpected results because it is more
+    ambiguous with complex names.
     '''
 
     def extract_middle_names(first):
@@ -154,20 +160,22 @@ def tokenize_name(name_str):
             )
 
         # because of our splitting method, van, von, della, etc. may end up at the end of the first name field
-        try:
-            last_part_of_first, new_first = [part[::-1] for part in split_tex_string(first[::-1], 1)]
-        except ValueError:
-            # we only have one last name
-            pass
-        else:
-            while last_part_of_first.islower():
-                last = ' '.join((last_part_of_first, last))
-                first = new_first
-                try:
-                    last_part_of_first, new_first = [part[::-1] for part in split_tex_string(first[::-1], 1)]
-                except ValueError:
-                    # we reached the end of the first name
-                    break
+        first_parts = split_tex_string(first)
+        first_parts_len = len(first_parts)
+        if first_parts_len > 1:
+            lower_name_index = None
+            for i, part in enumerate(first_parts[::-1], 1):
+                if part.islower():
+                    if lower_name_index is None or lower_name_index == i - 1:
+                        lower_name_index = i
+                    else:
+                        break
+            if lower_name_index is not None:
+                last = u' '.join((
+                    u' '.join(first_parts[-lower_name_index:]),
+                    last
+                ))
+                first = u' '.join(first_parts[:-lower_name_index])
 
         forenames = extract_middle_names(first)
         lastnames = extract_name_prefix(last)
@@ -181,6 +189,11 @@ def tokenize_name(name_str):
     elif len(parts) == 2:
         # last, first
         last, first = parts
+
+        # for consistency with spaces being stripped in first last format
+        first = ' '.join((s for s in split_tex_string(first)))
+        last = ' '.join((s for s in split_tex_string(last)))
+
         forenames = extract_middle_names(first)
         lastnames = extract_name_prefix(last)
         return NameResult(
@@ -425,7 +438,7 @@ except ImportError:
         def test_multiple_middle_names_without_comma(self):
             self.assertEqual(
                 tokenize_name(u'Willard van Orman Quine'),
-                NameResult(first='Willard', middle='van Orman', prefix='', last='Quine', generation='')
+                NameResult(first='Willard', middle='', prefix='van', last='Orman Quine', generation='')
             )
 
         def test_single_name_only(self):
@@ -479,20 +492,32 @@ except ImportError:
 
         def test_complex_name(self):
             self.assertEqual(
-                tokenize_name(u'de la Vall{\\\'e}~Poussin, Jean Charles~Gabriel'),
-                NameResult(first='Jean', middle='Charles~Gabriel', prefix='de la', last="Vall{\\'e}~Poussin", generation='')
+                tokenize_name(u'de la Vall{\\\'e}e~Poussin, Jean Charles~Gabriel'),
+                NameResult(first='Jean', middle='Charles Gabriel', prefix='de la', last="Vall{\\'e}e Poussin", generation='')
             )
 
         def test_complex_name_without_comma(self):
             self.assertEqual(
                 tokenize_name(u'Jean Charles~Gabriel de la Vall{\\\'e}e~Poussin'),
-                NameResult(first='Jean', middle='Charles~Gabriel', prefix='de la', last="Vall{\\'e}~Poussin", generation='')
+                NameResult(first='Jean', middle='Charles Gabriel', prefix='de la', last="Vall{\\'e}e Poussin", generation='')
             )
 
         def test_complex_name_with_unicode(self):
             self.assertEqual(
                 tokenize_name(u'Jean Charles~Gabriel de la Vallée~Poussin'),
-                NameResult(first='Jean', middle='Charles~Gabriel', prefix='de la', last="Vallée~Poussin", generation='')
+                NameResult(first='Jean', middle='Charles Gabriel', prefix='de la', last=u'Vallée Poussin', generation='')
+            )
+
+        def test_another_complex_name(self):
+            self.assertEqual(
+                tokenize_name(u'von Berlichingen zu Hornberg, Johann Gottfried'),
+                NameResult(first='Johann', middle='Gottfried', prefix='von', last='Berlichingen zu Hornberg', generation='')
+            )
+
+        def test_name_with_brackets(self):
+            self.assertEqual(
+                tokenize_name(u'{Robert and Sons, Inc.}'),
+                NameResult(first='{Robert and Sons, Inc.}', middle='', prefix='', last='', generation='')
             )
 
     class TestGetNames(unittest.TestCase):
