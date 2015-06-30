@@ -546,158 +546,172 @@ except ImportError:
             )
 
         def test_editor(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    editor = {Coddlington, Simon},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        editor = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
 
         def test_translator(self):
-            result = get_names("""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    translator = {Coddlington, Simon},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        translator = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
 
         def test_newline_before_value(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {
-                        Coddlington, Simon},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {
+                            Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
 
         def test_newline_after_value(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon
-                        },
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon
+                            },
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
 
         def test_newlines_in_value(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {
-                        Coddlington, Simon
-                    },
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {
+                            Coddlington, Simon
+                        },
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
 
         def test_two_authors(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon and Gary Winchester},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon', u'Winchester, Gary'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon and Gary Winchester},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
 
         def test_two_authors_newline_before_and(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon
-                        and Gary Winchester},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon', u'Winchester, Gary'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon
+                            and Gary Winchester},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
 
         def test_two_authors_newline_after_and(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon and
-                        Gary Winchester},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon', u'Winchester, Gary'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon and
+                            Gary Winchester},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
 
         def test_three_authors(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon and Gary Winchester and Calhoun, Buck},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Calhoun, Buck', u'Coddlington, Simon', u'Winchester, Gary'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon and Gary Winchester and Calhoun, Buck},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Calhoun, Buck', u'Coddlington, Simon', u'Winchester, Gary']
+            )
 
         def test_two_name_fields(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon},
-                    editor = {Winchester, Gary},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon', u'Winchester, Gary'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        editor = {Winchester, Gary},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
 
         def test_three_name_fields(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon},
-                    editor = {Winchester, Gary},
-                    translator = {Calhoun, Buck},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Calhoun, Buck', u'Coddlington, Simon', u'Winchester, Gary'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        editor = {Winchester, Gary},
+                        translator = {Calhoun, Buck},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Calhoun, Buck', u'Coddlington, Simon', u'Winchester, Gary']
+            )
 
         def test_two_name_fields_same_person(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon},
-                    editor = {Coddlington, Simon},
-                    date = {2014-08-01}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        editor = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
 
         def test_multiple_entries(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon},
-                    date = {2014-08-01}
-                }
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }
 
-                @book{
-                    title = {An Even Longer Disquisition on Nothingness and Other Thoughts},
-                    author = {Winchester, Gary},
-                    date = {2015-06-07}
-                }""")
-
-            self.assertEqual(result, [u'Coddlington, Simon', u'Winchester, Gary'])
+                    @book{
+                        title = {An Even Longer Disquisition on Nothingness and Other Thoughts},
+                        author = {Winchester, Gary},
+                        date = {2015-06-07}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
 
         def test_paritially_complete_entry(self):
-            result = get_names(u"""
-                @article {
-                    title = {A Long Disquisition on Nothing},
-                    author = {Coddlington, Simon and""")
-
-            self.assertEqual(result, [u'Coddlington, Simon'])
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon and"""),
+                [u'Coddlington, Simon']
+            )
 
 if __name__ == '__main__':
     unittest.main()
