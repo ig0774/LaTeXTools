@@ -45,6 +45,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         self.completed = False
         self.completions = None
         self.current_file = None
+        self.triggered = False
         self._WLOCK = threading.RLock()
 
     def hack(self):
@@ -53,43 +54,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             sublime.active_window().run_command("auto_complete")
         sublime.set_timeout(hack2, 1)
 
-    def on_completions(self, completions, file_name):
-        with self._WLOCK:
-            self.started = False
-            # we're still on the same file
-            if self.current_file == file_name:
-                self.completed = True
-                self.completions = completions
-            else:
-                return
-
-        if len(self.completions) != 0:
-            sublime.set_timeout(self.hack, 1)
-
-    def on_query_completions(self, view, prefix, locations):
-        # settings = sublime.load_settings("LaTeXTools.sublime-settings")
-        # cwl_completion = settings.get('cwl_completion')
-
-        if not CWL_COMPLETION:
-            return []
-
-        point = locations[0]
-        if not view.score_selector(point, "text.tex.latex"):
-            return []
-
-        line = view.substr(get_Region(view.line(point).a, point))
-        line = line[::-1]
-
-        # Do not do completions in actions
-        for rex in ENV_DONOT_AUTO_COM:
-            if match(rex, line) != None:
-                return []
-
-        if self.completed and self.current_file == view.file_name():
-            return (self.completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
-        elif self.started and self.current_file == view.file_name():
-            return
-
+    def load_completions(self, view):
         with self._WLOCK:
             # Get cwl file list
             # cwl_path = sublime.packages_path() + "/LaTeX-cwl"
@@ -122,6 +87,47 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             t.daemon = True
             t.start()
 
+
+    def on_completions(self, completions, file_name):
+        with self._WLOCK:
+            self.started = False
+            # we're still on the same file
+            if self.current_file == file_name:
+                self.completed = True
+                self.completions = completions
+            else:
+                return
+
+        if self.triggered and len(self.completions) != 0:
+            sublime.set_timeout(self.hack, 1)
+
+    def on_query_completions(self, view, prefix, locations):
+        # settings = sublime.load_settings("LaTeXTools.sublime-settings")
+        # cwl_completion = settings.get('cwl_completion')
+
+        if not CWL_COMPLETION:
+            return []
+
+        point = locations[0]
+        if not view.score_selector(point, "text.tex.latex"):
+            return []
+
+        line = view.substr(get_Region(view.line(point).a, point))
+        line = line[::-1]
+
+        # Do not do completions in actions
+        for rex in ENV_DONOT_AUTO_COM:
+            if match(rex, line) != None:
+                return []
+
+        if self.completed and self.current_file == view.file_name():
+            return (self.completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+        elif self.started and self.current_file == view.file_name():
+            return
+
+        self.triggered = True
+        self.load_completions(view)
+
     # This functions is to determine whether LaTeX-cwl is installed,
     # if so, trigger auto-completion in latex buffers by '\'
     def on_activated(self, view):
@@ -152,12 +158,35 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
                 })
                 g_settings.set("auto_complete_triggers", acts)
 
+            # preload completions for this view
+            self.load_completions(view)
+
+    def on_post_save_async(self, view):
+        settings = sublime.settings('LaTeXTools.sublime-settings')
+        cwl_autoload = view.settings().get(
+            'cwl_autoload', settings.get('cwl_autoload', False))
+
+        if cwl_autoload:
+            # reload completions on save if we are autoloading
+            self.load_completions(view)
+
+# allow ST2 to use on_post_save_async
+if sublime.version() < '3000':
+    def _on_post_save(self, view):
+        t = threading.Thread(
+            target=self.on_post_save_async,
+            args=(view,)
+        )
+        t.daemon = True
+        t.start()
+
+    LatexCwlCompletion.on_post_save = _on_post_save
+
 def get_packages(root, src):
     packages = []
     for content in walk_subfiles(root, src, preamble_only=True):
         document_classes = re.findall(r'\\documentclass(?:\[[^\]]+\])?\{([^\}]+)\}', content)
         packages.extend(['class-{0}'.format(dc) for dc in document_classes])
-
         packages.extend(re.findall(r'\\usepackage(?:\[[^\]]+\])?\{([^\}]+)\}', content))
     return packages
 
