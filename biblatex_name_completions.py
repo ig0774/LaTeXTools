@@ -713,5 +713,60 @@ except ImportError:
                 [u'Coddlington, Simon']
             )
 
+    class TestFieldMatchingRegex(unittest.TestCase):
+
+        def test_simple(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = {'[::-1])
+            )
+
+        def test_without_spaces(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author={'[::-1])
+            )
+
+        def test_without_bracket(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = '[::-1])
+            )
+
+        def test_with_space_after_bracket(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = { '[::-1])
+            )
+
+        def test_alternative_field(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('editor = {'[::-1])
+            )
+
+        def test_doesnt_match_empty_field(self):
+            self.assertIsNone(
+                ON_NAME_FIELD_REGEX.match('author = {}'[::-1])
+            )
+
+        def test_doesnt_match_completed_field(self):
+            self.assertIsNone(
+                ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon}'[::-1])
+            )
+
+        def test_matches_partial_field(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and'[::-1])
+            )
+
+# monkey patch unittest in Python 2.6
+if sys.version_info < (2, 7) and sys.version_info >= (2, 6):
+        def assertIsNone(self, obj, msg=None):
+            if obj is not None:
+                raise self.failureException(msg or '%r is not None' % (obj,))
+
+        def assertIsNotNone(self, obj, msg=None):
+            if obj is None:
+                raise self.failureException(msg or '%r is None' % (obj,))
+
+        unittest.TestCase.assertIsNone = assertIsNone
+        unittest.TestCase.assertIsNotNone = assertIsNotNone
+
 if __name__ == '__main__':
     unittest.main()
