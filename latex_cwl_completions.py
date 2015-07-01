@@ -264,6 +264,8 @@ def parse_cwl_file(cwl_file_list):
                 f.close()
 
         for line in s.split('\n'):
+            if line == '':
+                continue
             if line.lstrip()[0] == '#':
                 continue
 
