@@ -178,20 +178,19 @@ def get_packages(root, src, packages):
             if f and not f.closed:
                 f.close()
 
+    # we want to stop searching when the preamble ends, so quit at the first \begin{document}
+    document_start = None
+    src_content, document_start = re.split(r'\\begin\{document\}', src_content, 1)
+
     document_classes = re.findall(r'\\documentclass(?:\[[^\]]+\])?\{([^\}]+)\}', src_content)
     packages.extend(['class-{0}'.format(dc) for dc in document_classes])
 
     packages.extend(re.findall(r'\\usepackage(?:\[[^\]]+\])?\{([^\}]+)\}', src_content))
 
     # search through input tex files recursively
-    for l in src_content.splitlines():
-        # packages can only be defined in the preamble, so stop when we find
-        # the start of the document
-        if re.search(r'\\begin{document}', l):
-            break
-        else:
-            for f in re.findall(r'\\(?:input|include)\{([^\{\}]+)\}', l):
-                get_packages(root, f, packages)
+    if not document_start:
+        for f in re.findall(r'\\(?:input|include)\{([^\{\}]+)\}', src_content):
+            get_packages(root, f, packages)
 
 # bit of a hack as these are all one cwl file
 KOMA_SCRIPT_CLASSES = set(('class-scrartcl', 'class-scrreprt', 'class-book'))
