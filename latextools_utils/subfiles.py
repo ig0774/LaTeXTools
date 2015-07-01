@@ -10,7 +10,7 @@ except:
     from latextools_utils import is_tex_file, get_tex_extensions
 
 INPUT_FILE = re.compile(r'\\(?:input|include)\{([^\}]+)\}')
-DOCUMENT_START = re.compile(r'\\begin{document}')
+DOCUMENT_START = re.compile(r'\\begin\{document\}')
 
 # recursively search all linked tex files to find all
 # included bibliography tags in the document and extract
