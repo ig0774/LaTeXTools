@@ -257,22 +257,20 @@ def _get_replacement(matcher, key):
     if not matcher.group('ENTRIES'):
         equals = matcher.group('EQUALS')
 
-        return u'{0}{1}{2}{3}'.format(
+        return u'{0}{1}{2}'.format(
             u'' if equals else u'= ' if match.startswith(u' ') else u' = ',
             u'' if matcher.group('OPEN') else u'{' if not equals or match.startswith(u' ') else u' {',
-            key,
-            u'}'
+            key
         )
 
     if matcher.group('ENTRIES').startswith('dna'):
         if match.startswith(' '):
-            return u'{0}{1}'.format(key, u'}')
-        return u' {0}{1}'.format(key, u'}')
+            return u'{0}'.format(key)
+        return u' {0}'.format(key)
     else:
-        return u'{0}{1}{2}'.format(
+        return u'{0}{1}'.format(
             u' ' if matcher.group('ENTRIES').startswith(u' ') != u' ' else u'',
-            key,
-            u'}'
+            key
         )
 
 NAME_FIELD_REGEX = re.compile(
@@ -790,7 +788,7 @@ except ImportError:
                     ON_NAME_FIELD_REGEX.match('author = {'[::-1]),
                     'Coddlington, Simon'
                 ),
-                'Coddlington, Simon}'
+                'Coddlington, Simon'
             )
 
         def test_without_spaces(self):
@@ -799,7 +797,7 @@ except ImportError:
                     ON_NAME_FIELD_REGEX.match('author={'[::-1]),
                     'Coddlington, Simon'
                 ),
-                'Coddlington, Simon}'
+                'Coddlington, Simon'
             )
 
         def test_without_bracket(self):
@@ -808,7 +806,7 @@ except ImportError:
                     ON_NAME_FIELD_REGEX.match('author = '[::-1]),
                     'Coddlington, Simon'
                 ),
-                '{Coddlington, Simon}'
+                '{Coddlington, Simon'
             )
 
         def test_without_bracket_or_preceding_space(self):
@@ -817,7 +815,7 @@ except ImportError:
                     ON_NAME_FIELD_REGEX.match('author ='[::-1]),
                     'Coddlington, Simon'
                 ),
-                ' {Coddlington, Simon}'
+                ' {Coddlington, Simon'
             )
 
         def test_without_equals(self):
@@ -826,7 +824,7 @@ except ImportError:
                     ON_NAME_FIELD_REGEX.match('author '[::-1]),
                     'Coddlington, Simon'
                 ),
-                '= {Coddlington, Simon}'
+                '= {Coddlington, Simon'
             )
 
         def test_without_equals_or_space(self):
@@ -835,7 +833,7 @@ except ImportError:
                     ON_NAME_FIELD_REGEX.match('author'[::-1]),
                     'Coddlington, Simon'
                 ),
-                ' = {Coddlington, Simon}'
+                ' = {Coddlington, Simon'
             )
 
         def test_with_existing_entry(self):
@@ -844,7 +842,7 @@ except ImportError:
                     ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and '[::-1]),
                     'Coddlington, Simon'
                 ),
-                'Coddlington, Simon}'
+                'Coddlington, Simon'
             )
 
         def test_with_existing_entry_without_space(self):
@@ -853,7 +851,7 @@ except ImportError:
                     ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and'[::-1]),
                     'Coddlington, Simon'
                 ),
-                ' Coddlington, Simon}'
+                ' Coddlington, Simon'
             )
 
 # monkey patch unittest in Python 2.6
