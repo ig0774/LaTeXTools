@@ -146,6 +146,9 @@ class BiblatexCrossrefCompletions(sublime_plugin.EventListener):
 
         current_line = get_text_to_cursor(view)[::-1]
 
+        if current_line.startswith(prefix[::-1]):
+            current_line = current_line[len(prefix):]
+
         result = get_completions_if_matches(
             CROSSREF_REGEX, current_line, get_cite_keys, view)
 
