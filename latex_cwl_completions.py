@@ -172,15 +172,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
 
 # allow ST2 to use on_post_save_async
 if sublime.version() < '3000':
-    def _on_post_save(self, view):
-        t = threading.Thread(
-            target=self.on_post_save_async,
-            args=(view,)
-        )
-        t.daemon = True
-        t.start()
-
-    LatexCwlCompletion.on_post_save = _on_post_save
+    LatexCwlCompletion.on_post_save = LatexCwlCompletion.on_post_save_async
 
 def get_packages(root, src):
     packages = []
