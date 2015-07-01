@@ -247,18 +247,30 @@ class Name(object):
 
 # builds the replacement string depending on the current context of the line
 def _get_replacement(matcher, key):
+    if not matcher:
+        return key
+
+    match = matcher.group(0)
     if not matcher.group('ENTRIES'):
+        equals = matcher.group('EQUALS')
+
         return u'{0}{1}{2}{3}'.format(
-            u'' if matcher.group('EQUALS') else u'= ',
-            u'' if matcher.group('OPEN') else u'{',
+            u'' if equals else u'= ' if match.startswith(u' ') else u' = ',
+            u'' if matcher.group('OPEN') else u'{' if not equals or match.startswith(u' ') else u' {',
             key,
-            u'' if matcher.group('OPEN') else u'}'
+            u'}'
         )
 
-    return '{0}{1}'.format(
-        u',' if matcher.group('ENTRIES')[0] != u',' else u'',
-        key
-    )
+    if matcher.group('ENTRIES').startswith('dna'):
+        if match.startswith(' '):
+            return u'{0}{1}'.format(key, u'}')
+        return u' {0}{1}'.format(key, u'}')
+    else:
+        return u'{0}{1}{2}'.format(
+            u' ' if matcher.group('ENTRIES').startswith(u' ') != u' ' else u'',
+            key,
+            u'}'
+        )
 
 NAME_FIELD_REGEX = re.compile(
     r'(?:^|[\s~]+)(?:' + r'|'.join(NAME_FIELDS) + ')\s*=\s*\{',
@@ -753,6 +765,79 @@ except ImportError:
         def test_matches_partial_field(self):
             self.assertIsNotNone(
                 ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and'[::-1])
+            )
+
+    class TestGetReplacement(unittest.TestCase):
+        def test_simple(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author = {'[::-1]),
+                    'Coddlington, Simon'
+                ),
+                'Coddlington, Simon}'
+            )
+
+        def test_without_spaces(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author={'[::-1]),
+                    'Coddlington, Simon'
+                ),
+                'Coddlington, Simon}'
+            )
+
+        def test_without_bracket(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author = '[::-1]),
+                    'Coddlington, Simon'
+                ),
+                '{Coddlington, Simon}'
+            )
+
+        def test_without_bracket_or_preceding_space(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author ='[::-1]),
+                    'Coddlington, Simon'
+                ),
+                ' {Coddlington, Simon}'
+            )
+
+        def test_without_equals(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author '[::-1]),
+                    'Coddlington, Simon'
+                ),
+                '= {Coddlington, Simon}'
+            )
+
+        def test_without_equals_or_space(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author'[::-1]),
+                    'Coddlington, Simon'
+                ),
+                ' = {Coddlington, Simon}'
+            )
+
+        def test_with_existing_entry(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and '[::-1]),
+                    'Coddlington, Simon'
+                ),
+                'Coddlington, Simon}'
+            )
+
+        def test_with_existing_entry_without_space(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and'[::-1]),
+                    'Coddlington, Simon'
+                ),
+                ' Coddlington, Simon}'
             )
 
 # monkey patch unittest in Python 2.6
