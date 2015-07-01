@@ -234,6 +234,9 @@ class Name(object):
             tokenize_name(name_str)
 
     def __unicode__(self):
+        if not self.last:
+            return self.first
+
         result = u' '.join((self.prefix, self.last)) if self.prefix else unicode(self.last)
         if self.generation:
             result = u', '.join((result, self.generation))
@@ -336,6 +339,9 @@ try:
                 return []
 
             current_line = get_text_to_cursor(view)[::-1]
+
+            if current_line.startswith(prefix[::-1]):
+                current_line = current_line[len(prefix):]
 
             matcher = ON_NAME_FIELD_REGEX.match(current_line)
             if matcher:
@@ -765,6 +771,16 @@ except ImportError:
         def test_matches_partial_field(self):
             self.assertIsNotNone(
                 ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and'[::-1])
+            )
+
+        def test_matches_partial_field_two_names(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and Gary Winchester and'[::-1])
+            )
+
+        def test_matches_partial_field_three_names(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and Gary Winchester and Calhoun, Buck and'[::-1])
             )
 
     class TestGetReplacement(unittest.TestCase):
