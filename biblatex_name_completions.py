@@ -730,7 +730,6 @@ except ImportError:
             )
 
     class TestFieldMatchingRegex(unittest.TestCase):
-
         def test_simple(self):
             self.assertIsNotNone(
                 ON_NAME_FIELD_REGEX.match('author = {'[::-1])
