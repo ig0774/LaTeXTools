@@ -162,7 +162,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             self.load_completions(view)
 
     def on_post_save_async(self, view):
-        settings = sublime.settings('LaTeXTools.sublime-settings')
+        settings = sublime.load_settings('LaTeXTools.sublime-settings')
         cwl_autoload = view.settings().get(
             'cwl_autoload', settings.get('cwl_autoload', False))
 
