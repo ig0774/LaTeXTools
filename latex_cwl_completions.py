@@ -80,7 +80,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             if match(rex, line) != None:
                 return []
 
-        if self.completed:
+        if self.completed and self.current_file == view.file_name():
             return (self.completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
         elif self.started and self.current_file == view.file_name():
             return
