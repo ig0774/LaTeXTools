@@ -82,7 +82,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             if match(rex, line) != None:
                 return []
 
-        if self.completed:
+        if self.completed and self.current_file == view.file_name():
             return (self.completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
         elif self.started and self.current_file == view.file_name():
             return
@@ -210,8 +210,6 @@ class CwlParsingHandler(object):
         self.callback(parse_cwl_file(cwl_file_list), self.file_name)
 
 def parse_cwl_file(cwl_file_list):
-    CLW_COMMENT = re.compile(r'#[^#]*')
-
     # ST3 can use load_resource api, while ST2 do not has this api
     # so a little different with implementation of loading cwl files.
     if _ST3:
@@ -231,13 +229,15 @@ def parse_cwl_file(cwl_file_list):
                 f.close()
 
         for line in s.split('\n'):
-            if CLW_COMMENT.match(line.strip()):
-                pass
-            else:
-                keyword = line.strip()
-                method = os.path.splitext(os.path.basename(cwl))[0]
-                item = (u'%s\t%s' % (keyword, method), parse_keyword(keyword))
-                completions.append(item)
+            if line == '':
+                continue
+            if line.lstrip()[0] == '#':
+                continue
+
+            keyword = line.strip()
+            method = os.path.splitext(os.path.basename(cwl))[0]
+            item = (u'%s\t%s' % (keyword, method), parse_keyword(keyword))
+            completions.append(item)
 
     return completions
 
