@@ -767,6 +767,16 @@ except ImportError:
                 ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and'[::-1])
             )
 
+        def test_matches_partial_field_two_names(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and Gary Winchester and'[::-1])
+            )
+
+        def test_matches_partial_field_three_names(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and Gary Winchester and Calhoun, Buck and'[::-1])
+            )
+
     class TestGetReplacement(unittest.TestCase):
         def test_simple(self):
             self.assertEqual(
