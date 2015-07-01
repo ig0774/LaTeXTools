@@ -2,9 +2,6 @@
 
 from __future__ import print_function
 
-import sublime
-import sublime_plugin
-
 from collections import namedtuple
 
 import re
@@ -42,8 +39,8 @@ NAME_FIELDS = set((
 # I've tried to simply the comprehensibility of the backwards regexes used by
 # constructing them here
 #
-# VALUE_REGEX is a common suffix to hand the `= {<value>,<value>}` part
-VALUE_REGEX = r'[\s~]*(?P<ENTRIES>(?:[\s~]*dna[\s~]+.+)+)?[\s~]*(?P<OPEN>\{)?(?P<EQUALS>\s*=\s*)?'
+# VALUE_REGEX is a common suffix to hand the `= {<value> and <value>}` part
+VALUE_REGEX = r'[\s~]*(?P<ENTRIES>(?:dna[\s~]+.+)+)?[\s~]*(?P<OPEN>\{)?(?P<EQUALS>\s*=\s*)?'
 
 ON_NAME_FIELD_REGEX = re.compile(
     VALUE_REGEX + r'(?:' + r'|'.join((s[::-1] for s in NAME_FIELDS)) + r')' + r'\b',
@@ -106,25 +103,6 @@ def split_tex_string(string, maxsplit=-1, sep=None):
     return [part.strip() for part in result if part]
 
 def tokenize_list(list_str):
-    u'''
-    >>> tokenize_list('Chemicals and Entrails')
-    ['Chemicals', 'Entrails']
-
-    >>> tokenize_list('{Harman and Feather Corporation}')
-    ['{Harman and Feather Corporation}']
-
-    >>> tokenize_list('Harman { and } Feather Corporation')
-    ['Harman { and } Feather Corporation']
-
-    >>> tokenize_list('Harman {and} Feather Corporation')
-    ['Harman {and} Feather Corporation']
-
-    >>> tokenize_list('Chemicals~and~Entrails')
-    ['Chemicals', 'Entrails']
-
-    >>> tokenize_list('Chemicals and')
-    ['Chemicals']
-    '''
     return split_tex_string(list_str, sep=r'(?iu)[\s~]+and(?:[\s~]+|$)')
 
 # namedtuple so results are a little more comprehensible
@@ -135,71 +113,17 @@ def tokenize_name(name_str):
     Takes a string representing a name and returns a NameResult breaking that
     string into its component parts, as defined in the LaTeX book and BibTeXing.
 
-    Note that while this should preserve non-breaking spaces within a given name
-    component, preserving them where they act as a separator between two name
-    components require a more complex data structure than we use here.
+    The supported formats are thus:
 
-    >>> tokenize_name('Coddlington, Simon')
-    NameResult(first='Simon', middle='', prefix='', last='Coddlington', generation='')
+    First von Last
+    von Last, First
+    von Last, Jr, First
 
-    >>> tokenize_name('Simon Coddlington')
-    NameResult(first='Simon', middle='', prefix='', last='Coddlington', generation='')
-
-    >>> tokenize_name('Simon~Coddlington')
-    NameResult(first='Simon', middle='', prefix='', last='Coddlington', generation='')
-
-    >>> tokenize_name('Simon P. Coddlington')
-    NameResult(first='Simon', middle='P.', prefix='', last='Coddlington', generation='')
-
-    >>> tokenize_name('Coddlington, Simon P.')
-    NameResult(first='Simon', middle='P.', prefix='', last='Coddlington', generation='')
-
-    >>> tokenize_name('Coddlington, Simon~P.')
-    NameResult(first='Simon', middle='P.', prefix='', last='Coddlington', generation='')
-
-
-    >>> tokenize_name('Willard van Orman Quine')
-    NameResult(first='Willard', middle='van Orman', prefix='', last='Quine', generation='')
-
-    >>> tokenize_name('Quine, Willard van Orman')
-    NameResult(first='Willard', middle='van Orman', prefix='', last='Quine', generation='')
-
-    >>> tokenize_name('Augustine')
-    NameResult(first='Augustine', middle='', prefix='', last='', generation='')
-
-    >>> tokenize_name('Jean-Paul Sartre')
-    NameResult(first='Jean-Paul', middle='', prefix='', last='Sartre', generation='')
-
-    >>> tokenize_name('Sartre, Jean-Paul')
-    NameResult(first='Jean-Paul', middle='', prefix='', last='Sartre', generation='')
-
-    >>> tokenize_name('Charles Louis Xavier Joseph de la Vall{\\\'e}e Poussin')
-    NameResult(first='Charles', middle="Louis Xavier Joseph de la Vall{'e}e", prefix='', last='Poussin', generation='')
-
-    >>> tokenize_name(u'Charles Louis Xavier Joseph de la Vallée Poussin')
-    NameResult(first=u'Charles', middle=u'Louis Xavier Joseph de la Vall\\xe9e', prefix='', last=u'Poussin', generation='')
-
-    >>> tokenize_name('James van Houten')
-    NameResult(first='James', middle='', prefix='van', last='Houten', generation='')
-
-    >>> tokenize_name('van Houten, James')
-    NameResult(first='James', middle='', prefix='van', last='Houten', generation='')
-
-    >>> tokenize_name('Jones, Jr, James Earl')
-    NameResult(first='James', middle='Earl', prefix='', last='Jones', generation='Jr')
-
-    >>> tokenize_name('van auf der Rissen, Gloria')
-    NameResult(first='Gloria', middle='', prefix='van auf der', last='Rissen', generation='')
-
-    >>> tokenize_name('Gloria van auf der Rissen')
-    NameResult(first='Gloria', middle='', prefix='van auf der', last='Rissen', generation='')
-
-    >>> tokenize_name('Jean Charles-Gabriel')
-    NameResult(first='Jean', middle='', prefix='', last='Charles-Gabriel', generation='')
-
-    >>> tokenize_name('de la Vall{\\\'e}~Poussin, Jean Charles~Gabriel')
-    NameResult(first='Jean', middle='Charles~Gabriel', prefix='de la', last="Vall{'e}~Poussin", generation='')
+    We try to follow the rules in BibTeXing relatively strictly, meaning that the
+    first of these formats can result in unexpected results because it is more
+    ambiguous with complex names.
     '''
+
     def extract_middle_names(first):
         return split_tex_string(first, 1)
 
@@ -236,20 +160,22 @@ def tokenize_name(name_str):
             )
 
         # because of our splitting method, van, von, della, etc. may end up at the end of the first name field
-        try:
-            last_part_of_first, new_first = [part[::-1] for part in split_tex_string(first[::-1], 1)]
-        except ValueError:
-            # we only have one last name
-            pass
-        else:
-            while last_part_of_first.islower():
-                last = ' '.join((last_part_of_first, last))
-                first = new_first
-                try:
-                    last_part_of_first, new_first = [part[::-1] for part in split_tex_string(first[::-1], 1)]
-                except ValueError:
-                    # we reached the end of the first name
-                    break
+        first_parts = split_tex_string(first)
+        first_parts_len = len(first_parts)
+        if first_parts_len > 1:
+            lower_name_index = None
+            for i, part in enumerate(first_parts[::-1], 1):
+                if part.islower():
+                    if lower_name_index is None or lower_name_index == i - 1:
+                        lower_name_index = i
+                    else:
+                        break
+            if lower_name_index is not None:
+                last = u' '.join((
+                    u' '.join(first_parts[-lower_name_index:]),
+                    last
+                ))
+                first = u' '.join(first_parts[:-lower_name_index])
 
         forenames = extract_middle_names(first)
         lastnames = extract_name_prefix(last)
@@ -263,6 +189,11 @@ def tokenize_name(name_str):
     elif len(parts) == 2:
         # last, first
         last, first = parts
+
+        # for consistency with spaces being stripped in first last format
+        first = ' '.join((s for s in split_tex_string(first)))
+        last = ' '.join((s for s in split_tex_string(last)))
+
         forenames = extract_middle_names(first)
         lastnames = extract_name_prefix(last)
         return NameResult(
@@ -291,18 +222,6 @@ class Name(object):
     u'''
     Represents a BibLaTeX name entry. __str__ will return a name formatted in
     the preferred format
-
-    >>> str(Name('Jean-Paul Sartre'))
-    'Sartre, Jean-Paul'
-
-    >>> str(Name('Simon~Coddlington'))
-    'Coddlington, Simon'
-
-    >>> str(Name('de la Vall{\\\'e}~Poussin, Jean Charles~Gabriel'))
-    "de la Vall{\'e}~Poussin, Jean Charles~Gabriel"
-
-    >>> str(Name('Gloria van auf der Rissen'))
-    'van auf der Rissen, Gloria'
     '''
     def __init__(self, name_str):
         self.first = None
@@ -328,18 +247,30 @@ class Name(object):
 
 # builds the replacement string depending on the current context of the line
 def _get_replacement(matcher, key):
+    if not matcher:
+        return key
+
+    match = matcher.group(0)
     if not matcher.group('ENTRIES'):
+        equals = matcher.group('EQUALS')
+
         return u'{0}{1}{2}{3}'.format(
-            u'' if matcher.group('EQUALS') else u'= ',
-            u'' if matcher.group('OPEN') else u'{',
+            u'' if equals else u'= ' if match.startswith(u' ') else u' = ',
+            u'' if matcher.group('OPEN') else u'{' if not equals or match.startswith(u' ') else u' {',
             key,
-            u'' if matcher.group('OPEN') else u'}'
+            u'}'
         )
 
-    return '{0}{1}'.format(
-        u',' if matcher.group('ENTRIES')[0] != u',' else u'',
-        key
-    )
+    if matcher.group('ENTRIES').startswith('dna'):
+        if match.startswith(' '):
+            return u'{0}{1}'.format(key, u'}')
+        return u' {0}{1}'.format(key, u'}')
+    else:
+        return u'{0}{1}{2}'.format(
+            u' ' if matcher.group('ENTRIES').startswith(u' ') != u' ' else u'',
+            key,
+            u'}'
+        )
 
 NAME_FIELD_REGEX = re.compile(
     r'(?:^|[\s~]+)(?:' + r'|'.join(NAME_FIELDS) + ')\s*=\s*\{',
@@ -353,122 +284,6 @@ def get_names_from_view(view):
 def get_names(contents):
     u'''
     Work-horse function to extract all the names defined in the current bib file.
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {Coddlington, Simon},
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         editor = {Coddlington, Simon},
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         translator = {Coddlington, Simon},
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {
-    ...             Coddlington, Simon
-    ...         },
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {
-    ...             Coddlington, Simon},
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {Coddlington, Simon
-    ...         },
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {Coddlington, Simon},
-    ...         editor = {Coddlington, Simon},
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {Coddlington, Simon and Gary Winchester},
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon', u'Winchester, Gary']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {Winchester, Gary},
-    ...         editor = {Coddlington, Simon},
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon', u'Winchester, Gary']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {Winchester, Gary},
-    ...         editor = {Coddlington, Simon},
-    ...         translator = {Winchester, Gary},
-    ...         date = {2014/08/01}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon', u'Winchester, Gary']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {Coddlington, Simon},
-    ...         date = {2014/08/01}
-    ...     }
-    ...     @book {
-    ...         title = {An Incredibly Long Disquisition on Absolutely Nothing at all Which I Ate For Breakfast Last Tuesday}
-    ...     }
-    ... """)
-    [u'Coddlington, Simon']
-
-    >>> get_names("""
-    ...     @article {
-    ...         title = {A Long Disquisition on Nothing},
-    ...         author = {Coddlington, Simon and""")
-    [u'Coddlington, Simon']
     '''
     names = []
 
@@ -510,22 +325,533 @@ def get_names(contents):
 
     return sorted(set(names))
 
-class BiblatexNameCompletions(sublime_plugin.EventListener):
-    def on_query_completions(self, view, prefix, locations):
-        if not is_bib_file(view):
+# isolate sublime-dependent code to allow testing with unittest
+try:
+    import sublime
+    import sublime_plugin
+
+    class BiblatexNameCompletions(sublime_plugin.EventListener):
+        def on_query_completions(self, view, prefix, locations):
+            if not is_bib_file(view):
+                return []
+
+            current_line = get_text_to_cursor(view)[::-1]
+
+            matcher = ON_NAME_FIELD_REGEX.match(current_line)
+            if matcher:
+                return ([(name, _get_replacement(matcher, name))
+                        for name in get_names_from_view(view)],
+                        sublime.INHIBIT_WORD_COMPLETIONS |
+                        sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+
             return []
+except ImportError:
+    # Assume we are not in sublime
+    import unittest
 
-        current_line = get_text_to_cursor(view)[::-1]
+    class TestTokenizeList(unittest.TestCase):
+        def test_simple(self):
+            self.assertEqual(
+                tokenize_list(u'Chemicals and Entrails'),
+                [u'Chemicals', u'Entrails']
+            )
 
-        matcher = ON_NAME_FIELD_REGEX.match(current_line)
-        if matcher:
-            return ([(name, _get_replacement(matcher, name))
-                    for name in get_names_from_view(view)],
-                    sublime.INHIBIT_WORD_COMPLETIONS |
-                    sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+        def test_nbsp(self):
+            self.assertEqual(
+                tokenize_list(u'Chemicals~and~Entrails'),
+                [u'Chemicals', u'Entrails']
+            )
 
-        return []
+        def test_values_wrapped_in_brackets(self):
+            self.assertEqual(
+                tokenize_list(u'{Chemicals and Entrails}'),
+                [u'{Chemicals and Entrails}']
+            )
+
+        def test_and_wrapped_in_brackets(self):
+            self.assertEqual(
+                tokenize_list(u'Chemicals {and} Entrails'),
+                [u'Chemicals {and} Entrails']
+            )
+
+        def test_and_wrapped_in_brackets_with_whitespace(self):
+            self.assertEqual(
+                tokenize_list(u'Chemicals { and } Entrails'),
+                [u'Chemicals { and } Entrails']
+            )
+
+        def test_partial_list(self):
+            self.assertEqual(
+                tokenize_list(u'Chemicals and'),
+                [u'Chemicals']
+            )
+
+    class TestTokenizeName(unittest.TestCase):
+        def test_simple(self):
+            self.assertEqual(
+                tokenize_name(u'Coddlington, Simon'),
+                NameResult(first='Simon', middle='', prefix='', last='Coddlington', generation='')
+            )
+
+        def test_with_nbsp(self):
+            self.assertEqual(
+                tokenize_name(u'Coddlington,~Simon'),
+                NameResult(first='Simon', middle='', prefix='', last='Coddlington', generation='')
+            )
+
+        def test_without_comma(self):
+            self.assertEqual(
+                tokenize_name(u'Simon Coddlington'),
+                NameResult(first='Simon', middle='', prefix='', last='Coddlington', generation='')
+            )
+
+        def test_without_comma_with_nbsp(self):
+            self.assertEqual(
+                tokenize_name(u'Simon~Coddlington'),
+                NameResult(first='Simon', middle='', prefix='', last='Coddlington', generation='')
+            )
+
+        def test_middle_name(self):
+            self.assertEqual(
+                tokenize_name(u'Coddlington, Simon P.'),
+                NameResult(first='Simon', middle='P.', prefix='', last='Coddlington', generation='')
+            )
+
+        def test_middle_name_without_comma(self):
+            self.assertEqual(
+                tokenize_name(u'Simon P. Coddlington'),
+                NameResult(first='Simon', middle='P.', prefix='', last='Coddlington', generation='')
+            )
+
+        def test_middle_name_with_nbsp(self):
+            self.assertEqual(
+                tokenize_name(u'Coddlington, Simon~P.'),
+                NameResult(first='Simon', middle='P.', prefix='', last='Coddlington', generation='')
+            )
+
+        def test_multiple_middle_names(self):
+            self.assertEqual(
+                tokenize_name(u'Quine, Willard van Orman'),
+                NameResult(first='Willard', middle='van Orman', prefix='', last='Quine', generation='')
+            )
+
+        def test_multiple_middle_names_without_comma(self):
+            self.assertEqual(
+                tokenize_name(u'Willard van Orman Quine'),
+                NameResult(first='Willard', middle='', prefix='van', last='Orman Quine', generation='')
+            )
+
+        def test_single_name_only(self):
+            self.assertEqual(
+                tokenize_name(u'Augustine'),
+                NameResult(first='Augustine', middle='', prefix='', last='', generation='')
+            )
+
+        def test_generation(self):
+            # NB as with Bib(La)TeX, generations are only supported using commas
+            self.assertEqual(
+                tokenize_name(u'Jones, Jr, James Earl'),
+                NameResult(first='James', middle='Earl', prefix='', last='Jones', generation='Jr')
+            )
+
+        def test_hyphenated_first_name(self):
+            self.assertEqual(
+                tokenize_name(u'Sartre, Jean-Paul'),
+                NameResult(first='Jean-Paul', middle='', prefix='', last='Sartre', generation='')
+            )
+
+        def test_hyphenated_surname(self):
+            self.assertEqual(
+                tokenize_name(u'Jean Charles-Gabriel'),
+                NameResult(first='Jean', middle='', prefix='', last='Charles-Gabriel', generation='')
+            )
+
+        def test_prefixed_surname(self):
+            self.assertEqual(
+                tokenize_name(u'van Houten, James'),
+                NameResult(first='James', middle='', prefix='van', last='Houten', generation='')
+            )
+
+        def test_prefixed_surname_without_comma(self):
+            self.assertEqual(
+                tokenize_name(u'James van Houten'),
+                NameResult(first='James', middle='', prefix='van', last='Houten', generation='')
+            )
+
+        def test_long_prefixed_surname(self):
+            self.assertEqual(
+                tokenize_name(u'van auf der Rissen, Gloria'),
+                NameResult(first='Gloria', middle='', prefix='van auf der', last='Rissen', generation='')
+            )
+
+        def test_long_prefixed_surname_without_comma(self):
+            self.assertEqual(
+                tokenize_name(u'Gloria van auf der Rissen'),
+                NameResult(first='Gloria', middle='', prefix='van auf der', last='Rissen', generation='')
+            )
+
+        def test_complex_name(self):
+            self.assertEqual(
+                tokenize_name(u'de la Vall{\\\'e}e~Poussin, Jean Charles~Gabriel'),
+                NameResult(first='Jean', middle='Charles Gabriel', prefix='de la', last="Vall{\\'e}e Poussin", generation='')
+            )
+
+        def test_complex_name_without_comma(self):
+            self.assertEqual(
+                tokenize_name(u'Jean Charles~Gabriel de la Vall{\\\'e}e~Poussin'),
+                NameResult(first='Jean', middle='Charles Gabriel', prefix='de la', last="Vall{\\'e}e Poussin", generation='')
+            )
+
+        def test_complex_name_with_unicode(self):
+            self.assertEqual(
+                tokenize_name(u'Jean Charles~Gabriel de la Vallée~Poussin'),
+                NameResult(first='Jean', middle='Charles Gabriel', prefix='de la', last=u'Vallée Poussin', generation='')
+            )
+
+        def test_another_complex_name(self):
+            self.assertEqual(
+                tokenize_name(u'von Berlichingen zu Hornberg, Johann Gottfried'),
+                NameResult(first='Johann', middle='Gottfried', prefix='von', last='Berlichingen zu Hornberg', generation='')
+            )
+
+        def test_name_with_brackets(self):
+            self.assertEqual(
+                tokenize_name(u'{Robert and Sons, Inc.}'),
+                NameResult(first='{Robert and Sons, Inc.}', middle='', prefix='', last='', generation='')
+            )
+
+    class TestNameClass(unittest.TestCase):
+        def test_simple(self):
+            self.assertEqual(
+                str(Name('Simon~Coddlington')),
+                'Coddlington, Simon'
+            )
+
+        def test_hyphenation(self):
+            self.assertEqual(
+                str(Name('Jean-Paul Sartre')),
+                'Sartre, Jean-Paul'
+            )
+
+        def test_prefixed_surname(self):
+            self.assertEqual(
+                str(Name('Gloria van auf der Rissen')),
+                'van auf der Rissen, Gloria'
+            )
+
+        def test_complex_name(self):
+            self.assertEqual(
+                str(Name('de la Vall{\\\'e}e~Poussin, Jean Charles~Gabriel')),
+                "de la Vall{\\'e}e Poussin, Jean Charles Gabriel"
+            )
+
+    class TestGetNames(unittest.TestCase):
+        def test_simple(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
+
+        def test_editor(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        editor = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
+
+        def test_translator(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        translator = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
+
+        def test_newline_before_value(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {
+                            Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
+
+        def test_newline_after_value(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon
+                            },
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
+
+        def test_newlines_in_value(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {
+                            Coddlington, Simon
+                        },
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
+
+        def test_two_authors(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon and Gary Winchester},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
+
+        def test_two_authors_newline_before_and(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon
+                            and Gary Winchester},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
+
+        def test_two_authors_newline_after_and(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon and
+                            Gary Winchester},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
+
+        def test_three_authors(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon and Gary Winchester and Calhoun, Buck},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Calhoun, Buck', u'Coddlington, Simon', u'Winchester, Gary']
+            )
+
+        def test_two_name_fields(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        editor = {Winchester, Gary},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
+
+        def test_three_name_fields(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        editor = {Winchester, Gary},
+                        translator = {Calhoun, Buck},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Calhoun, Buck', u'Coddlington, Simon', u'Winchester, Gary']
+            )
+
+        def test_two_name_fields_same_person(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        editor = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }"""),
+                [u'Coddlington, Simon']
+            )
+
+        def test_multiple_entries(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon},
+                        date = {2014-08-01}
+                    }
+
+                    @book{
+                        title = {An Even Longer Disquisition on Nothingness and Other Thoughts},
+                        author = {Winchester, Gary},
+                        date = {2015-06-07}
+                    }"""),
+                [u'Coddlington, Simon', u'Winchester, Gary']
+            )
+
+        def test_paritially_complete_entry(self):
+            self.assertEqual(
+                get_names(u"""
+                    @article {
+                        title = {A Long Disquisition on Nothing},
+                        author = {Coddlington, Simon and"""),
+                [u'Coddlington, Simon']
+            )
+
+    class TestFieldMatchingRegex(unittest.TestCase):
+
+        def test_simple(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = {'[::-1])
+            )
+
+        def test_without_spaces(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author={'[::-1])
+            )
+
+        def test_without_bracket(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = '[::-1])
+            )
+
+        def test_with_space_after_bracket(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = { '[::-1])
+            )
+
+        def test_alternative_field(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('editor = {'[::-1])
+            )
+
+        def test_doesnt_match_empty_field(self):
+            self.assertIsNone(
+                ON_NAME_FIELD_REGEX.match('author = {}'[::-1])
+            )
+
+        def test_doesnt_match_completed_field(self):
+            self.assertIsNone(
+                ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon}'[::-1])
+            )
+
+        def test_matches_partial_field(self):
+            self.assertIsNotNone(
+                ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and'[::-1])
+            )
+
+    class TestGetReplacement(unittest.TestCase):
+        def test_simple(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author = {'[::-1]),
+                    'Coddlington, Simon'
+                ),
+                'Coddlington, Simon}'
+            )
+
+        def test_without_spaces(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author={'[::-1]),
+                    'Coddlington, Simon'
+                ),
+                'Coddlington, Simon}'
+            )
+
+        def test_without_bracket(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author = '[::-1]),
+                    'Coddlington, Simon'
+                ),
+                '{Coddlington, Simon}'
+            )
+
+        def test_without_bracket_or_preceding_space(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author ='[::-1]),
+                    'Coddlington, Simon'
+                ),
+                ' {Coddlington, Simon}'
+            )
+
+        def test_without_equals(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author '[::-1]),
+                    'Coddlington, Simon'
+                ),
+                '= {Coddlington, Simon}'
+            )
+
+        def test_without_equals_or_space(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author'[::-1]),
+                    'Coddlington, Simon'
+                ),
+                ' = {Coddlington, Simon}'
+            )
+
+        def test_with_existing_entry(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and '[::-1]),
+                    'Coddlington, Simon'
+                ),
+                'Coddlington, Simon}'
+            )
+
+        def test_with_existing_entry_without_space(self):
+            self.assertEqual(
+                _get_replacement(
+                    ON_NAME_FIELD_REGEX.match('author = {Coddlington, Simon and'[::-1]),
+                    'Coddlington, Simon'
+                ),
+                ' Coddlington, Simon}'
+            )
+
+# monkey patch unittest in Python 2.6
+if sys.version_info < (2, 7) and sys.version_info >= (2, 6):
+        def assertIsNone(self, obj, msg=None):
+            if obj is not None:
+                raise self.failureException(msg or '%r is not None' % (obj,))
+
+        def assertIsNotNone(self, obj, msg=None):
+            if obj is None:
+                raise self.failureException(msg or '%r is None' % (obj,))
+
+        unittest.TestCase.assertIsNone = assertIsNone
+        unittest.TestCase.assertIsNotNone = assertIsNotNone
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    unittest.main()
