@@ -4,7 +4,7 @@
 @article{${1:Key},
     author = {${2:Author}},
     title = {${3:Title}},
-    journal = {${4:Journal}},
+    journaltitle = {${4:Journaltitle}},
     year = {${5:Year}}
 }
 ]]></content>
