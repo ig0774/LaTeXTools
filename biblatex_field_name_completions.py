@@ -185,11 +185,6 @@ def is_bib_file(view):
 def is_biblatex(view):
     return view.match_selector(0, 'text.biblatex')
 
-def get_text_to_cursor(view):
-    cursor = view.sel()[0].b
-    current_region = sublime.Region(0, cursor)
-    return view.substr(current_region)
-
 class FieldNameCompletions(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
         if not is_bib_file(view):
