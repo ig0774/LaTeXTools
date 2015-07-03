@@ -190,7 +190,7 @@ def get_text_to_cursor(view):
     current_region = sublime.Region(0, cursor)
     return view.substr(current_region)
 
-class SnippetCompletions(sublime_plugin.EventListener):
+class FieldNameCompletions(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
         if not is_bib_file(view):
             return []
