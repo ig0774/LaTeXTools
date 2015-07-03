@@ -192,11 +192,15 @@ class FieldNameCompletions(sublime_plugin.EventListener):
 
         cursor_point = view.sel()[0].b
 
-        # do not return completions if the cursor is outside an entry
+        # do not autocomplete if the cursor is outside an entry
         if not view.match_selector(cursor_point, 'meta.entry.braces.bibtex'):
             return []
 
-        # no completions if we are already inside a field
+        # do not autocomplete when cursor is in the citekey field
+        if view.match_selector(cursor_point, 'entity.name.type.entry-key.bibtex'):
+            return []
+
+        # do not autocomplete if we are already inside a field
         if view.match_selector(cursor_point, 'meta.key-assignment.bibtex'):
             return []
 
