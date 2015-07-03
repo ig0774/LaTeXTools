@@ -4,7 +4,7 @@
 @mvbook{${1:Key},
 	author = {${2:Author/Editor}},
 	title = {${3:Title}},
-	year = {${5:Year}}
+	year = {${4:Year}}
 }
 ]]></content>
 	<tabTrigger>mvbook</tabTrigger>
