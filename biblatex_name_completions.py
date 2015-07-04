@@ -853,8 +853,8 @@ except ImportError:
                 ' Coddlington, Simon'
             )
 
-# monkey patch unittest in Python 2.6
-if sys.version_info < (2, 7) and sys.version_info >= (2, 6):
+    # monkey patch unittest in Python 2.6
+    if sys.version_info < (2, 7) and sys.version_info >= (2, 6):
         def assertIsNone(self, obj, msg=None):
             if obj is not None:
                 raise self.failureException(msg or '%r is not None' % (obj,))
