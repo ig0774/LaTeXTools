@@ -14,7 +14,7 @@ def plugin_unloaded():
         return
     else:
         if events.pre_upgrade(PACKAGE_NAME) or events.remove(PACKAGE_NAME):
-            for module in ['latextools_plugin_internal']:
+            for module in ['latex_chars', 'latextools_plugin_internal']:
                 module_name = get_module_name(module)
                 if module_name in sys.modules:
                     del sys.modules[module_name]
