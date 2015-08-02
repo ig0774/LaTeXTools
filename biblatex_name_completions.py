@@ -136,7 +136,7 @@ def tokenize_name(name_str):
 
         new_names = split_tex_string(names[1], 1)
         while len(new_names) > 1 and new_names[0].islower():
-            result[0] = ' '.join((result[0], new_names[0]))
+            result[0] = u' '.join((result[0], new_names[0]))
             names = new_names
             new_names = split_tex_string(names[1], 1)
 
@@ -191,16 +191,25 @@ def tokenize_name(name_str):
         last, first = parts
 
         # for consistency with spaces being stripped in first last format
-        first = ' '.join((s for s in split_tex_string(first)))
-        last = ' '.join((s for s in split_tex_string(last)))
+        first = u' '.join((s for s in split_tex_string(first)))
+        last = u' '.join((s for s in split_tex_string(last)))
 
         forenames = extract_middle_names(first)
         lastnames = extract_name_prefix(last)
+
+        if len(lastnames) > 1:
+            name_index = 0
+            for part in lastnames:
+                if part.islower():
+                    name_index += 1
+                else:
+                    break
+
         return NameResult(
             forenames[0],
             forenames[1] if len(forenames) > 1 else '',
-            lastnames[0] if len(lastnames) > 1 else '',
-            lastnames[1] if len(lastnames) > 1 else lastnames[0],
+            u' '.join(lastnames[:name_index]) if len(lastnames) > 1 else '',
+            u' '.join(lastnames[name_index:]) if len(lastnames) > 1 else lastnames[0],
             ''
         )
     elif len(parts) == 3:
@@ -216,7 +225,7 @@ def tokenize_name(name_str):
             generation
         )
     else:
-        raise ValueError('Unrecognised name format for "{0}"'.format(name_str))
+        raise ValueError(u'Unrecognised name format for "{0}"'.format(name_str))
 
 class Name(object):
     u'''
@@ -492,6 +501,24 @@ except ImportError:
             self.assertEqual(
                 tokenize_name(u'Gloria van auf der Rissen'),
                 NameResult(first='Gloria', middle='', prefix='van auf der', last='Rissen', generation='')
+            )
+
+        def test_compound_last_name(self):
+            self.assertEqual(
+                tokenize_name(u'Pedro {Almodóvar Caballero}'),
+                NameResult(first='Pedro', middle='', prefix='', last=u'{Almodóvar Caballero}', generation='')
+            )
+
+        def test_compound_last_name_with_comma(self):
+            self.assertEqual(
+                tokenize_name(u'{Almodóvar Caballero}, Pedro'),
+                NameResult(first='Pedro', middle='', prefix='', last=u'{Almodóvar Caballero}', generation='')
+            )
+
+        def test_compound_last_name_with_comma_without_brackets(self):
+            self.assertEqual(
+                tokenize_name(u'Almodóvar Caballero, Pedro'),
+                NameResult(first='Pedro', middle='', prefix='', last=u'Almodóvar Caballero', generation='')
             )
 
         def test_complex_name(self):
