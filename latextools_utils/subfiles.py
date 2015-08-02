@@ -9,7 +9,11 @@ try:
 except:
     from latextools_utils import is_tex_file, get_tex_extensions
 
-INPUT_FILE = re.compile(r'\\(?:input|include)\{([^\}]+)\}')
+# I've combined this into one regex in case import order becomes important
+INPUT_FILE = re.compile(r'''
+    \\(?:input|include)\{([^\}]+)\}|
+    \\(?:(?:sub)?import)[*]?\{([^\}]+)\}\{([^\}]+)\}
+''', re.MULTILINE)
 DOCUMENT_START = re.compile(r'\\begin\{document\}')
 
 # recursively search all linked tex files to find all
@@ -63,9 +67,24 @@ def walk_subfiles(rootdir, src, preamble_only=False):
     if preamble_only:
         src_content, document_start = re.split(DOCUMENT_START, src_content, 1)
 
-    for input_file in re.findall(INPUT_FILE, src_content):
-        for src_content in walk_subfiles(rootdir, input_file, preamble_only):
-            yield src_content
+    for match in re.findall(INPUT_FILE, src_content):
+        # input / include
+        if match[0]:
+            for src_content in walk_subfiles(rootdir, match[0], preamble_only):
+                yield src_content
+        # import / subimport
+        elif match[1]:
+            if not match[2]:
+                continue
+
+            if os.path.isabs(match[1]):
+                new_root = match[1]
+            else:
+                new_root = os.path.normpath(
+                    os.path.join(rootdir, match[1]))
+
+            for src_content in walk_subfiles(new_root, match[2], preamble_only):
+                yield src_content
 
     if document_start is not None:
         raise StopIteration()
