@@ -136,7 +136,7 @@ def tokenize_name(name_str):
 
         new_names = split_tex_string(names[1], 1)
         while len(new_names) > 1 and new_names[0].islower():
-            result[0] = ' '.join((result[0], new_names[0]))
+            result[0] = u' '.join((result[0], new_names[0]))
             names = new_names
             new_names = split_tex_string(names[1], 1)
 
@@ -216,7 +216,7 @@ def tokenize_name(name_str):
             generation
         )
     else:
-        raise ValueError('Unrecognised name format for "{0}"'.format(name_str))
+        raise ValueError(u'Unrecognised name format for "{0}"'.format(name_str))
 
 class Name(object):
     u'''
