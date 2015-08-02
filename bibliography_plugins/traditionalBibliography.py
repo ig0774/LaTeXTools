@@ -55,6 +55,9 @@ def remove_latex_commands(s):
 
     >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu \\emph{Ernst {Blochs}} spekulativen Materialismus}')
     u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
+
+    >>> remove_latex_commands(ur'\\noindent Some text')
+    u'Some text'
     '''
     chars = []
     FOUND_SLASH = False
@@ -70,6 +73,8 @@ def remove_latex_commands(s):
             FOUND_SLASH = True
         elif not FOUND_SLASH:
             chars.append(c)
+        elif c.isspace():
+            FOUND_SLASH = False
 
     return ''.join(chars)
 
