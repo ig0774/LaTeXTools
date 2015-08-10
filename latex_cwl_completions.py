@@ -193,13 +193,12 @@ class CwlParsingHandler(object):
 
     def get_root_file(self):
         root = get_tex_root(sublime.active_window().active_view())
-        if root is not None:
-            t = threading.Thread(
-                target=self.on_autoload,
-                args=(root,)
-            )
-            t.daemon = True
-            t.start()
+        t = threading.Thread(
+            target=self.on_autoload,
+            args=(root,)
+        )
+        t.daemon = True
+        t.start()
 
     def __call__(self, callback, file_name, cwl_file_list, cwl_autoload):
         if cwl_autoload:
@@ -213,25 +212,26 @@ class CwlParsingHandler(object):
     def on_autoload(self, root):
         cwl_file_list = self.cwl_file_list
 
-        packages = get_packages(os.path.dirname(root), root)
+        if root is not None:
+            packages = get_packages(os.path.dirname(root), root)
 
-        for package in packages:
-            cwl_file = "{0}.cwl".format(package)
-            if cwl_file in cwl_file_list:
-                continue
-            elif package in KOMA_SCRIPT_CLASSES:
-                # basic KOMA-Script classes are in one cwl file
-                if 'class-scrartcl,scrreprt,scrbook.cwl' not in cwl_file_list:
-                    cwl_file_list.append('class-scrartcl,scrreprt,scrbook.cwl')
-            elif package == 'polyglossia':
-                # polyglossia is more or less babel
-                if 'babel.cwl' not in cwl_file_list:
-                    cwl_file_list.append('babel.cwl')
-            else:
-                if os.path.exists(
-                    os.path.normpath(os.path.join(
-                        sublime.packages_path(), 'LaTeX-cwl', cwl_file))):
-                    cwl_file_list.append(cwl_file)
+            for package in packages:
+                cwl_file = "{0}.cwl".format(package)
+                if cwl_file in cwl_file_list:
+                    continue
+                elif package in KOMA_SCRIPT_CLASSES:
+                    # basic KOMA-Script classes are in one cwl file
+                    if 'class-scrartcl,scrreprt,scrbook.cwl' not in cwl_file_list:
+                        cwl_file_list.append('class-scrartcl,scrreprt,scrbook.cwl')
+                elif package == 'polyglossia':
+                    # polyglossia is more or less babel
+                    if 'babel.cwl' not in cwl_file_list:
+                        cwl_file_list.append('babel.cwl')
+                else:
+                    if os.path.exists(
+                        os.path.normpath(os.path.join(
+                            sublime.packages_path(), 'LaTeX-cwl', cwl_file))):
+                        cwl_file_list.append(cwl_file)
         self.callback(parse_cwl_file(cwl_file_list), self.file_name)
 
 def parse_cwl_file(cwl_file_list):
