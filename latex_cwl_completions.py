@@ -193,12 +193,13 @@ class CwlParsingHandler(object):
 
     def get_root_file(self):
         root = get_tex_root(sublime.active_window().active_view())
-        t = threading.Thread(
-            target=self.on_autoload,
-            args=(root,)
-        )
-        t.daemon = True
-        t.start()
+        if root is not None:
+            t = threading.Thread(
+                target=self.on_autoload,
+                args=(root,)
+            )
+            t.daemon = True
+            t.start()
 
     def __call__(self, callback, file_name, cwl_file_list, cwl_autoload):
         if cwl_autoload:
