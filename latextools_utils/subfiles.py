@@ -11,7 +11,7 @@ except:
 
 # I've combined this into one regex in case import order becomes important
 INPUT_FILE = re.compile(r'''
-    \\(?:input|include)\{([^\}]+)\}|
+    \\(?:input|include|subfile)\{([^\}]+)\}|
     \\(?:(?:sub)?import)[*]?\{([^\}]+)\}\{([^\}]+)\}
 ''', re.MULTILINE)
 DOCUMENT_START = re.compile(r'\\begin\{document\}')
@@ -68,7 +68,7 @@ def walk_subfiles(rootdir, src, preamble_only=False):
         src_content, document_start = re.split(DOCUMENT_START, src_content, 1)
 
     for match in re.findall(INPUT_FILE, src_content):
-        # input / include
+        # input / include / subfile
         if match[0]:
             for src_content in walk_subfiles(rootdir, match[0], preamble_only):
                 yield src_content
