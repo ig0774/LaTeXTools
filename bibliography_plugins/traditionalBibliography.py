@@ -153,7 +153,7 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
 
         for content in walk_subfiles(rootdir, root_file):
             bibtags =  re.findall(r'\\bibliography\{([^\}]+)\}', content)
-            bibtags += re.findall(r'\\addbibresource\{([^\}]+.bib)\}', content)
+            bibtags += re.findall(r'\\addbibresource(?:\[[^\]]*\])?\{[^\}]+\.bib\}', content)
 
             # extract absolute filepath for each bib file
             for tag in bibtags:
