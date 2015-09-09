@@ -84,6 +84,11 @@ from contextlib import contextmanager
 
 from collections import MutableMapping
 
+try:
+    from latextools_utils import get_setting
+except ImportError:
+    fromt .latextools_utils import get_setting
+
 if sys.version_info < (3, 0):
     exec("""def reraise(tp, value, tb=None):
     raise tp, value, tb
@@ -276,9 +281,7 @@ plugin is supposed to be loaded. See the documentation for details.
 '''
 
 def _get_plugin_paths():
-    settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    plugin_paths = settings.get('plugin_paths', [])
-    return plugin_paths
+    return get_setting('plugin_paths', [])
 
 def _load_plugin(filename, *paths):
     name, ext = os.path.splitext(filename)
@@ -351,8 +354,8 @@ def _latextools_module_hack():
     such as the getTeXRoot module, but can be configured by the user as-needed.
     '''
     # add any white-listed plugins to sys.modules under their own name
-    settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    plugins_whitelist = settings.get('plugins_whitelist', ['getTeXRoot', 'kpsewhich', 'latex_chars', 'latextools_utils'])
+    plugins_whitelist = get_setting('plugins_whitelist',
+        ['getTeXRoot', 'kpsewhich', 'latex_chars', 'latextools_utils'])
 
     # always include latextools_pluing
     plugins_whitelist.append('latextools_plugin')

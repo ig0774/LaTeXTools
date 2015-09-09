@@ -5,6 +5,11 @@ import sys
 import subprocess
 from subprocess import Popen, PIPE
 
+try:
+    from latextools_utils import get_setting
+except ImportError:
+    from .latextools_utils import get_setting
+
 if sublime.version() < '3000':
     def expand_vars(texpath):
         return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
@@ -15,24 +20,11 @@ else:
 __all__ = ['external_command']
 
 def _get_texpath():
-    def _get_texpath_setting(settings):
-        platform_settings = settings.get(sublime.platform(), {})
-        if 'texpath' in platform_settings:
-            texpath = platform_settings['texpath']
-            if texpath:
-                return texpath
-        return settings.get('texpath', '')
+    texpath = get_setting(sublime.platform(), {}).get('texpath')
+    if texpath is None:
+        texpath = get_setting('texpath')
 
-    texpath = _get_texpath_setting(
-        sublime.active_window().active_view().settings()
-    ) or _get_texpath_setting(
-        sublime.load_settings('LaTeXTools.sublime-settings')
-    )
-
-    if texpath:
-        return expand_vars(texpath)
-    else:
-        return ''
+    return expand_vars(texpath) if texpath is not None else None
 
 def external_command(command, cwd=None):
     '''

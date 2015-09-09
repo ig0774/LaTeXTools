@@ -2,9 +2,9 @@ import sublime
 import sublime_plugin
 
 try:
-    from latextools_utils import is_tex_file
+    from latextools_utils import is_tex_file, get_setting
 except ImportError:
-    from .latextools_utils import is_tex_file
+    from .latextools_utils import is_tex_file, get_setting
 
 LATEX_SYNTAX = 'Packages/LaTeX/LaTeX.tmLanguage'
 
@@ -23,9 +23,7 @@ class TeXSyntaxListener(sublime_plugin.EventListener):
         if current_syntax == LATEX_SYNTAX:
             return
 
-        global_settings = sublime.load_settings('LaTeXTools.sublime-settings')
-        if not view.settings().get('latextools_set_syntax',
-            global_settings.get('latextools_set_syntax', True)):
+        if not get_setting('latextools_set_syntax', True:)
             return
 
         file_name = view.file_name()

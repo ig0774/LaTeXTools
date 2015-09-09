@@ -316,11 +316,7 @@ def run_plugin_command(command, *args, **kwargs):
 
         return result
 
-    settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    plugins = settings.get('bibliography_plugins', ['traditional_bibliography'])
-    if not plugins:
-        print('bibliography_plugins is blank. Loading traditional plugin.')
-        plugins = ['traditional_bibliography']
+    plugins = get_setting('bibliography_plugins', ['traditional_bibliography'])
 
     result = None
     if type(plugins) == strbase:

@@ -16,6 +16,7 @@ if sublime.version() < '3000':
     from latex_input_completions import TEX_INPUT_FILE_REGEX
     from getRegion import get_Region
     from getTeXRoot import get_tex_root
+    from latextools_utils import get_setting
     from latextools_utils.subfiles import walk_subfiles
 else:
     _ST3 = True
@@ -24,6 +25,7 @@ else:
     from .latex_input_completions import TEX_INPUT_FILE_REGEX
     from .getRegion import get_Region
     from .getTeXRoot import get_tex_root
+    from .latextools_utils import get_setting
     from .latextools_utils.subfiles import walk_subfiles
 
 # Do not do completions in these envrioments
@@ -59,19 +61,16 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             # Get cwl file list
             # cwl_path = sublime.packages_path() + "/LaTeX-cwl"
             settings = sublime.load_settings("LaTeXTools.sublime-settings")
-            cwl_file_list = view.settings().get('cwl_list',
-                settings.get(
-                    'cwl_list',
+            cwl_file_list = get_setting('cwl_list',
                     [
                         "tex.cwl",
                         "latex-209.cwl",
                         "latex-document.cwl",
                         "latex-l2tabu.cwl",
                         "latex-mathsymbols.cwl"
-                    ]))
+                    ])
 
-            cwl_autoload = view.settings().get(
-                'cwl_autoload', settings.get('cwl_autoload', False))
+            cwl_autoload = get_setting('cwl_autoload', False)
 
             self.started = True
             self.current_file = view.file_name()
@@ -102,9 +101,6 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             sublime.set_timeout(self.hack, 1)
 
     def on_query_completions(self, view, prefix, locations):
-        # settings = sublime.load_settings("LaTeXTools.sublime-settings")
-        # cwl_completion = settings.get('cwl_completion')
-
         if not CWL_COMPLETION:
             return []
 
@@ -142,8 +138,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             CWL_COMPLETION = True
 
         if CWL_COMPLETION:
-            g_settings = sublime.load_settings("Preferences.sublime-settings")
-            acts = g_settings.get("auto_complete_triggers", [])
+            acts = get_setting('auto_complete_triggers', [])
 
             # Whether auto trigger is already set in Preferences.sublime-settings
             TEX_AUTO_COM = False
@@ -162,9 +157,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             self.load_completions(view)
 
     def on_post_save_async(self, view):
-        settings = sublime.load_settings('LaTeXTools.sublime-settings')
-        cwl_autoload = view.settings().get(
-            'cwl_autoload', settings.get('cwl_autoload', False))
+        cwl_autoload = get_setting('cwl_autoload', False)
 
         if cwl_autoload:
             # reload completions on save if we are autoloading
