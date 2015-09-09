@@ -37,7 +37,7 @@ if sublime.version() < '3000':
     _ST3 = False
     import getTeXRoot
     import latextools_plugin
-    from latextools_utils import is_tex_buffer
+    from latextools_utils import is_tex_buffer, get_setting
     from latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
@@ -50,7 +50,7 @@ else:
     _ST3 = True
     from . import getTeXRoot
     from . import latextools_plugin
-    from .latextools_utils import is_tex_buffer
+    from .latextools_utils import is_tex_buffer, get_setting
     from .latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
@@ -630,8 +630,8 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
             prefix += " "
 
         # get preferences for formating of autocomplete entries
-        s = sublime.load_settings("LaTeXTools.sublime-settings")
-        cite_autocomplete_format = s.get("cite_autocomplete_format", "{keyword}: {title}")
+        cite_autocomplete_format = get_setting('cite_autocomplete_format',
+            "{keyword}: {title}")
 
         formatter = Formatter()
         r = [(prefix + formatter.vformat(cite_autocomplete_format, (), completion),
@@ -714,11 +714,12 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
             view.sel().add(sublime.Region(caret, caret))
 
         # get preferences for formating of quick panel
-        s = sublime.load_settings("LaTeXTools.sublime-settings")
         if _ST3:
-            cite_panel_format = s.get("cite_panel_format", ["{title} ({keyword})", "{author}"])
+            cite_panel_format = get_setting('cite_panel_format',
+                ["{title} ({keyword})", "{author}"])
         else:
-            cite_panel_format = map(unicode, s.get("cite_panel_format", ["{title} ({keyword})", "{author}"]))
+            cite_panel_format = map(unicode, get_setting('cite_panel_format',
+                ["{title} ({keyword})", "{author}"]))
 
         # show quick
         formatter = Formatter()
