@@ -85,9 +85,9 @@ from contextlib import contextmanager
 from collections import MutableMapping
 
 try:
-    from latextools_utils import get_setting
+    from .latextools_utils import get_setting
 except ImportError:
-    fromt .latextools_utils import get_setting
+    from latextools_utils import get_setting
 
 if sys.version_info < (3, 0):
     exec("""def reraise(tp, value, tb=None):
