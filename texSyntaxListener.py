@@ -23,7 +23,7 @@ class TeXSyntaxListener(sublime_plugin.EventListener):
         if current_syntax == LATEX_SYNTAX:
             return
 
-        if not get_setting('latextools_set_syntax', True)
+        if not get_setting('latextools_set_syntax', True):
             return
 
         file_name = view.file_name()
