@@ -172,7 +172,7 @@ class CmdThread ( threading.Thread ):
 			warnings = []
 
 			try:
-				(errors, warnings) = parseTeXlog.parse_tex_log(data)
+				(errors, warnings, badboxes) = parseTeXlog.parse_tex_log(data)
 				content = [""]
 				if errors:
 					content.append("Errors:") 
@@ -180,6 +180,7 @@ class CmdThread ( threading.Thread ):
 					content.extend(errors)
 				else:
 					content.append("No errors.")
+				
 				if warnings:
 					if errors:
 						content.extend(["", "Warnings:"])
@@ -189,12 +190,21 @@ class CmdThread ( threading.Thread ):
 					content.extend(warnings)
 				else:
 					content.append("")
+
+				if badboxes:
+					if warnings or errors:
+						content.extend(["". "Bad Boxes:"])
+					else:
+						content[-1] = content[-1] + " Bad Boxes":
+					content.append("")
+					content.extend(badboxes)
+				else:
+					content.append("")
 			except Exception as e:
 				content=["",""]
 				content.append("LaTeXtools could not parse the TeX log file")
 				content.append("(actually, we never should have gotten here)")
 				content.append("")
-				content.append("Python exception: " + repr(e))
 				content.append("")
 				content.append("Please let me know on GitHub. Thanks!")
 
