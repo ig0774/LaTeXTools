@@ -1,12 +1,5 @@
 # ST2/ST3 compat
 from __future__ import print_function 
-import sublime
-if sublime.version() < '3000':
-    # we are on ST2 and Python 2.X
-    _ST3 = False
-else:
-    _ST3 = True
-
 
 import re
 import sys
@@ -14,12 +7,12 @@ import os.path
 
 
 # To accommodate both Python 2 and 3
-def advance_iterator(it):
-	if not _ST3:
-		return it.next()
-	else:
+if sys.version_info > (3, 0):
+	def advance_iterator(it):
 		return next(it)
-
+else:
+	def advance_iterator(it):
+		return it.next()
 
 print_debug = False
 interactive = False
