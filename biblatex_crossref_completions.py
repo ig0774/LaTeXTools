@@ -67,7 +67,7 @@ def _get_keys_by_type(view, valid_types):
 
     contents = view.substr(sublime.Region(0, view.size()))
     for entry_type, key in re.findall(
-        r'(@(?!comment|string)[a-zA-Z]+)\s*\{\s*([^,]+)\b',
+        r'(@(?!preamble|comment|string)[a-zA-Z]+)\s*\{\s*([^,]+)\b',
         contents,
         re.IGNORECASE | re.UNICODE
     ):
