@@ -195,7 +195,7 @@ class CmdThread ( threading.Thread ):
 					if warnings or errors:
 						content.extend(["", "Bad Boxes:"])
 					else:
-						content[-1] = content[-1] + " Bad Boxes":
+						content[-1] = content[-1] + " Bad Boxes:"
 					content.append("")
 					content.extend(badboxes)
 				else:
