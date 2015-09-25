@@ -12,6 +12,11 @@ try:
 except ImportError:
     from getTeXRoot import get_tex_root
 
+try:
+    from .latextools_utils import get_tex_extensions
+except ImportError:
+    from latextools_utils import get_tex_extensions
+
 
 class JumptoTexFileCommand(sublime_plugin.TextCommand):
 
@@ -40,7 +45,7 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
                 _, ext = os.path.splitext(new_file_name)
                 if ext == '':
                     new_file_name += '.tex'
-                elif ext.lower() not in ['.tex', '.tikz']:
+                elif ext.lower() not in get_tex_extensions():
                     sublime.status_message(
                         "Cannot open file '{0}' as it has an unrecognized extension".format(
                             new_file_name))
