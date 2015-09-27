@@ -418,9 +418,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			self.window.active_view().run_command("jump_to_pdf", {"from_keybinding": False})
 			
 			# clean-up temp files if clean_on_build set to true
-			s = sublime.load_settings("LaTeXTools.sublime-settings")
-			clean_on_build = s.get('clean_on_build', False)
-			if clean_on_build:
+			if get_setting('clean_on_build', False):
 				self.window.run_command("delete_temp_files")
 
 
