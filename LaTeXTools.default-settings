@@ -138,6 +138,10 @@
 		}
 	},
 
+	// OPTION: "clean_on_build"
+	// If set to true, LaTeXTools will clean-up any temporary files
+	// after a successful build.
+	"clean_on_build": false,
 
 // ------------------------------------------------------------------
 // Formatting of bibliographic references in quick panel

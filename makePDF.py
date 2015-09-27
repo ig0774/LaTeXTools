@@ -393,6 +393,12 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.output_view.run_command("do_finish_edit")
 		if can_switch_to_pdf:
 			self.window.active_view().run_command("jump_to_pdf", {"from_keybinding": False})
+			
+			# clean-up temp files if clean_on_build set to true
+			s = sublime.load_settings("LaTeXTools.sublime-settings")
+			clean_on_build = s.get('clean_on_build', False)
+			if clean_on_build:
+				self.window.run_command("delete_temp_files")
 
 
 class DoOutputEditCommand(sublime_plugin.TextCommand):
