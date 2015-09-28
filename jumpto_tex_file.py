@@ -36,8 +36,8 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
         base_path, base_name = os.path.split(tex_root)
 
         reg = re.compile(
-            r"\\in((clude)|(put))\{(?P<file>[^}]+)\}",
-            re.UNICODE | re.IGNORECASE
+            r"\\(?:input|include|subfile)\{(?P<file>[^}]+)\}",
+            re.UNICODE
         )
         for sel in view.sel():
             line = view.substr(view.line(sel))
