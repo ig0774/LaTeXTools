@@ -17,6 +17,11 @@ try:
 except ImportError:
     from latextools_utils import get_tex_extensions, is_tex_buffer
 
+try:
+    from .latextools_utils.subfiles import INPUT_FILE
+except ImportError:
+    from latextools_utils.subfiles import INPUT_FILE
+
 
 class JumptoTexFileCommand(sublime_plugin.TextCommand):
 
@@ -35,15 +40,11 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
         # the base path to the root file
         base_path, base_name = os.path.split(tex_root)
 
-        reg = re.compile(
-            r"\\(?:input|include|subfile)\{(?P<file>[^}]+)\}",
-            re.UNICODE
-        )
         for sel in view.sel():
             line = view.substr(view.line(sel))
-            g = re.search(reg, line)
-            if g and g.group("file"):
-                new_file_name = g.group('file')
+            g = re.search(INPUT_FILE, line)
+            if g and (g.group("file") or g.group("file2")):
+                new_file_name = g.group('file') or g.group("file2")
 
                 _, ext = os.path.splitext(new_file_name)
                 if ext == '':
