@@ -17,11 +17,11 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
 
     def run(self, edit, auto_create_missing_folders=True,
             auto_insert_root=True):
+        view = self.view
         if not view.match_selector(locations[0],
                 "text.tex.latex"):
             return
 
-        view = self.view
         tex_root = get_tex_root(view)
 
         if tex_root is None:
