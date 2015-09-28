@@ -13,7 +13,7 @@ except:
 INPUT_FILE = re.compile(r'''
     \\(?:input|include|subfile)\{([^\}]+)\}|
     \\(?:(?:sub)?import)[*]?\{([^\}]+)\}\{([^\}]+)\}
-''', re.MULTILINE)
+''', re.MULTILINE | re.UNICODE)
 DOCUMENT_START = re.compile(r'\\begin\{document\}')
 
 # recursively search all linked tex files to find all
