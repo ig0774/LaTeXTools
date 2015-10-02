@@ -13,20 +13,19 @@ except ImportError:
     from getTeXRoot import get_tex_root
 
 try:
-    from .latextools_utils import get_tex_extensions
+    from .latextools_utils import get_tex_extensions, is_tex_buffer
 except ImportError:
-    from latextools_utils import get_tex_extensions
+    from latextools_utils import get_tex_extensions, is_tex_buffer
 
 
 class JumptoTexFileCommand(sublime_plugin.TextCommand):
 
     def run(self, edit, auto_create_missing_folders=True,
             auto_insert_root=True):
-        if not view.match_selector(locations[0],
-                "text.tex.latex"):
+        view = self.view
+        if not is_tex_buffer(view):
             return
 
-        view = self.view
         tex_root = get_tex_root(view)
 
         if tex_root is None:
@@ -37,8 +36,8 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
         base_path, base_name = os.path.split(tex_root)
 
         reg = re.compile(
-            r"\\in((clude)|(put))\{(?P<file>[^}]+)\}",
-            re.UNICODE | re.IGNORECASE
+            r"\\(?:input|include|subfile)\{(?P<file>[^}]+)\}",
+            re.UNICODE
         )
         for sel in view.sel():
             line = view.substr(view.line(sel))
