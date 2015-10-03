@@ -299,7 +299,7 @@ def run_plugin_command(command, *args, **kwargs):
                 print(error_message)
                 raise BibPluginError(error_message)
             else:
-                reraise(*sys.exec_info())
+                reraise(*sys.exc_info())
         except AttributeError as e:
             if "'{0}'".format(command) in str(e):
                 error_message = '{0} does not implement `{1}`'.format(
@@ -310,7 +310,7 @@ def run_plugin_command(command, *args, **kwargs):
                 print(error_message)
                 raise BibPluginError(error_message)
             else:
-                reraise(*sys.exec_info())
+                reraise(*sys.exc_info())
         except NotImplementedError:
             return None
 
