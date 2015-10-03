@@ -45,12 +45,16 @@ class Database(MutableMapping):
         self._macros[key] = value
 
     def add_entry(self, entry):
+        if not isinstance(entry, Entry):
+            raise TypeError(type(entry))
+
         if entry.cite_key in self._entries:
             raise KeyError('entry with key {0} already exists'.format(
                 entry.cite_key
             ))
 
         self._entries[entry.cite_key] = entry
+        entry.database = self
 
     def get_preamble(self):
         return ''.join(self._preamble)
@@ -85,10 +89,10 @@ class Database(MutableMapping):
 
 class Entry(MutableMapping):
 
-    def __init__(self, entry_type, cite_key, database=None, *args, **kwargs):
+    def __init__(self, entry_type, cite_key, *args, **kwargs):
         self.entry_type = entry_type.lower()
         self.cite_key = cite_key
-        self.database = database
+        self.database = None
         self._attributes = CaseInsensitiveOrderedDict(*args, **kwargs)
 
     def get_crossref(self):
@@ -101,12 +105,15 @@ class Entry(MutableMapping):
             return None
 
     def __getitem__(self, key):
+        if key is None:
+            raise KeyError()
+
         try:
             return self._attributes[key]
         except KeyError:
             exc_info = sys.exc_info()
 
-            if key != 'crossref':
+            if key.lower() != 'crossref':
                 try:
                     return self.get_crossref()[key]
                 except TypeError:
