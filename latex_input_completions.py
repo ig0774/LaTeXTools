@@ -185,7 +185,7 @@ class LatexFillInputCommand(sublime_plugin.TextCommand):
             # is given so this works when being triggered by pressing "{"
             point += view.insert(edit, point, insert_char)
 
-            do_completion = get_setting("input_auto_trigger", True)
+            do_completion = get_setting("fill_auto_trigger", True)
             
             if not do_completion:
                 add_closing_bracket(view, edit)
