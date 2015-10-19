@@ -709,13 +709,26 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
             view.sel().subtract(view.sel()[0])
             view.sel().add(sublime.Region(caret, caret))
 
-        # get preferences for formating of quick panel
-        if _ST3:
-            cite_panel_format = get_setting('cite_panel_format',
-                ["{title} ({keyword})", "{author}"])
+        completions_length = len(completions)
+        if completions_length == 0:
+            return
+        elif completions_length == 1:
+            # only one entry, so insert entry
+            view.run_command("latex_tools_replace",
+                {
+                    "a": new_point_a,
+                    "b": new_point_b,
+                    "replacement": completions[0][0] + post_brace
+                }
+            )
         else:
-            cite_panel_format = map(unicode, get_setting('cite_panel_format',
-                ["{title} ({keyword})", "{author}"]))
+            # get preferences for formating of quick panel
+            if _ST3:
+                cite_panel_format = get_setting('cite_panel_format',
+                    ["{title} ({keyword})", "{author}"])
+            else:
+                cite_panel_format = map(unicode, get_setting('cite_panel_format',
+                    ["{title} ({keyword})", "{author}"]))
 
         # show quick
         formatter = Formatter()
