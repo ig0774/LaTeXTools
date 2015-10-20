@@ -721,6 +721,11 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
                     "replacement": completions[0][0] + post_brace
                 }
             )
+
+            # Unselect the replaced region and leave the caret at the end
+            caret = view.sel()[0].b
+            view.sel().subtract(view.sel()[0])
+            view.sel().add(sublime.Region(caret, caret))
         else:
             # get preferences for formating of quick panel
             if _ST3:
