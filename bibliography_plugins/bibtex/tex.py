@@ -12,7 +12,6 @@ def split_tex_string(string, maxsplit=-1, sep=None):
     if sep is None:
         # tilde == non-breaking space
         sep = r'(?u)[\s~]+'
-    sep_re = re.compile(sep)
 
     result = []
 
@@ -23,22 +22,28 @@ def split_tex_string(string, maxsplit=-1, sep=None):
     word_start = 0
     splits = 0
 
-    for pos, c in enumerate(string):
-        if c == '{':
-            brace_level += 1
-        elif c == '}':
-            brace_level -= 1
-        elif brace_level == 0 and pos > 0:
-            matcher = sep_re.match(string[pos:])
-            if matcher:
-                sep_len = len(matcher.group())
-                if pos + sep_len <= string_len:
-                    result.append(string[word_start:pos])
-                    word_start = pos + sep_len
+    i = 0
+    next_break = re.compile(r'\{|}|(?P<sep>' + sep + ')')
+
+    while i < string_len:
+        match = next_break.search(string, i)
+        if match:
+            matched = match.group(0)
+            if matched == '{':
+                brace_level += 1
+            elif matched == '}':
+                brace_level -= 1
+            elif brace_level == 0 and match.start('sep') > 0:
+                if match.end('sep') <= string_len:
+                    result.append(string[word_start:match.start('sep')])
+                    word_start = match.end('sep')
 
                     splits += 1
                     if splits == maxsplit:
                         break
+            i = match.end()
+        else:
+            i = string_len
 
     if word_start < string_len:
         result.append(string[word_start:])
