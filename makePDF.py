@@ -193,6 +193,7 @@ class CmdThread ( threading.Thread ):
 				"no_warnings": not errors and not warnings,
 				"never": False
 			}.get(hide_panel_level, False)
+
 			if hide_panel:
 				self.caller.window.run_command("hide_panel", {"panel": "output.exec"})
 				message = "build completed"
