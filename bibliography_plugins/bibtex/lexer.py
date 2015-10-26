@@ -61,7 +61,6 @@ class Lexer(object):
             else:
                 if start_entry:
                     consumed = (
-                        self.whitespace_token()     or
                         self.preamble_token()       or
                         self.string_token()         or
                         self.comment_token()        or
@@ -70,10 +69,14 @@ class Lexer(object):
                     )
 
                     start_entry = False
+                elif self.tokens[-1][0] == 'ENTRY_START':
+                    consumed = (
+                        self.entry_type_token()     or
+                        self.token_error()
+                    )
                 else:
                     consumed = (
                         self.whitespace_token()     or
-                        self.entry_type_token()     or
                         self.comma_token()          or
                         self.key_token()            or
                         self.identifier_token()     or

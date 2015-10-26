@@ -320,3 +320,48 @@ class TestEntry(unittest.TestCase):
             self.entry['title'],
             'Moby Dick'
         )
+
+    def test_entry_getitem_crosses_multiple_crossrefs(self):
+        entry1 = Entry('book', 'key1')
+        entry1._attributes['crossref'] = 'key2'
+
+        entry2 = Entry('book', 'key2')
+        entry2._attributes['title'] = 'Moby Dick'
+
+        self.database.add_entry(entry1)
+        self.database.add_entry(entry2)
+
+        self.entry._attributes['crossref'] = 'key1'
+
+        self.database.add_entry(self.entry)
+
+        self.assertEqual(
+            self.entry['title'],
+            'Moby Dick'
+        )
+
+    def test_entry_getitem_raises_keyerror_with_missing_crossref(self):
+        self.entry._attributes['crossref'] = 'key1'
+
+        self.database.add_entry(self.entry)
+
+        self.assertRaises(
+            KeyError,
+            self.entry.__getitem__,
+            'title'
+        )
+
+    def test_entry_getitem_raises_keyerror_with_missing_crossref_field(self):
+        entry1 = Entry('book', 'key1')
+
+        self.database.add_entry(entry1)
+
+        self.entry._attributes['crossref'] = 'key1'
+
+        self.database.add_entry(self.entry)
+
+        self.assertRaises(
+            KeyError,
+            self.entry.__getitem__,
+            'title'
+        )
