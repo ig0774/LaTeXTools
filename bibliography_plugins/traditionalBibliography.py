@@ -162,7 +162,6 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
             bibtags += re.findall(r'\\addglobalbib(?:\[[^\]]*\])?\{[^\}]+\.bib\}', content)
             bibtags += re.findall(r'\\addsectionbib(?:\[[^\]]*\])?\{[^\}]+\.bib\}', content)
             bibtags += re.findall(r'\\begin\{refsection\}\[([^\]]+)\]', content)
-            bibtags += re.findall(r'\\bibliography\{([^\}]+)\}', content)
 
             # extract absolute filepath for each bib file
             for tag in bibtags:
