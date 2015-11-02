@@ -255,7 +255,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		else: # either it's the first time we run, or else we have no running processes
 			self.proc = None
 		
-		view = self.window.active_view()
+		view = self.view = self.window.active_view()
 
 		self.file_name = getTeXRoot.get_tex_root(view)
 		if not os.path.isfile(self.file_name):
@@ -433,12 +433,11 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		# self.output_view.end_edit(edit)
 		self.output_view.run_command("do_finish_edit")
 		if can_switch_to_pdf:
-			self.window.active_view().run_command("jump_to_pdf", {"from_keybinding": False})
-			
+			self.view.run_command("jump_to_pdf", {"from_keybinding": False})
+
 			# clean-up temp files if clean_on_build set to true
 			if get_setting('clean_on_build', False):
 				self.window.run_command("delete_temp_files")
-
 
 class DoOutputEditCommand(sublime_plugin.TextCommand):
     def run(self, edit, data, selection_was_at_end):
