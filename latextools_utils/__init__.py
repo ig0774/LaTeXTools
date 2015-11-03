@@ -27,8 +27,6 @@ def is_tex_file(file_name):
             return True
     return False
 
-global_settings = None
-
 class SettingsWrapper(Mapping):
     '''
     Wrapper object for nested settings, to allow us to refer to keys
@@ -86,8 +84,7 @@ class SettingsWrapper(Mapping):
 
 
 def get_setting(setting, default=None):
-    if global_settings is None:
-        plugin_loaded()
+    global_settings = sublime.load_settings('LaTeXTools.sublime-settings')
 
     try:
         result = sublime.active_window().active_view().settings().get(setting)
@@ -105,7 +102,3 @@ def get_setting(setting, default=None):
         result = SettingsWrapper(setting, result)
 
     return result
-
-def plugin_loaded():
-    global global_settings
-    global_settings = sublime.load_settings('LaTeXTools.sublime-settings')
