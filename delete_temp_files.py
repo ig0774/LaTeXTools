@@ -1,6 +1,11 @@
 # ST2/ST3 compat
 from __future__ import print_function
 import sublime
+import sublime_plugin
+
+import os
+import traceback
+
 if sublime.version() < '3000':
 	_ST3 = False
 	# we are on ST2 and Python 2.X
@@ -11,11 +16,6 @@ else:
 	from . import getTeXRoot
 	from .latextools_utils import get_setting
 
-
-import sublime_plugin
-import os
-
-import traceback
 
 class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 	def run(self):
@@ -41,7 +41,7 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			['.blg', '.bbl', '.aux', '.log', '.brf', '.nlo', '.out', '.dvi',
 			 '.ps', '.lof', '.toc', '.fls', '.fdb_latexmk', '.pdfsync',
 			 '.synctex.gz', '.ind', '.ilg', '.idx'])
-		
+
 		ignored_folders = get_setting('temp_files_ignored_folders',
 			['.git', '.svn', '.hg'])
 		ignored_folders = set(ignored_folders)
