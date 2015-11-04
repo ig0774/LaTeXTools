@@ -2,7 +2,7 @@
 from __future__ import print_function 
 import sublime
 if sublime.version() < '3000':
-    # we are on ST2 and Python 2.X
+	# we are on ST2 and Python 2.X
 	_ST3 = False
 	strbase = basestring
 else:
@@ -122,11 +122,15 @@ class TraditionalBuilder(PdfBuilder):
 						"luatex": "lualatex"
 					}[engine]
 
+				# latexmk doesn't support -pdflatex
+				if engine == 'pdflatex':
+					engine = 'pdf'
+
 			if engine != self.engine:
 				self.display("Engine: " + self.engine + " -> " + engine + ". ")
 
 			for i, c in enumerate(cmd):
-                cmd[i] = c.replace("%E", engine)
+				cmd[i] = c.replace("%E", engine)
 
 		# handle any options
 		if texify or latexmk:
@@ -153,4 +157,4 @@ class TraditionalBuilder(PdfBuilder):
 		if self.display_log:
 			self.display("\nCommand results:\n")
 			self.display(self.out)
-			self.display("\n\n")	
+			self.display("\n\n")
