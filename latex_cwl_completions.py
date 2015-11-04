@@ -222,10 +222,7 @@ class CwlParsingHandler(object):
                     if 'babel.cwl' not in cwl_file_list:
                         cwl_file_list.append('babel.cwl')
                 else:
-                    if os.path.exists(
-                        os.path.normpath(os.path.join(
-                            sublime.packages_path(), 'LaTeX-cwl', cwl_file))):
-                        cwl_file_list.append(cwl_file)
+                    cwl_file_list.append(cwl_file)
         self.callback(parse_cwl_file(cwl_file_list), self.file_name)
 
 def parse_cwl_file(cwl_file_list):
@@ -239,9 +236,17 @@ def parse_cwl_file(cwl_file_list):
     completions = []
     for cwl in cwl_files:
         if _ST3:
-            s = sublime.load_resource(cwl)
+            try:
+                s = sublime.load_resource(cwl)
+            except IOError:
+                print(cwl + ' does not exist or could not be accessed')
+                continue
         else:
-            f = codecs.open(cwl, 'r', 'utf-8')
+            try:
+                f = codecs.open(cwl, 'r', 'utf-8')
+            except IOError:
+                print(cwl + ' does not exist or could not be accessed')
+                continue
             try:
                 s = u''.join(f.readlines())
             finally:
