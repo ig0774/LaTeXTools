@@ -199,7 +199,7 @@ class CwlParsingHandler(object):
             self.callback = callback
             self.file_name = file_name
             self.cwl_file_list = cwl_file_list
-            sublime.set_timeout(self.get_root_file)
+            sublime.set_timeout(self.get_root_file, 1)
         else:  # not autoloading... vanillla handler
             callback(parse_cwl_file(cwl_file_list), file_name)
 
