@@ -8,14 +8,14 @@ import sublime
 import sublime_plugin
 
 try:
-    from .getTeXRoot import get_tex_root
-except ImportError:
     from getTeXRoot import get_tex_root
+except ImportError:
+    from .getTeXRoot import get_tex_root
 
 try:
-    from .latextools_utils import get_tex_extensions, is_tex_buffer
-except ImportError:
     from latextools_utils import get_tex_extensions, is_tex_buffer
+except ImportError:
+    from .latextools_utils import get_tex_extensions, is_tex_buffer
 
 
 class JumptoTexFileCommand(sublime_plugin.TextCommand):
