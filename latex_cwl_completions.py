@@ -13,12 +13,14 @@ if sublime.version() < '3000':
     _ST3 = False
     from latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
+    from latex_input_completions import TEX_INPUT_FILE_REGEX
     from getRegion import get_Region
     from getTeXRoot import get_tex_root
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
+    from .latex_input_completions import TEX_INPUT_FILE_REGEX
     from .getRegion import get_Region
     from .getTeXRoot import get_tex_root
 
@@ -28,6 +30,7 @@ ENV_DONOT_AUTO_COM = [
     NEW_STYLE_CITE_REGEX,
     OLD_STYLE_REF_REGEX,
     NEW_STYLE_REF_REGEX,
+    TEX_INPUT_FILE_REGEX,
     re.compile(r'\\\\')
 ]
 
