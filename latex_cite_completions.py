@@ -735,9 +735,9 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
                 cite_panel_format = map(unicode, get_setting('cite_panel_format',
                     ["{title} ({keyword})", "{author}"]))
 
-        # show quick
-        formatter = Formatter()
-        view.window().show_quick_panel([[formatter.vformat(s, (), completion) for s in cite_panel_format] \
+            # show quick
+            formatter = Formatter()
+            view.window().show_quick_panel([[formatter.vformat(s, (), completion) for s in cite_panel_format] \
                                         for completion in completions], on_done)
 
 def plugin_loaded():
