@@ -7,11 +7,6 @@ from collections import namedtuple
 import re
 import sys
 
-try:
-    from latextools_utils import is_bib_buffer
-except ImportError:
-    from .latextools_utils import is_bib_buffer
-
 if sys.version_info > (3, 0):
     strbase = str
     unicode = str
@@ -338,6 +333,11 @@ def get_names(contents):
 try:
     import sublime
     import sublime_plugin
+
+    try:
+        from latextools_utils import is_bib_buffer
+    except ImportError:
+        from .latextools_utils import is_bib_buffer
 
     class BiblatexNameCompletions(sublime_plugin.EventListener):
         def on_query_completions(self, view, prefix, locations):
