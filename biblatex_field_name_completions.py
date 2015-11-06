@@ -3,6 +3,11 @@ from __future__ import print_function
 import sublime
 import sublime_plugin
 
+try:
+    from latextools_utils import is_bib_buffer, is_biblatex_buffer
+except ImportError:
+    from .latextools_utils import is_bib_buffer, is_biblatex_buffer
+
 bibtex_fields = [
     ['address', 'address = {${1:Address}},'],
     ['annote', 'annote = {${1:Annote}},'],
@@ -179,15 +184,9 @@ biblatex_fields = [
     ['year', 'year = {${1:Year}},']
 ]
 
-def is_bib_file(view):
-    return view.match_selector(0, 'text.bibtex') or is_biblatex(view)
-
-def is_biblatex(view):
-    return view.match_selector(0, 'text.biblatex')
-
 class FieldNameCompletions(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
-        if not is_bib_file(view):
+        if not is_bib_buffer(view):
             return []
 
         cursor_point = view.sel()[0].b
@@ -204,7 +203,7 @@ class FieldNameCompletions(sublime_plugin.EventListener):
         if view.match_selector(cursor_point, 'meta.key-assignment.bibtex'):
             return []
 
-        if is_biblatex(view):
+        if is_biblatex_buffer(view):
             return (biblatex_fields, sublime.INHIBIT_WORD_COMPLETIONS)
 
         else:

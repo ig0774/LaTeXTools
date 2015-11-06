@@ -9,6 +9,12 @@ if sys.version_info < (3, 0):
 else:
     strbase = str
 
+def is_bib_buffer(view, point=0):
+    return view.match_selector(point, 'text.bibtex') or is_biblatex_buffer(view, point)
+
+def is_biblatex_buffer(view, point=0):
+    return view.match_selector(point, 'text.biblatex')
+
 def is_tex_buffer(view, point=0):
     # per unofficial docs, match_selector is equivalent to score_selector != 0
     return view.match_selector(point, 'text.tex.latex')

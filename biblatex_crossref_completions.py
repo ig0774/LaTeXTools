@@ -6,6 +6,11 @@ import sublime_plugin
 import re
 import sys
 
+try:
+    from latextools_utils import is_bib_buffer, is_biblatex_buffer
+except ImportError:
+    from .latextools_utils import is_bib_buffer, is_biblatex_buffer
+
 if sys.version_info > (3, 0):
     strbase = str
 else:
@@ -43,12 +48,6 @@ XDATA_REGEX = re.compile(
 
 # set indicating entries that have their own special handling...
 SPECIAL_ENTRIES = set(['@xdata', '@set'])
-
-def is_bib_file(view):
-    return view.match_selector(0, 'text.bibtex') or is_biblatex(view)
-
-def is_biblatex(view):
-    return view.match_selector(0, 'text.biblatex')
 
 def _get_keys_by_type(view, valid_types):
     if not valid_types:
@@ -141,7 +140,7 @@ def get_completions_if_matches(regex, line, get_key_list_func, view):
 
 class BiblatexCrossrefCompletions(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
-        if not is_bib_file(view):
+        if not is_bib_buffer(view):
             return []
 
         current_line = get_text_to_cursor(view)[::-1]
@@ -155,7 +154,7 @@ class BiblatexCrossrefCompletions(sublime_plugin.EventListener):
         if result:
             return result
 
-        if not is_biblatex(view):
+        if not is_biblatex_buffer(view):
             return []
 
         return get_completions_if_matches(

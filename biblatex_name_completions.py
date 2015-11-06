@@ -7,6 +7,11 @@ from collections import namedtuple
 import re
 import sys
 
+try:
+    from latextools_utils import is_bib_buffer
+except ImportError:
+    from .latextools_utils import is_bib_buffer
+
 if sys.version_info > (3, 0):
     strbase = str
     unicode = str
@@ -46,12 +51,6 @@ ON_NAME_FIELD_REGEX = re.compile(
     VALUE_REGEX + r'(?:' + r'|'.join((s[::-1] for s in NAME_FIELDS)) + r')' + r'\b',
     re.IGNORECASE | re.UNICODE
 )
-
-def is_bib_file(view):
-    return view.match_selector(0, 'text.bibtex') or is_biblatex(view)
-
-def is_biblatex(view):
-    return view.match_selector(0, 'text.biblatex')
 
 def get_text_to_cursor(view):
     cursor = view.sel()[0].b
@@ -342,7 +341,7 @@ try:
 
     class BiblatexNameCompletions(sublime_plugin.EventListener):
         def on_query_completions(self, view, prefix, locations):
-            if not is_bib_file(view):
+            if not is_bib_buffer(view):
                 return []
 
             current_line = get_text_to_cursor(view)[::-1]

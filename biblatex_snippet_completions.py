@@ -13,15 +13,14 @@ import traceback
 
 from xml.etree import ElementTree
 
+try:
+    from latextools_utils import is_bib_buffer, is_biblatex_buffer
+except ImportError:
+    from .latextools_utils import is_bib_buffer, is_biblatex_buffer
+
 __dir__ = os.path.dirname(__file__)
 if __dir__ == '.':
     __dir__ = os.path.join(sublime.packages_path(), 'LaTeXTools')
-
-def is_bib_file(view):
-    return view.match_selector(0, 'text.bibtex') or is_biblatex(view)
-
-def is_biblatex(view):
-    return view.match_selector(0, 'text.biblatex')
 
 def _get_completions(ext):
     completions = []
@@ -59,14 +58,14 @@ def get_bibtex_completions():
 
 class SnippetCompletions(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
-        if not is_bib_file(view):
+        if not is_bib_buffer(view):
             return []
 
         # do not return completions if the cursor is inside an entry
         if view.match_selector(view.sel()[0].b, 'meta.entry.braces.bibtex'):
             return []
 
-        if is_biblatex(view):
+        if is_biblatex_buffer(view):
             return (get_biblatex_completions(), sublime.INHIBIT_WORD_COMPLETIONS)
 
         else:
