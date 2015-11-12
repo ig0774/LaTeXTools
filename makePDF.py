@@ -303,7 +303,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		platform_settings  = get_setting(self.plat, {})
 		builder_name = get_setting("builder")
 
-		self.hide_panel_level = s.get('hide_panel_level')
+		self.hide_panel_level = get_setting('hide_panel_level')
 
 		# This *must* exist, so if it doesn't, the user didn't migrate
 		if builder_name is None:
