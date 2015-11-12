@@ -185,14 +185,12 @@ class CmdThread ( threading.Thread ):
 			else:
 				content.append("")
 
-			s = sublime.load_settings("LaTeXTools.sublime-settings")
-			hide_panel_level = s.get("hide_build_panel")
 			hide_panel = {
 				"always": True,
 				"no_errors": not errors,
 				"no_warnings": not errors and not warnings,
 				"never": False
-			}.get(hide_panel_level, False)
+			}.get(self.caller.hide_panel_level, False)
 
 			if hide_panel:
 				self.caller.window.run_command("hide_panel", {"panel": "output.exec"})
@@ -279,6 +277,9 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		
 		# Get platform settings, builder, and builder settings
 		s = sublime.load_settings("LaTeXTools.sublime-settings")
+
+		self.hide_panel_level = s.get('hide_panel_level')
+
 		platform_settings  = s.get(self.plat)
 		builder_name = s.get("builder")
 		# This *must* exist, so if it doesn't, the user didn't migrate
