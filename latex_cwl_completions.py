@@ -128,9 +128,9 @@ def parse_cwl_file():
                 continue
 
             if line[0] == '#':
-                if line.startswith('#keyvals'):
+                if line.startswith('#keyvals') or line.startswith('#ifOption'):
                     KEYVAL = True
-                if line.startswith('#endkeyvals'):
+                if line.startswith('#endkeyvals') or line.startswith('#endif'):
                     KEYVAL = False
 
                 continue
