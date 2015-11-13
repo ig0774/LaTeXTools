@@ -210,7 +210,8 @@ class CmdThread ( threading.Thread ):
 
 				if hide_panel:
 					self.caller.window.run_command("hide_panel", {"panel": "output.exec"})
-					message = "build completed"
+				
+				message = "build completed"
 				if errors:
 					message += " with errors"
 				if warnings:
