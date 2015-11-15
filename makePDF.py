@@ -209,14 +209,15 @@ class CmdThread ( threading.Thread ):
 				}.get(self.caller.hide_panel_level, False)
 
 				if hide_panel:
+					# hide the build panel (ST2 api is not thread save)
 					self.caller.window.run_command("hide_panel", {"panel": "output.exec"})
-				
-				message = "build completed"
-				if errors:
-					message += " with errors"
-				if warnings:
-					message += " and" if errors else " with"
-					message += " warnings"
+
+					message = "build completed"
+					if errors:
+						message += " with errors"
+					if warnings:
+						message += " and" if errors else " with"
+						message += " warnings"
 				sublime.status_message(message)
 			except Exception as e:
 				content=["",""]
@@ -298,8 +299,8 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			self.encoding = "UTF-8"
 		else:
 			sublime.error_message("Platform as yet unsupported. Sorry!")
-			return	
-		
+			return
+
 		# Get platform settings, builder, and builder settings
 		platform_settings  = get_setting(self.plat, {})
 		builder_name = get_setting("builder")
