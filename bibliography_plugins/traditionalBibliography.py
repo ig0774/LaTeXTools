@@ -158,6 +158,7 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
 
         for content in walk_subfiles(rootdir, root_file):
             bibtags =  re.findall(r'\\bibliography\{([^\}]+)\}', content)
+            bibtags =  re.findall(r'\\nobibliography\{([^\}]+)\}', content)
             bibtags += re.findall(r'\\addbibresource(?:\[[^\]]*\])?\{[^\}]+\.bib\}', content)
             bibtags += re.findall(r'\\addglobalbib(?:\[[^\]]*\])?\{[^\}]+\.bib\}', content)
             bibtags += re.findall(r'\\addsectionbib(?:\[[^\]]*\])?\{[^\}]+\.bib\}', content)
