@@ -115,22 +115,22 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
                 return []
 
         if self.completed and self.current_file == view.file_name():
-             # autocompleting with slash already on line
+            # autocompleting with slash already on line
             # this is necessary to work around a short-coming in ST where having a keyed entry
             # appears to interfere with it recognising that there is a \ already on the line
             #
             # NB this may not work if there are other punctuation marks in the completion
             # since these are rare in TeX, this is probably ok
             if len(line) > 0 and line[0] == '\\':
-                _completions = []
-                for completion in completions:
+                completions = []
+                for completion in self.completions:
                     _completion = completion[1]
                     if  _completion[0] == '\\' and '${1:' in _completion:
                         completion = (completion[0], _completion[1:])
-                    _completions.append(completion)
+                    completions.append(completion)
             else:
-                _completions = completions
-            return (_completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+                completions = self.completions
+            return (completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
         elif self.started and self.current_file == view.file_name():
             return
 
