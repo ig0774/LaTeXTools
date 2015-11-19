@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import re
 import os
+import codecs
 import shlex
 import sys
 import traceback
@@ -26,6 +27,7 @@ except ImportError:
 
 if sys.version_info < (3, 0):
     strbase = basestring
+    _ST3 = True
 else:
     strbase = str
 
@@ -51,6 +53,7 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
         if not is_tex_buffer(view):
             return
 
+        window = view.window()
         tex_root = get_tex_root(view)
 
         if tex_root is None:
@@ -103,14 +106,14 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
                 if auto_create_missing_folders and\
                         not os.path.exists(containing_folder):
                     try:
-                        os.makedirs(containing_folder, exist_ok=True)
+                        os.makedirs(containing_folder)
                     except OSError:
                         # most likely a permissions error
-                        print('Error occurred while creating path "{0}"'
+                        print(u'Error occurred while creating path "{0}"'
                               .format(containing_folder))
                         traceback.print_last()
                     else:
-                        print('Created folder: "{0}"'
+                        print(u'Created folder: "{0}"'
                               .format(containing_folder))
 
                 if not os.path.exists(containing_folder):
@@ -129,24 +132,25 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
                             base_name)
 
                     # Use slashes consistent with TeX's usage
-                    if sublime.platform() == 'windows' and not isabs:
-                        root_path = root_path.replace('\\', '/')
+                    if sublime.platform() == 'windows':
+                        root_path = root_path.replace(u'\\', u'/')
 
-                    root_string = '%!TEX root = {0}\n'.format(root_path)
+                    root_string = u'%!TEX root = {0}\n'.format(root_path)
                     try:
-                        with open(full_new_path, 'a', encoding='utf-8') as new_file:
+                        with codecs.open(full_new_path, "w", "utf8") as new_file:
                             new_file.write(root_string)
                         is_root_inserted = True
                     except OSError:
                         print('An error occurred while creating file "{0}"'
-                              .format(new_file_name))
+                             u .format(new_file_name))
                         traceback.print_last()
 
                 # open the file
-                new_view = view.window().open_file(full_new_path)
+                new_view = window.open_file(full_new_path)
 
                 # await opening and move cursor to end of the new view
-                if auto_insert_root and is_root_inserted:
+                # (does not work on st2)
+                if _ST3 and auto_insert_root and is_root_inserted:
                     def set_caret_position():
                         cursor_pos = len(root_string)
                         new_view.sel().clear()
