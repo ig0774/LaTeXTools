@@ -263,10 +263,11 @@ def parse_cwl_file(cwl_file_list):
             except IOError:
                 print(cwl + ' does not exist or could not be accessed')
                 continue
-            try:
-                s = u''.join(f.readlines())
-            finally:
-                f.close()
+            else:
+                try:
+                    s = u''.join(f.readlines())
+                finally:
+                    f.close()
 
         # we need some state tracking to ignore keyval data
         # it could be useful at a later date
