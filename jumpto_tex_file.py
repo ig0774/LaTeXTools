@@ -141,8 +141,8 @@ class JumptoTexFileCommand(sublime_plugin.TextCommand):
                             new_file.write(root_string)
                         is_root_inserted = True
                     except OSError:
-                        print('An error occurred while creating file "{0}"'
-                             u .format(new_file_name))
+                        print(u'An error occurred while creating file "{0}"'\
+                                .format(new_file_name))
                         traceback.print_last()
 
                 # open the file
