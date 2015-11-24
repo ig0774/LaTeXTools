@@ -218,7 +218,7 @@ class CmdThread ( threading.Thread ):
 					if warnings:
 						message += " and" if errors else " with"
 						message += " warnings"
-				sublime.status_message(message)
+					sublime.status_message(message)
 			except Exception as e:
 				content=["",""]
 				content.append("LaTeXtools could not parse the TeX log file")
