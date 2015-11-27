@@ -12,11 +12,13 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    from latextools_utils import is_tex_buffer, get_tex_extensions, get_setting
+    from latextools_utils import is_tex_buffer, get_tex_extensions
+    from latextools_settings import get_setting
 else:
     _ST3 = True
     from . import getTeXRoot
-    from .latextools_utils import is_tex_buffer, get_tex_extensions, get_setting
+    from .latextools_utils import is_tex_buffer, get_tex_extensions
+    from .latextools_settings import get_setting
 
 # Only work for \include{} and \input{} and \includegraphics
 TEX_INPUT_FILE_REGEX = re.compile(
@@ -106,7 +108,7 @@ def parse_completions(view, line):
         # In order to user input, "image_types" must be set in
         # LaTeXTools.sublime-settings configuration file or the
         # project settings for the current view.
-        input_file_types = get_setting('image_types', [
+        input_file_types = get_setting('image_types',
                 '.pdf', '.png', '.jpeg', '.jpg', '.eps'
             ])
     elif addbib_filter is not None or bib_filter is not None:
@@ -117,7 +119,7 @@ def parse_completions(view, line):
             prefix = ''
             bib_filter[::-1]
             filter_exts = ['.bib']
-        input_file_types = ['bib']
+        input_file_types = ['.bib']
     elif cls_filter is not None or pkg_filter is not None or bst_filter is not None:
         # for packages, classes and bsts
         if _ST3:

@@ -37,8 +37,9 @@ if sublime.version() < '3000':
     _ST3 = False
     import getTeXRoot
     import latextools_plugin
-    from latextools_utils import is_tex_buffer, get_setting
+    from latextools_utils import is_tex_buffer
     from latextools_utils.subfiles import walk_subfiles
+    from latextools_settings import get_setting
 
     # reraise implementation from 6
     exec("""def reraise(tp, value, tb=None):
@@ -50,8 +51,9 @@ else:
     _ST3 = True
     from . import getTeXRoot
     from . import latextools_plugin
-    from .latextools_utils import is_tex_buffer, get_setting
+    from .latextools_utils import is_tex_buffer
     from .latextools_utils.subfiles import walk_subfiles
+    from .latextools_settings import get_setting
 
     # reraise implementation from 6
     def reraise(tp, value, tb=None):

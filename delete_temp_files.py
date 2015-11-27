@@ -10,11 +10,11 @@ if sublime.version() < '3000':
 	_ST3 = False
 	# we are on ST2 and Python 2.X
 	import getTeXRoot
-	from latextools_utils import get_setting
+	from latextools_settings import get_setting
 else:
 	_ST3 = True
 	from . import getTeXRoot
-	from .latextools_utils import get_setting
+	from .latextools_settings import get_setting
 
 
 class DeleteTempFilesCommand(sublime_plugin.WindowCommand):

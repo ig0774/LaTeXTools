@@ -6,12 +6,14 @@ if sublime.version() < '3000':
 	_ST3 = False
 	import getTeXRoot
 	import parseTeXlog
-	from latextools_utils import is_tex_file, get_setting
+	from latextools_utils import is_tex_file
+	from latextools_settings import get_setting
 else:
 	_ST3 = True
 	from . import getTeXRoot
 	from . import parseTeXlog
-	from .latextools_utils import is_tex_file, get_setting
+	from .latextools_utils import is_tex_file
+	from .latextools_settings import get_setting
 
 import sublime_plugin
 import sys
@@ -334,9 +336,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		# Get platform settings, builder, and builder settings
 		platform_settings  = get_setting(self.plat, {})
 		builder_name = get_setting("builder")
-
 		self.hide_panel_level = get_setting('hide_panel_level')
-
 		# This *must* exist, so if it doesn't, the user didn't migrate
 		if builder_name is None:
 			sublime.error_message("LaTeXTools: you need to migrate your preferences. See the README file for instructions.")

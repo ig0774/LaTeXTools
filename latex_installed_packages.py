@@ -15,7 +15,6 @@ if sublime.version() < '3000':
     _ST3 = False
     strbase = basestring
     from latextools_utils.external_command import external_command
-    import sys
 else:
     _ST3 = True
     strbase = str
