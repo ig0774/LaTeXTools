@@ -4,6 +4,11 @@ from collections import Mapping
 import sublime
 import sys
 
+try:
+    from latextools_settings import get_setting
+except ImportError:
+    from ..latextools_settings import get_setting
+
 if sys.version_info < (3, 0):
     strbase = basestring
 else:

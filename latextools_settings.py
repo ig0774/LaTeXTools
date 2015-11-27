@@ -2,6 +2,8 @@ from __future__ import print_function
 
 from collections import Mapping
 
+import sublime
+
 class SettingsWrapper(Mapping):
     '''
     Wrapper object for nested settings, to allow us to refer to keys
