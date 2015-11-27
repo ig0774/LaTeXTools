@@ -109,7 +109,7 @@ def parse_completions(view, line):
         # LaTeXTools.sublime-settings configuration file or the
         # project settings for the current view.
         input_file_types = get_setting('image_types',
-                '.pdf', '.png', '.jpeg', '.jpg', '.eps'
+                'pdf', 'png', 'jpeg', 'jpg', 'eps'
             ])
     elif addbib_filter is not None or bib_filter is not None:
         # For bibliography
@@ -119,7 +119,7 @@ def parse_completions(view, line):
             prefix = ''
             bib_filter[::-1]
             filter_exts = ['.bib']
-        input_file_types = ['.bib']
+        input_file_types = ['bib']
     elif cls_filter is not None or pkg_filter is not None or bst_filter is not None:
         # for packages, classes and bsts
         if _ST3:
