@@ -126,7 +126,8 @@ class CmdThread ( threading.Thread ):
 								stderr=subprocess.STDOUT,
 								stdout=subprocess.PIPE, 
 								preexec_fn=os.setsid
-							)					except:
+							)					
+					except:
 						self.caller.output("\n\nCOULD NOT COMPILE!\n\n")
 						self.caller.output("Attempted command:")
 						self.caller.output(" ".join(cmd))
