@@ -11,10 +11,12 @@ if sublime.version() < '3000':
 	# we are on ST2 and Python 2.X
 	import getTeXRoot
 	from latextools_settings import get_setting
+	from latextools_utils import cache
 else:
 	_ST3 = True
 	from . import getTeXRoot
 	from .latextools_settings import get_setting
+	from .latextools_utils import cache
 
 
 class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
@@ -33,6 +35,9 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			sublime.status_message(message)
 			print(message)
 			return
+
+		# clear the cache
+		cache.delete_local_cache(root_file)
 
 		path = os.path.dirname(root_file)
 
