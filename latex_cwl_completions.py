@@ -38,6 +38,16 @@ ENV_DONOT_AUTO_COM = [
 
 CWL_COMPLETION = False
 
+
+def _is_snippet(completion_entry):
+    """
+    returns True if the second part of the completion tuple
+    is a sublime snippet
+    """
+    completion_result = completion_entry[1]
+    return completion_result[0] == '\\' and '${1:' in completion_result
+
+
 class LatexCwlCompletion(sublime_plugin.EventListener):
 
     def __init__(self):
@@ -58,7 +68,6 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         with self._WLOCK:
             # Get cwl file list
             # cwl_path = sublime.packages_path() + "/LaTeX-cwl"
-            settings = sublime.load_settings("LaTeXTools.sublime-settings")
             cwl_file_list = get_setting('cwl_list',
                     [
                         "tex.cwl",
@@ -84,7 +93,6 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             t.daemon = True
             t.start()
 
-
     def on_completions(self, completions, file_name):
         with self._WLOCK:
             self.started = False
@@ -106,31 +114,41 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         if not view.score_selector(point, "text.tex.latex"):
             return []
 
+        point_before = point - len(prefix)
+        char_before = view.substr(get_Region(point_before - 1, point_before))
+        if not _ST3:  # convert from unicode (might not be necessary)
+            char_before = char_before.encode("utf-8")
+        is_prefixed = char_before == "\\"
+
+        completion_level = "prefixed"  # default completion level is "prefixed"
+        completion_level = get_setting("command_completion",
+                                       "prefixed")
+
+        do_complete = {
+            "never": False,
+            "prefixed": is_prefixed,
+            "always": True
+        }.get(completion_level, is_prefixed)
+
+        if not do_complete:
+            return []
+
         line = view.substr(get_Region(view.line(point).a, point))
         line = line[::-1]
 
         # Do not do completions in actions
         for rex in ENV_DONOT_AUTO_COM:
-            if match(rex, line) != None:
+            if match(rex, line) is not None:
                 return []
 
         if self.completed and self.current_file == view.file_name():
-            # autocompleting with slash already on line
-            # this is necessary to work around a short-coming in ST where having a keyed entry
-            # appears to interfere with it recognising that there is a \ already on the line
-            #
-            # NB this may not work if there are other punctuation marks in the completion
-            # since these are rare in TeX, this is probably ok
-            if len(line) > 0 and line[0] == '\\':
-                completions = []
-                for completion in self.completions:
-                    _completion = completion[1]
-                    if  _completion[0] == '\\' and '${1:' in _completion:
-                        completion = (completion[0], _completion[1:])
-                    completions.append(completion)
+            if is_prefixed:
+                completions = [(c[0], c[1][1:]) if _is_snippet(c) else c
+                               for c in self.completions]
             else:
-                completions = self.completions
-            return (completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+                completions = [c for c in self.completions]
+
+            return completions
         elif self.started and self.current_file == view.file_name():
             return
 
