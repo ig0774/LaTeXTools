@@ -203,9 +203,6 @@
 // ------------------------------------------------------------------
 // Opening files included into the tex source code
 // ------------------------------------------------------------------
-	
-	// list of image extensions in the order they should be supported
-	"image_extensions": ["eps", "png", "pdf", "jpg", "jpeg"]
 
 	// image types you use in latex
 	// these types will be used for autocompletion and 
