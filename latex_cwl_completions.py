@@ -120,7 +120,6 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             char_before = char_before.encode("utf-8")
         is_prefixed = char_before == "\\"
 
-        completion_level = "prefixed"  # default completion level is "prefixed"
         completion_level = get_setting("command_completion",
                                        "prefixed")
 
