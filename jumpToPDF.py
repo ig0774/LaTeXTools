@@ -93,7 +93,6 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 					startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 					shell = True
 
-				# must be Popen or else this doesn't work
 				subprocess.Popen(
 					sublime_command,
 					startupinfo=startupinfo,
