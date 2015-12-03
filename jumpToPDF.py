@@ -43,7 +43,7 @@ def get_sublime_executable():
 	if sublime.platform() == 'windows':
 		startupinfo = subprocess.STARTUPINFO()
 		startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-		shell = True
+		shell = _ST3
 
 	version = sublime.version()
 
@@ -124,7 +124,7 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 				if platform == 'windows':
 					startupinfo = subprocess.STARTUPINFO()
 					startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-					shell = True
+					shell = _ST3
 
 				subprocess.Popen(
 					sublime_command,
