@@ -185,6 +185,17 @@ def run_plugin_command(command, *args, **kwargs):
             print(error_message)
             raise BibPluginError(error_message)
 
+        # instantiate plugin
+        try:
+            plugin = plugin()
+        except:
+            error_message = 'Could not instantiate {0}. {0} must have a no-args __init__ method'.format(
+                type(plugin).__name__,
+            )
+
+            print(error_message)
+            raise BibPluginError(error_message)
+
         try:
             result = getattr(plugin, command)(*args, **kwargs)
         except TypeError as e:
