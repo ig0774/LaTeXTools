@@ -167,7 +167,11 @@ else:
     def _get_sublime_module_name(directory, module):
         return '{0}.{1}'.format(os.path.basename(directory), module)
 
-__all__ = ['LaTeXToolsPlugin', 'get_plugin', 'add_plugin_path']
+__all__ = [
+    'LaTeXToolsPlugin', 'get_plugin', 'add_plugin_path',
+    'LaTeXToolsPluginException', 'InvalidPluginException',
+    'NoSuchPluginException'
+]
 
 _MODULE_PREFIX = '_latextools_'
 
@@ -205,7 +209,7 @@ class LaTeXToolsPluginRegistry(MutableMapping):
                 'Plugin {0} does not exist. Please ensure that the plugin is configured as documented'.format(key))
 
     def __setitem__(self, key, value):
-        if not isinstance(value, LaTeXToolsPlugin):
+        if not isinstance(value, LaTeXToolsPluginMeta):
             raise InvalidPluginException(type(value))
 
         self._registry[key] = value
@@ -262,17 +266,18 @@ class LaTeXToolsPluginMeta(type):
     '''
     def __init__(cls, name, bases, attrs):
         super(LaTeXToolsPluginMeta, cls).__init__(name, bases, attrs)
+
         if cls == LaTeXToolsPluginMeta:
             return
 
         try:
-            if LaTeXToolsPlugin not in bases:
+            if not any((True for base in bases if issubclass(base, LaTeXToolsPlugin))):
                 return
         except NameError:
             return
 
         registered_name = _classname_to_internal_name(name)
-        internal._REGISTRY[registered_name] = cls()
+        internal._REGISTRY[registered_name] = cls
 
 LaTeXToolsPlugin = LaTeXToolsPluginMeta('LaTeXToolsPlugin', (object,), {})
 LaTeXToolsPlugin.__doc__ = '''
