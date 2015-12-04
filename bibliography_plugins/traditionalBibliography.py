@@ -120,21 +120,15 @@ class EntryWrapper(Mapping):
                 if not result:
                     return u''
         elif key == 'translator':
-            try:
-                people = [pybtex.database.Person(name) for name in
-                          split_name_list(self.entry.fields[key])]
-                if short:
-                    result = _get_people_short(people)
-                else:
-                    result = _get_people_long(people)
-            except KeyError:
-                return u''
+            people = [pybtex.database.Person(name) for name in
+                      split_name_list(self.entry.fields[key])]
+            if short:
+                result = _get_people_short(people)
+            else:
+                result = _get_people_long(people)
 
         if not result:
-            try:
-                result = self.entry.fields[key]
-            except KeyError:
-                return u''
+            result = self.entry.fields[key]
 
         return remove_latex_commands(codecs.decode(result, 'latex'))
 
