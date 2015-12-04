@@ -5,14 +5,17 @@ import sublime_plugin
 
 import os
 
+try:
+    from latextools_utils.external_command import _get_texpath as get_texpath
+except ImportError:
+    from .latextools_utils.external_command import _get_texpath as get_texpath
+
 if sublime.version() < '3000':
     _ST3 = False
     strbase = basestring
-    from latextools_utils.external_command import external_command
 else:
     _ST3 = True
     strbase = str
-    from .latextools_utils.external_command import external_command
 
 def using_miktex():
     if sublime.platform() != 'windows':
@@ -34,6 +37,10 @@ def _view_texdoc(file):
         raise TypeError('File must be a string')
 
     command = ['texdoc']
+
+    texpath = get_texpath() or os.environ['PATH']
+    env = dict(os.environ)
+    env['PATH'] = texpath
 
     try:
         # Windows-specific adjustments
