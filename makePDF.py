@@ -131,8 +131,7 @@ class CmdThread ( threading.Thread ):
 							proc = subprocess.Popen(
 								cmd,
 								stderr=subprocess.STDOUT,
-								stdout=subprocess.PIPE, 
-								preexec_fn=os.setsid
+								stdout=subprocess.PIPE,								preexec_fn=os.setsid
 							)
 					except:
 						self.caller.output("\n\nCOULD NOT COMPILE!\n\n")
@@ -155,6 +154,7 @@ class CmdThread ( threading.Thread ):
 				out, err = proc.communicate()
 				self.caller.builder.set_output(out.decode(self.caller.encoding,"ignore"))
 
+				
 				# Here the process terminated, but it may have been killed. If so, stop and don't read log
 				# Since we set self.caller.proc above, if it is None, the process must have been killed.
 				# TODO: clean up?

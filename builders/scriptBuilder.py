@@ -60,7 +60,7 @@ class ScriptBuilder(PdfBuilder):
 
 		if self.cmd is None:
 			sublime.error_message(
-				"You MUST set an command in your LaTeXTools.sublime-settings " +
+				"You MUST set a command in your LaTeXTools.sublime-settings " +
 				"file before launching the script builder."
 			)
 
@@ -99,10 +99,13 @@ class ScriptBuilder(PdfBuilder):
 			)
 
 			startupinfo = None
+			preexec_fn = None
 
 			if sublime.platform() == 'windows':
 				startupinfo = subprocess.STARTUPINFO()
 				startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+			else:
+				preexec_fn = os.setsid
 
 			p = Popen(
 				cmd,
@@ -111,15 +114,16 @@ class ScriptBuilder(PdfBuilder):
 				startupinfo=startupinfo,
 				shell=False,
 				env=env,
-				cwd=self.tex_dir
+				cwd=self.tex_dir,
+				preexec_fn=preexec_fn
 			)
 
 			yield (p, "")
 
 			self.display("done.\n")
 
-		# This is for debugging purposes 
-		if self.display_log and p.stdout is not None:
-			self.display("\nCommand results:\n")
-			self.display(self.out)
-			self.display("\n\n")
+			# This is for debugging purposes 
+			if self.display_log and p.stdout is not None:
+				self.display("\nCommand results:\n")
+				self.display(self.out)
+				self.display("\n\n")
