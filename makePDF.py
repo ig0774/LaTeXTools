@@ -19,8 +19,8 @@ else:
 	from . import parseTeXlog
 	from .latextools_utils import is_tex_file
 	from .latextools_settings import get_setting
-	from latextools_plugin import (
-		add_plugin_path, add_whitelist_module, get_plugin, NoSuchPluginException
+	from .latextools_plugin import (
+		add_plugin_path, get_plugin, NoSuchPluginException
 	)
 	strbase = str
 
