@@ -101,10 +101,7 @@ class EntryWrapper(Mapping):
             return self.entry.cite_key
 
         if key in Name.NAME_FIELDS:
-            try:
-                people = [Name(x) for x in tokenize_list(self.entry[key])]
-            except KeyError:
-                return u''
+            people = [Name(x) for x in tokenize_list(self.entry[key])]
 
             if short:
                 result = _get_people_short(people)
@@ -112,10 +109,7 @@ class EntryWrapper(Mapping):
                 result = _get_people_long(people)
 
         if not result:
-            try:
-                result = self.entry[key]
-            except KeyError:
-                return u''
+            result = self.entry[key]
 
         return remove_latex_commands(codecs.decode(result, 'latex'))
 
