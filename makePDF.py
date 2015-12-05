@@ -15,6 +15,7 @@ import sublime_plugin
 import sys
 import imp
 import os, os.path
+import signal
 import threading
 import functools
 import subprocess
@@ -103,9 +104,20 @@ class CmdThread ( threading.Thread ):
 					proc = subprocess.Popen(cmd, startupinfo=startupinfo, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 				elif self.caller.plat == "osx":
 					# Temporary (?) fix for Yosemite: pass environment
-					proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=os.environ)
+					proc = subprocess.Popen(
+						cmd,
+						stderr=subprocess.STDOUT,
+						stdout=subprocess.PIPE, 
+						env=os.environ,
+						preexec_fn=os.setsid
+					)
 				else: # Must be linux
-					proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+					proc = subprocess.Popen(
+						cmd,
+						stderr=subprocess.STDOUT,
+						stdout=subprocess.PIPE,
+						preexec_fn=os.setsid
+					)
 			except:
 				self.caller.output("\n\nCOULD NOT COMPILE!\n\n")
 				self.caller.output("Attempted command:")
@@ -120,20 +132,23 @@ class CmdThread ( threading.Thread ):
 			
 			# Now actually invoke the command, making sure we allow for killing
 			# First, save process handle into caller; then communicate (which blocks)
-			self.caller.proc = proc
+			with self.caller.proc_lock:
+				self.caller.proc = proc
 			out, err = proc.communicate()
 			self.caller.builder.set_output(out.decode(self.caller.encoding,"ignore"))
 
 			# Here the process terminated, but it may have been killed. If so, stop and don't read log
 			# Since we set self.caller.proc above, if it is None, the process must have been killed.
 			# TODO: clean up?
-			if not self.caller.proc:
-				print (proc.returncode)
-				self.caller.output("\n\n[User terminated compilation process]\n")
-				self.caller.finish(False)	# We kill, so won't switch to PDF anyway
-				return
+			with self.caller.proc_lock:
+				if not self.caller.proc:
+					print (proc.returncode)
+					self.caller.output("\n\n[User terminated compilation process]\n")
+					self.caller.finish(False)	# We kill, so won't switch to PDF anyway
+					return
 			# Here we are done cleanly:
-			self.caller.proc = None
+			with self.caller.proc_lock:
+				self.caller.proc = None
 			print ("Finished normally")
 			print (proc.returncode)
 
@@ -184,6 +199,30 @@ class CmdThread ( threading.Thread ):
 				content.extend(warnings)
 			else:
 				content.append("")
+
+			hide_panel = {
+				"always": True,
+				"no_errors": not errors,
+				"no_warnings": not errors and not warnings,
+				"never": False
+			}.get(self.caller.hide_panel_level, False)
+
+			if hide_panel:
+				# hide the build panel (ST2 api is not thread save)
+				if _ST3:
+					self.caller.window.run_command("hide_panel", {"panel": "output.exec"})
+				else:
+					sublime.set_timeout(lambda: self.caller.window.run_command("hide_panel", {"panel": "output.exec"}), 10)
+				message = "build completed"
+				if errors:
+					message += " with errors"
+				if warnings:
+					message += " and" if errors else " with"
+					message += " warnings"
+				if _ST3:
+					sublime.status_message(message)
+				else:
+					sublime.set_timeout(lambda: sublime.status_message(message), 10)
 		except Exception as e:
 			content=["",""]
 			content.append("LaTeXtools could not parse the TeX log file")
@@ -202,18 +241,33 @@ class CmdThread ( threading.Thread ):
 
 class make_pdfCommand(sublime_plugin.WindowCommand):
 
+	def __init__(self, *args, **kwargs):
+		sublime_plugin.WindowCommand.__init__(self, *args, **kwargs)
+		self.proc = None
+		self.proc_lock = threading.Lock()
+
 	def run(self, cmd="", file_regex="", path=""):
 		
 		# Try to handle killing
-		if hasattr(self, 'proc') and self.proc: # if we are running, try to kill running process
-			self.output("\n\n### Got request to terminate compilation ###")
-			self.proc.kill()
-			self.proc = None
-			return
-		else: # either it's the first time we run, or else we have no running processes
-			self.proc = None
+		with self.proc_lock:
+			if self.proc: # if we are running, try to kill running process
+				self.output("\n\n### Got request to terminate compilation ###")
+				if sublime.platform() == 'windows':
+					startupinfo = subprocess.STARTUPINFO()
+					startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+					subprocess.call(
+						'taskkill /t /f /pid {pid}'.format(pid=self.proc.pid),
+						startupinfo=startupinfo,
+						shell=True
+					)
+				else:
+					os.killpg(self.proc.pid, signal.SIGTERM)
+				self.proc = None
+				return
+			else: # either it's the first time we run, or else we have no running processes
+				self.proc = None
 		
-		view = self.window.active_view()
+		view = self.view = self.window.active_view()
 
 		self.file_name = getTeXRoot.get_tex_root(view)
 		if not os.path.isfile(self.file_name):
@@ -256,10 +310,11 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			self.encoding = "UTF-8"
 		else:
 			sublime.error_message("Platform as yet unsupported. Sorry!")
-			return	
-		
+			return
+
 		# Get platform settings, builder, and builder settings
 		s = sublime.load_settings("LaTeXTools.sublime-settings")
+		self.hide_panel_level = s.get("hide_build_panel")
 		platform_settings  = s.get(self.plat)
 		builder_name = s.get("builder")
 		# This *must* exist, so if it doesn't, the user didn't migrate
@@ -392,7 +447,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		# self.output_view.end_edit(edit)
 		self.output_view.run_command("do_finish_edit")
 		if can_switch_to_pdf:
-			self.window.active_view().run_command("jump_to_pdf", {"from_keybinding": False})
+			self.view.run_command("jump_to_pdf", {"from_keybinding": False})
 
 
 class DoOutputEditCommand(sublime_plugin.TextCommand):
