@@ -13,16 +13,37 @@ except ImportError:
 if sublime.version() < '3000':
     def expand_vars(texpath):
         return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
+
+    # reraise implementation from 6
+    exec("""def reraise(tp, value, tb=None):
+    raise tp, value, tb
+""")
 else:
     def expand_vars(texpath):
         return os.path.expandvars(texpath)
 
+    # reraise implementation from 6
+    def reraise(tp, value, tb=None):
+        if value is None:
+            value = tp()
+        if value.__traceback__ is not tb:
+            raise value.with_traceback(tb)
+        raise value
+
 __all__ = ['external_command']
 
+
 def _get_texpath():
-    texpath = get_setting(sublime.platform(), {}).get('texpath')
-    if texpath is None:
-        texpath = get_setting('texpath')
+    try:
+        texpath = get_setting(sublime.platform(), {}).get('texpath')
+    except AttributeError:
+        # hack to reload this module in case the calling module was reloaded
+        exc_info = sys.exc_info
+        try:
+            reload(sys.modules[_get_texpath.__module__])
+            texpath = get_setting(sublime.platform(), {}).get('texpath')
+        except:
+            reraise(*exc_info)
 
     return expand_vars(texpath) if texpath is not None else None
 
