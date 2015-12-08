@@ -2,9 +2,9 @@ import sublime
 import sublime_plugin
 
 try:
-    from latextools_settings import get_setting
+    from latextools_utils import get_setting
 except ImportError:
-    from .latextools_settings import get_setting
+    from .latextools_utils import get_setting
 
 BIBLATEX_SYNTAX = 'Packages/LaTeXTools/BibLaTeX.tmLanguage'
 

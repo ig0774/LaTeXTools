@@ -6,9 +6,9 @@ import subprocess
 from subprocess import Popen, PIPE
 
 try:
-    from latextools_settings import get_setting    
+    from latextools_utils.settings import get_setting
 except ImportError:
-    from ..latextools_settings import get_setting
+    from . import get_setting
 
 if sublime.version() < '3000':
     def expand_vars(texpath):

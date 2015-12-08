@@ -16,14 +16,9 @@ except ImportError:
     from .getTeXRoot import get_tex_root
 
 try:
-    from latextools_utils import get_tex_extensions, is_tex_buffer
+    from latextools_utils import get_tex_extensions, is_tex_buffer, get_setting
 except ImportError:
-    from .latextools_utils import get_tex_extensions, is_tex_buffer
-
-try:
-    from latextools_settings import get_setting
-except ImportError:
-    from .latextools_settings import get_setting
+    from .latextools_utils import get_tex_extensions, is_tex_buffer, get_setting
 
 try:
     from latextools_utils.external_command import external_command
