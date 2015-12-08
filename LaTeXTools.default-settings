@@ -32,16 +32,6 @@
 	// Sync PDF to current editor position after building (true) or not
 	"forward_sync": true,
 
-	// valid texfile extensions
-	"tex_file_exts": [".tex"],
-
-	// whether or not to set the syntax for a buffer name with a tex extension
-	"latextools_set_syntax": true,
-
-	// set to true to use BibLaTeX instead of BibTex
-	// can also be set on a per-project basis
-	"use_biblatex": false,
-
 	// When to trigger cwl-command completion (requires the LaTeX-cwl package)
 	// possible values are:
 	// "always" (always show command completions)
@@ -56,6 +46,17 @@
 	// "no_warnings" (only hide the panel if no warnings occur) and
 	// "never" (default, never hide the build panel)
 	"hide_build_panel": "never",
+
+	// valid texfile extensions
+	"tex_file_exts": [".tex"],
+
+	// controls whether or not syntax is automatically set to LaTeX for
+	// files that match one of the configured `tex_file_exts`
+	"latextools_set_syntax": true,
+
+	// set to true to use BibLaTeX instead of BibTex
+	// can also be set on a per-project basis
+	"use_biblatex": false,
 
 // ------------------------------------------------------------------
 // Temporary file settings

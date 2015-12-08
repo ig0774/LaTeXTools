@@ -9,7 +9,6 @@ else:
 	_ST3 = True
 	from .latextools_utils import get_tex_extensions
 
-
 import os.path, re
 import codecs
 
