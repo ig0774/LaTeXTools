@@ -10,6 +10,11 @@ try:
 except ImportError:
     from .latextools_utils.external_command import _get_texpath as get_texpath
 
+try:
+    from latextools_utils import get_setting
+except ImportError:
+    from .latextools_utils import get_setting
+
 if sublime.version() < '3000':
     _ST3 = False
     strbase = basestring
@@ -21,11 +26,10 @@ def using_miktex():
     if sublime.platform() != 'windows':
         return False
 
-    settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    platform_settings = settings.get(sublime.platform())
+    platform_settings = get_setting(sublime.platform(), {})
 
     try:
-        distro = platform_settings['distro']
+        distro = platform_settings.get('distro', 'miktex')
         return distro in ['miktex', '']
     except KeyError:
         return True  # assumed

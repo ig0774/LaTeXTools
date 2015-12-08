@@ -5,9 +5,9 @@ import sublime
 import sys
 
 try:
-    from latextools_settings import get_setting
+    from latextools_utils.settings import get_setting
 except ImportError:
-    from ..latextools_settings import get_setting
+    from .settings import get_setting
 
 if sys.version_info < (3, 0):
     strbase = basestring

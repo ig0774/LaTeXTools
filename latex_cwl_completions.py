@@ -14,7 +14,7 @@ if sublime.version() < '3000':
     from latex_input_completions import TEX_INPUT_FILE_REGEX
     from getRegion import get_Region
     from getTeXRoot import get_tex_root
-    from latextools_settings import get_setting
+    from latextools_utils import get_setting
     from latextools_utils.subfiles import walk_subfiles
 else:
     _ST3 = True
@@ -23,7 +23,7 @@ else:
     from .latex_input_completions import TEX_INPUT_FILE_REGEX
     from .getRegion import get_Region
     from .getTeXRoot import get_tex_root
-    from .latextools_settings import get_setting
+    from .latextools_utils import get_setting
     from .latextools_utils.subfiles import walk_subfiles
 
 # Do not do completions in these envrioments
