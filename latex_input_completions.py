@@ -8,11 +8,6 @@ import os
 import re
 import json
 
-try:
-    from latextools_utils.is_tex_file import get_tex_extensions
-except ImportError:
-    from .latextools_utils.is_tex_file import get_tex_extensions
-
 if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
