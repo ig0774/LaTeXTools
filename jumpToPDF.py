@@ -1,6 +1,7 @@
 # ST2/ST3 compat
 from __future__ import print_function 
 import sublime
+import sys
 if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
 	_ST3 = False
@@ -46,8 +47,7 @@ def get_sublime_executable():
 							return process
 		return None
 
-	s = sublime.load_settings('LaTeXTools.sublime-settings')
-	plat_settings = s.get(sublime.platform(), {})
+	plat_settings = get_setting(sublime.platform(), {})
 	sublime_executable = plat_settings.get('sublime_executable', None)
 
 	if sublime_executable:
@@ -60,6 +60,10 @@ def get_sublime_executable():
 	# are we on ST3
 	if hasattr(sublime, 'executable_path'):
 		get_sublime_executable.result = sublime.executable_path()
+		return get_sublime_executable.result
+	# in ST2 the Python executable is actually "sublime_text"
+	elif sys.executable != 'python' and os.path.isabs(sys.executable):
+		get_sublime_executable.result = sys.executable
 		return get_sublime_executable.result
 
 	# guess-work for ST2
@@ -123,9 +127,8 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 		sublime_command = get_sublime_executable()
 
 		if sublime_command is not None:
-			s = sublime.load_settings('LaTeXTools.sublime-settings')
 			platform = sublime.platform()
-			plat_settings = s.get(platform, {})
+			plat_settings = get_setting(platform, {})
 			wait_time = plat_settings.get('keep_focus_delay', 0.5)
 
 			def keep_focus():

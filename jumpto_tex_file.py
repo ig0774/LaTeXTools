@@ -30,7 +30,7 @@ if sys.version_info < (3, 0):
     _ST3 = True
 else:
     strbase = str
-
+    _ST3 = False
 
 # TODO this might be moved to a generic util
 def run_after_loading(view, func):
@@ -154,7 +154,6 @@ def _jumpto_bib_file(view, window, tex_root, file_name,
 
 def _jumpto_image_file(view, window, tex_root, file_name):
     base_path = os.path.dirname(tex_root)
-
     image_types = get_setting(
         "image_types", [
             "png", "pdf", "jpg", "jpeg", "eps"
