@@ -9,12 +9,11 @@ except ImportError:
 import sublime
 
 if sublime.version() < '3000':
-    # we are on ST2 and Python 2.X
     _ST3 = False
 else:
     _ST3 = True
 
-CACHE_FOLDER = ".st_ltt_cache"
+CACHE_FOLDER = ".st_lt_cache"
 
 
 class CacheMiss(Exception):
@@ -26,8 +25,21 @@ def delete_local_cache(tex_root):
     """
     Removes the local cache folder and the local cache files
     """
-    cache_path = _local_cache_path(tex_root)
+    print("Deleting local cache for '{0}'.".format(tex_root))
+    local_cache_paths = [_hidden_local_cache_path(),
+                         _local_cache_path(tex_root)]
+    for cache_path in local_cache_paths:
+        if os.path.exists(cache_path):
+            print("Delete local cache folder '{0}'".format(cache_path))
+            shutil.rmtree(cache_path)
+
+
+def invalidate_local_cache(cache_path):
+    """
+    Invalidates the local cache by removing the cache folders
+    """
     if os.path.exists(cache_path):
+        print("Invalidate local cache '{0}'.".format(cache_path))
         shutil.rmtree(cache_path)
 
 
@@ -137,24 +149,23 @@ def read_local(tex_root, name):
     return _read(cache_path, name)
 
 
-def cache_global(tex_root, name, generate):
+def cache_global(name, generate):
     """
     Uses the global sublime cache retrieve the entry for the name.
     If the entry is not available, it will be calculated via the
     generate-function and cached using pickle.
 
     Arguments:
-    tex_root -- the root of the tex file (for the folder of the cache)
     name -- the relative file name to write the object
     generate -- a function pointer/closure to create the cached object
         for case it is not available in the cache,
         must be compatible with pickle
     """
     try:
-        result = read_global(tex_root, name)
+        result = read_global(name)
     except CacheMiss:
         result = generate()
-        write_global(tex_root, name, result)
+        write_global(name, result)
     return result
 
 
@@ -196,12 +207,17 @@ def _local_cache_path(tex_root):
         root_folder = os.path.dirname(tex_root)
         return os.path.join(root_folder, CACHE_FOLDER)
     else:
-        global_path = _global_cache_path()
+        cache_path = _hidden_local_cache_path()
         # convert the root to plain string and hash it
         tex_root = tex_root.encode("utf8")
         root_hash = hashlib.md5(tex_root)
         root_hash = root_hash.hexdigest()
-        return os.path.join(global_path, CACHE_FOLDER, root_hash)
+        return os.path.join(cache_path, root_hash)
+
+
+def _hidden_local_cache_path():
+    global_path = _global_cache_path()
+    return os.path.join(global_path, CACHE_FOLDER)
 
 
 def _global_cache_path():
