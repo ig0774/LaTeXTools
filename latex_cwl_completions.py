@@ -38,6 +38,19 @@ ENV_DONOT_AUTO_COM = [
 
 CWL_COMPLETION = False
 
+# regex to detect that the cursor is predecended by a \begin{
+BEGIN_END_BEFORE_REGEX = re.compile(
+    r"([^{}\[\]]*)\{"
+    r"(?:\][^{}\[\]]*\[)?"
+    r"(?:nigeb|dne)\\"
+)
+# regex to parse a environment line from the cwl file
+# only search for \end to create a list without duplicates
+ENVIRONMENT_REGEX = re.compile(
+    r"\\end"
+    r"\{(?P<name>[^\}]+)\}"
+)
+
 
 def _is_snippet(completion_entry):
     """
@@ -54,6 +67,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         self.started = False
         self.completed = False
         self.completions = None
+        self.env_completions = None
         self.current_file = None
         self.triggered = False
         self._WLOCK = threading.RLock()
@@ -68,8 +82,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         with self._WLOCK:
             # Get cwl file list
             # cwl_path = sublime.packages_path() + "/LaTeX-cwl"
-            cwl_file_list = get_setting('cwl_list',
-                    [
+            cwl_file_list = get_setting('cwl_list', [
                         "tex.cwl",
                         "latex-209.cwl",
                         "latex-document.cwl",
@@ -93,13 +106,14 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             t.daemon = True
             t.start()
 
-    def on_completions(self, completions, file_name):
+    def on_completions(self, completions, env_completions, file_name):
         with self._WLOCK:
             self.started = False
             # we're still on the same file
             if self.current_file == file_name:
                 self.completed = True
                 self.completions = completions
+                self.env_completions = env_completions
             else:
                 return
 
@@ -120,20 +134,22 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             char_before = char_before.encode("utf-8")
         is_prefixed = char_before == "\\"
 
-        completion_level = get_setting("command_completion",
-                                       "prefixed")
+        line = view.substr(get_Region(view.line(point).begin(), point_before))
+        line = line[::-1]
+
+        is_env = bool(BEGIN_END_BEFORE_REGEX.match(line))
+
+        completion_level = "prefixed"  # default completion level is "prefixed"
+        completion_level = get_setting("command_completion", completion_level)
 
         do_complete = {
             "never": False,
-            "prefixed": is_prefixed,
+            "prefixed": is_prefixed or is_env,
             "always": True
-        }.get(completion_level, is_prefixed)
+        }.get(completion_level, is_prefixed or is_env)
 
         if not do_complete:
             return []
-
-        line = view.substr(get_Region(view.line(point).a, point))
-        line = line[::-1]
 
         # Do not do completions in actions
         for rex in ENV_DONOT_AUTO_COM:
@@ -141,7 +157,9 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
                 return []
 
         if self.completed and self.current_file == view.file_name():
-            if is_prefixed:
+            if is_env:
+                completions = [c for c in self.env_completions]
+            elif is_prefixed:
                 completions = [(c[0], c[1][1:]) if _is_snippet(c) else c
                                for c in self.completions]
             else:
@@ -256,9 +274,24 @@ class CwlParsingHandler(object):
             else:
                 if cwl_file not in cwl_file_list:
                     cwl_file_list.append(cwl_file)
-        self.callback(parse_cwl_file(cwl_file_list), self.file_name)
+        self.callback(
+            parse_cwl_file(cwl_file_list),  # parse commands
+            parse_cwl_file(cwl_file_list, parse_line_as_environment),  # parse environments
+            self.file_name
+        )
 
-def parse_cwl_file(cwl_file_list):
+def parse_line_as_environment(line):
+    m = ENVIRONMENT_REGEX.match(line)
+    if not m:
+        return
+    env_name = m.group("name")
+    return env_name, env_name
+
+
+def parse_line_as_command(line):
+    return line, parse_keyword(line)
+
+def parse_cwl_file(cwl_file_list, parse_line=parse_line_as_command):
     # ST3 can use load_resource api, while ST2 do not has this api
     # so a little different with implementation of loading cwl files.
     if _ST3:
@@ -286,6 +319,8 @@ def parse_cwl_file(cwl_file_list):
                 finally:
                     f.close()
 
+        method = os.path.splitext(os.path.basename(cwl))[0]
+
         # we need some state tracking to ignore keyval data
         # it could be useful at a later date
         KEYVAL = False
@@ -311,9 +346,11 @@ def parse_cwl_file(cwl_file_list):
             # tracking purposes, but we can ignore it
             line = line.split('#', 1)[0]
 
-            keyword = line.rstrip()
-            method = os.path.splitext(os.path.basename(cwl))[0]
-            item = (u'%s\t%s' % (keyword, method), parse_keyword(keyword))
+            result = parse_line(line)
+            if result is None:
+                continue
+            (keyword, insertion) = result
+            item = (u'%s\t%s' % (keyword, method), insertion)
             completions.append(item)
 
     return completions
