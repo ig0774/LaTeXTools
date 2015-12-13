@@ -92,8 +92,8 @@ class CwlCompletions(object):
                         pass
                 return completions
             else:
-                self.triggered = True
-                if not self.started:
+                self._triggered = True
+                if not self._started:
                     self.load_completions()
                 return []
 
