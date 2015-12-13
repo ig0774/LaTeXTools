@@ -10,12 +10,14 @@ if sublime.version() < '3000':
     from latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from latex_input_completions import TEX_INPUT_FILE_REGEX
+    from latex_cwl_completions import BEGIN_END_BEFORE_REGEX
     from getRegion import get_Region
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     from .latex_input_completions import TEX_INPUT_FILE_REGEX
+    from .latex_cwl_completions import BEGIN_END_BEFORE_REGEX
     from .getRegion import get_Region
 
 # used to flag whether command is triggered for cite
@@ -79,9 +81,12 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
                         })
             view.run_command("latex_fill_input")
 
+        if BEGIN_END_BEFORE_REGEX.match(line):
+            view.run_command("latex_fill_env")
+
 class OnLatexFillAllReplacement(sublime_plugin.EventListener):
     # This trigger is used to delete the last "}"
-    # character inserted by latex_cite command 
+    # character inserted by latex_cite command
     # when modifing the keyword between two commas.
     def on_selection_modified(self, view):
         global TRIGGER_CITE
