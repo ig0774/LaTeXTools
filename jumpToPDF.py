@@ -186,10 +186,9 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 		line += 1
 
 		# Issue #625: forward search with multifile docs
-		# Skim/OSX and Evince/Linux want the tex source of the
-		# **included** file, which is the one where the command was issued, i.e.,
-		# the current view.
-		srcfile = os.path.basename(self.view.file_name())
+		# to make this work, we pass the relative path to the view file
+		rootPath, _ = os.path.split(root)
+		srcfile = os.path.relpath(self.view.file_name(), rootPath)
 		# We need to do something different for Windows below
 
 		# Query view settings to see if we need to keep focus or let the PDF viewer grab it
@@ -213,12 +212,6 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 								'LaTeXTools', 'skim', 'displayfile')
 				subprocess.Popen(['sh', skim] + options + [pdffile])
 		elif plat == 'win32':
-			# Issue #625: forward search with multifile docs
-			# Sumatra wants the tex source of the *root* file
-			# Credit: r_stein
-			rootPath, _ = os.path.split(root)
-			srcfile = os.path.relpath(self.view.file_name(), rootPath)
-
 			# determine if Sumatra is running, launch it if not
 			print ("Windows, Calling Sumatra")
 
