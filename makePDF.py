@@ -7,32 +7,31 @@ if sublime.version() < '3000':
 	_ST3 = False
 	import getTeXRoot
 	import parseTeXlog
-	from latextools_utils import is_tex_file, get_setting
 	from latextools_plugin import (
 		add_plugin_path, get_plugin, NoSuchPluginException
 	)
+	from latextools_utils import is_tex_file, get_setting
+
 	strbase = basestring
 else:
 	_ST3 = True
 	from . import getTeXRoot
 	from . import parseTeXlog
-	from .latextools_utils import is_tex_file, get_setting
 	from .latextools_plugin import (
 		add_plugin_path, get_plugin, NoSuchPluginException
 	)
+	from .latextools_utils import is_tex_file, get_setting
+
 	strbase = str
 
 import sublime_plugin
 import sys
-import imp
 import os, os.path
 import signal
 import threading
 import functools
 import subprocess
 import types
-import re
-import codecs
 import traceback
 
 DEBUG = False
@@ -230,7 +229,7 @@ class CmdThread ( threading.Thread ):
 					if warnings or errors:
 						content.extend(["", "Bad Boxes:"])
 					else:
-						content[-1] = content[-1] + " Bad Boxes:"
+						content[-2] = content[-2] + " Bad Boxes:"
 					content.append("")
 					content.extend(badboxes)
 				else:
@@ -364,7 +363,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		if builder_name in ['', 'default']:
 			builder_name = 'traditional'
 
-		builder_settings = get_setting("builder_settings")
+		builder_settings = get_setting("builder_settings", {})
 
 		# Read the env option (platform specific)
 		builder_platform_settings = builder_settings.get(self.plat)
