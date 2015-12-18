@@ -185,8 +185,9 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 		# HACK? It seems we get better results incrementing line
 		line += 1
 
-		# Issue #625: forward search with multifile docs
-		# to make this work, we pass the relative path to the view file
+		# issue #625: we need to pass the relative path to the viewer where
+		# there are files in subfolders of the main folder.
+		# Thanks rstein for this code!
 		rootPath, _ = os.path.split(root)
 		srcfile = os.path.relpath(self.view.file_name(), rootPath)
 		# We need to do something different for Windows below
