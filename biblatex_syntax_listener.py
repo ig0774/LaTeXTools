@@ -1,7 +1,13 @@
 import sublime
 import sublime_plugin
 
+try:
+    from latextools_utils import get_setting
+except ImportError:
+    from .latextools_utils import get_setting
+
 BIBLATEX_SYNTAX = 'Packages/LaTeXTools/BibLaTeX.tmLanguage'
+
 
 # simple listener to default bib files to BibLaTeX syntax if the
 # `use_biblatex` configuration option has been set in either the user's
@@ -21,9 +27,7 @@ class BibLaTeXSyntaxListener(sublime_plugin.EventListener):
         if current_syntax == BIBLATEX_SYNTAX:
             return
 
-        global_settings = sublime.load_settings('LaTeXTools.sublime-settings')
-        if not view.settings().get('use_biblatex',
-            global_settings.get('use_biblatex', False)):
+        if not get_setting('use_biblatex', False):
             return
 
         file_name = view.file_name()
