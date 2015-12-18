@@ -8,6 +8,7 @@ except ImportError:
 
 BIBLATEX_SYNTAX = 'Packages/LaTeXTools/BibLaTeX.tmLanguage'
 
+
 # simple listener to default bib files to BibLaTeX syntax if the
 # `use_biblatex` configuration option has been set in either the user's
 # LaTeXTools.sublime-settings or the current project settings
