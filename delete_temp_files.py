@@ -16,6 +16,9 @@ else:
 	from . import getTeXRoot
 	from .latextools_utils import cache, get_setting
 
+import sublime_plugin
+import os
+
 
 class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 	def run(self):
