@@ -5,7 +5,6 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-<<<<<<< HEAD
     from latextools_utils import is_tex_buffer
     from latextools_utils.subfiles import walk_subfiles
 else:
@@ -13,15 +12,6 @@ else:
     from . import getTeXRoot
     from .latextools_utils import is_tex_buffer
     from .latextools_utils.subfiles import walk_subfiles
-=======
-    from latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
-    from latextools_utils import get_setting
-else:
-    _ST3 = True
-    from . import getTeXRoot
-    from .latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
-    from .latextools_utils import get_setting
->>>>>>> better_bibliography_support_plugin
 
 import sublime_plugin
 import os, os.path
@@ -46,70 +36,11 @@ def match(rex, str):
 
 # recursively search all linked tex files to find all
 # included \label{} tags in the document and extract
-<<<<<<< HEAD
 def find_labels_in_files(rootdir, src):
     completions = []
     for content in walk_subfiles(rootdir, src):
         for label in re.findall(r'\\label\{([^{}]+)\}', content):
             completions.append(label)
-=======
-def find_labels_in_files(rootdir, src, labels):
-    if not is_tex_file(src):
-        src_tex_file = None
-        for ext in get_tex_extensions():
-            src_tex_file = ''.join((src, ext))
-            if os.path.exists(os.path.join(rootdir, src_tex_file)):
-                src = src_tex_file
-                break
-        if src != src_tex_file:
-            print("Could not find file {0}".format(src))
-            return
-
-    file_path = os.path.normpath(os.path.join(rootdir, src))
-    print ("Searching file: " + repr(file_path))
-    # The following was a mistake:
-    #dir_name = os.path.dirname(file_path)
-    # THe reason is that \input and \include reference files **from the directory
-    # of the master file**. So we must keep passing that (in rootdir).
-
-    # read src file and extract all label tags
-
-    # We open with utf-8 by default. If you use a different encoding, too bad.
-    # If we really wanted to be safe, we would read until \begin{document},
-    # then stop. Hopefully we wouldn't encounter any non-ASCII chars there. 
-    # But for now do the dumb thing.
-    try:
-        src_file = codecs.open(file_path, "r", "UTF-8")
-    except IOError:
-        sublime.status_message("LaTeXTools WARNING: cannot find included file " + file_path)
-        print ("WARNING! I can't find it! Check your \\include's and \\input's." )
-        return
-
-    src_content = re.sub("%.*", "", src_file.read())
-    src_file.close()
-
-    # If the file uses inputenc with a DIFFERENT encoding, try re-opening
-    # This is still not ideal because we may still fail to decode properly, but still... 
-    m = re.search(r"\\usepackage\[(.*?)\]\{inputenc\}", src_content)
-    if m and (m.group(1) not in ["utf8", "UTF-8", "utf-8"]):
-        print("reopening with encoding " + m.group(1))
-        f = None
-        try:
-            f = codecs.open(file_path, "r", m.group(1))
-            src_content = re.sub("%.*", "", f.read())
-        except:
-            print("Uh-oh, could not read file " + file_path + " with encoding " + m.group(1))
-        finally:
-            if f and not f.closed:
-                f.close()
-
-    labels += re.findall(r'\\label\{([^{}]+)\}', src_content)
-
-    # search through input tex files recursively
-    for f in re.findall(r'\\(?:input|include)\{([^\{\}]+)\}', src_content):
-        find_labels_in_files(rootdir, f, labels)
->>>>>>> better_bibliography_support_plugin
-
     return completions
 
 # get_ref_completions forms the guts of the parsing shared by both the

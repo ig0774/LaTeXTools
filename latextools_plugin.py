@@ -365,14 +365,9 @@ def _latextools_module_hack():
     such as the getTeXRoot module, but can be configured by the user as-needed.
     '''
     # add any white-listed plugins to sys.modules under their own name
-<<<<<<< HEAD
-    settings = sublime.load_settings('LaTeXTools.sublime-settings')
-    plugins_whitelist = settings.get('plugins_whitelist', ['getTeXRoot', 'kpsewhich', 'latex_chars', 'latextools_utils'])
-=======
     plugins_whitelist = get_setting('plugins_whitelist',
         ['getTeXRoot', 'kpsewhich', 'latextools_utils']
     )
->>>>>>> better_bibliography_support_plugin
 
     # always include latextools_pluing
     plugins_whitelist.append('latextools_plugin')
