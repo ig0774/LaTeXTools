@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import sublime
 import sublime_plugin
+from subprocess import Popen
 
 import os
 
@@ -26,10 +27,8 @@ def using_miktex():
     if sublime.platform() != 'windows':
         return False
 
-    platform_settings = get_setting(sublime.platform(), {})
-
     try:
-        distro = platform_settings.get('distro', 'miktex')
+        distro = get_setting('distro', 'miktex')
         return distro in ['miktex', '']
     except KeyError:
         return True  # assumed

@@ -38,20 +38,13 @@ class PdfBuilder(latextools_plugin.LaTeXToolsPlugin):
 	# tex_root is properly split into the root tex file's directory,
 	# its base name, and extension, etc.
 
-	def __init__(self, tex_root, output, builder_settings, platform_settings):
-		# when this is imported at the head of the file, os.path can
-		# become None. I believe this is due to the Python unloading behaviour
-		# in pre-3.4, but it only appears to manifest itself on Linux
-		# in any case, re-importing is basically harmless
-		import os.path
-
+	def __init__(self, tex_root, output, builder_settings):
 		self.tex_root = tex_root
 		self.tex_dir, self.tex_name = os.path.split(tex_root)
 		self.base_name, self.tex_ext = os.path.splitext(self.tex_name)
 		self.output_callable = output
 		self.out = ""
 		self.builder_settings = builder_settings
-		self.platform_settings = platform_settings
 
 	# Send to callable object
 	# Usually no need to override

@@ -355,7 +355,6 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			return
 
 		# Get platform settings, builder, and builder settings
-		platform_settings  = get_setting(self.plat, {})
 		builder_name = get_setting("builder", "traditional")
 		self.hide_panel_level = get_setting("hide_build_panel", "never")
 		# This *must* exist, so if it doesn't, the user didn't migrate
@@ -370,11 +369,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		builder_settings = get_setting("builder_settings", {})
 
 		# Read the env option (platform specific)
-		builder_platform_settings = builder_settings.get(self.plat)
-		if builder_platform_settings:
-			self.env = builder_platform_settings.get("env", None)
-		else:
-			self.env = None
+		self.env = builder_settings.get("env", None)
 
 		# Now actually get the builder
 		builder_path = get_setting("builder_path")  # relative to ST packages dir!
@@ -404,7 +399,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		# Now get the tex binary path from prefs, change directory to
 		# that of the tex root file, and run!
-		self.path = platform_settings['texpath']
+		self.path = get_setting('texpath')
 		os.chdir(tex_dir)
 		CmdThread(self).start()
 		print(threading.active_count())

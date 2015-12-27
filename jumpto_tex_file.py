@@ -190,8 +190,7 @@ def _jumpto_image_file(view, window, tex_root, file_name):
                 command.append(file_path)
             external_command(command)
 
-    psystem = sublime.platform()
-    commands = get_setting("open_image_command", {}).get(psystem, None)
+    commands = get_setting("open_image_command", {}).get(sublime.platform())
     print("Commands: '{0}'".format(commands))
     print("Open File: '{0}'".format(file_path))
 
