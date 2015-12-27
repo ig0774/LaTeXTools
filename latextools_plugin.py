@@ -368,6 +368,7 @@ def _latextools_module_hack():
     plugins_whitelist = get_setting('plugins_whitelist',
         ['getTeXRoot', 'kpsewhich', 'latex_chars', 'latextools_utils'])
 
+
     # always include latextools_pluing
     plugins_whitelist.append('latextools_plugin')
     overwritten_modules = {}
