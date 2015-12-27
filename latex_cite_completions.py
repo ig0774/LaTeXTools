@@ -38,7 +38,6 @@ if sublime.version() < '3000':
     import getTeXRoot
     import latextools_plugin
     from latextools_utils import is_tex_buffer, get_setting
-    from latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
     exec("""def reraise(tp, value, tb=None):
@@ -51,7 +50,6 @@ else:
     from . import getTeXRoot
     from . import latextools_plugin
     from .latextools_utils import is_tex_buffer, get_setting
-    from .latextools_utils.subfiles import walk_subfiles
 
     # reraise implementation from 6
     def reraise(tp, value, tb=None):
@@ -328,6 +326,9 @@ def run_plugin_command(command, *args, **kwargs):
         return result
 
     plugins = get_setting('bibliography_plugins', ['traditional_bibliography'])
+    if not plugins:
+        print('bibliography_plugins is blank. Loading traditional plugin.')
+        plugins = ['traditional_bibliography']
 
     result = None
     if type(plugins) == strbase:
@@ -370,7 +371,7 @@ def get_author_short(authors):
         authors = authors[0] + " et al."
     else:
         authors = ' & '.join(authors)
-    
+
     # return formated string
     return authors
 
@@ -750,6 +751,7 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
             formatter = Formatter()
             view.window().show_quick_panel([[formatter.vformat(s, (), completion) for s in cite_panel_format] \
                                         for completion in completions], on_done)
+
 
 def plugin_loaded():
     # load plugins from the bibliography_plugins dir of LaTeXTools if it exists

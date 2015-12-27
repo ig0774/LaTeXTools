@@ -291,7 +291,8 @@ plugin is supposed to be loaded. See the documentation for details.
 '''
 
 def _get_plugin_paths():
-    return get_setting('plugin_paths', [])
+    plugin_paths = get_setting('plugin_paths', [])
+    return plugin_paths
 
 def _load_plugin(filename, *paths):
     name, ext = os.path.splitext(filename)
@@ -359,7 +360,7 @@ def get_plugin(name):
 def _latextools_module_hack():
     '''
     Context manager to ensure sys.modules has certain white-listed modules, most
-    especially latextools_plugins. This exposes ssome of the modules in LaTeXTools
+    especially latextools_plugins. This exposes some of the modules in LaTeXTools
     to plugins. It is intended primarily to expose library-esque functionality,
     such as the getTeXRoot module, but can be configured by the user as-needed.
     '''
@@ -420,7 +421,7 @@ def _latextools_module_hack():
 def add_whitelist_module(name, module=None):
     '''
     API function to ensure that a certain module is made available to any plugins.
-    
+
     `name` should be the name of the module as it will be imported in a plugin
     `module`, if specified, should be either an actual module object or a callable
     that returns the actual module object.

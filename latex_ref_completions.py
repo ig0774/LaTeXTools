@@ -5,12 +5,12 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    from latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions
+    from latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions, get_setting
     from latextools_utils.subfiles import walk_subfiles
 else:
     _ST3 = True
     from . import getTeXRoot
-    from .latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions
+    from .latextools_utils import is_tex_buffer, is_tex_file, get_tex_extensions, get_setting
     from .latextools_utils.subfiles import walk_subfiles
 
 import sublime_plugin
@@ -41,7 +41,6 @@ def find_labels_in_files(rootdir, src):
     for content in walk_subfiles(rootdir, src):
         for label in re.findall(r'\\label\{([^{}]+)\}', content):
             completions.append(label)
-
     return completions
 
 # get_ref_completions forms the guts of the parsing shared by both the
