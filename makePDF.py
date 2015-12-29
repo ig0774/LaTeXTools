@@ -393,8 +393,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.builder = builder(
 			self.file_name,
 			self.output,
-			builder_settings,
-			platform_settings
+			builder_settings
 		)
 
 		# Now get the tex binary path from prefs, change directory to
