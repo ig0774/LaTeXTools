@@ -126,6 +126,7 @@ if sys.version_info < (3, 0):
     strbase = basestring
 else:
     from importlib.machinery import PathFinder, SourceFileLoader
+    from imp import reload
 
     # WARNING:
     # imp module is deprecated in 3.x, unfortunately, importlib does not seem
@@ -303,14 +304,19 @@ def _load_plugin(filename, *paths):
     else:
         module_name = '{0}{1}_{2}'.format(_MODULE_PREFIX, name, ext[1:])
 
-    try:
-        return sys.modules[module_name]
-    except KeyError:
-        pass
+    if module_name in sys.modules:
+        try:
+            reload(sys.modules[module_name])
+            return sys.modules[module_name]
+        except ImportError:
+            # On ST2, this appears to be triggered on the initial reload and 
+            # fails, so instead of reloading just continue to run the loading
+            # code
+            pass
 
     try:
         return _load_module(module_name, filename, *paths)
-    except ImportError:
+    except:
         print('Could not load module {0} using path {1}.'.format(name, paths))
         traceback.print_exc()
 
@@ -503,12 +509,8 @@ def plugin_loaded():
     # by default load anything in the User package with a .latextools-plugin extension
     add_plugin_path(os.path.join(sublime.packages_path(), 'User'), '*.latextools-plugin')
 
-# when this plugin is unloaded, unload all custom plugins from sys.modules
+# when this plugin is unloaded, remove the registry
 def plugin_unloaded():
-    for module in list(sys.modules.keys()):
-        if module.startswith(_MODULE_PREFIX):
-            del sys.modules[module]
-
     internal._REGISTRY = None
 
 # ensure plugin_loaded() called on ST2
