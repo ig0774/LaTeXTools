@@ -22,6 +22,7 @@ else:
 
 __all__ = ['LatexGenPkgCacheCommand']
 
+
 def _get_tex_searchpath(file_type):
     if file_type is None:
         raise Exception('file_type must be set for _get_tex_searchpath')

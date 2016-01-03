@@ -11,7 +11,7 @@ else:
 	from . import getTeXRoot
 	from .latextools_utils import is_tex_file, get_setting
 
-import sublime_plugin, os, os.path
+import sublime_plugin, os, os.path, platform
 from subprocess import Popen
 
 
@@ -22,6 +22,8 @@ from subprocess import Popen
 
 class View_pdfCommand(sublime_plugin.WindowCommand):
 	def run(self):
+		prefs_lin = get_setting('linux', {})
+
 		view = self.window.active_view()
 		if not is_tex_file(view.file_name()):
 			sublime.error_message("%s is not a TeX source file: cannot view." % (os.path.basename(view.file_name()),))
@@ -31,28 +33,29 @@ class View_pdfCommand(sublime_plugin.WindowCommand):
 
 		rootFile, rootExt = os.path.splitext(root)
 		pdfFile = quotes + rootFile + '.pdf' + quotes
+		s = platform.system()
 		script_path = None
-		p = sublime.platform()
-		if p == "osx":
+		if s == "Darwin":
 			# for inverse search, set up a "Custom" sync profile, using
 			# "subl" as command and "%file:%line" as argument
 			# you also have to put a symlink to subl somewhere on your path
 			# Also check the box "check for file changes"
 			viewercmd = ["open", "-a", "Skim"]
-		elif p == "windows":
+		elif s == "Windows":
 			# with new version of SumatraPDF, can set up Inverse 
 			# Search in the GUI: under Settings|Options...
 			# Under "Set inverse search command-line", set:
 			# sublime_text "%f":%l
-			su_binary = get_setting("sumatra", "SumatraPDF.exe")
+			prefs_win = get_setting("windows", {})
+			su_binary = prefs_win.get("sumatra", "SumatraPDF.exe")
 			viewercmd = [su_binary, "-reuse-instance"]		
-		elif p == "linux":
+		elif s == "Linux":
 			# the required scripts are in the 'evince' subdir
 			script_path = os.path.join(sublime.packages_path(), 'LaTeXTools', 'evince')
 			ev_sync_exec = os.path.join(script_path, 'evince_sync') # so we get inverse search
 			# Get python binary if set in preferences:
-			py_binary = get_setting('python2', 'python')
-			sb_binary = get_setting('sublime', 'sublime_text')
+			py_binary = prefs_lin["python2"] or 'python'
+			sb_binary = prefs_lin["sublime"] or 'sublime-text'
 			viewercmd = ['sh', ev_sync_exec, py_binary, sb_binary]
 		else:
 			sublime.error_message("Platform as yet unsupported. Sorry!")

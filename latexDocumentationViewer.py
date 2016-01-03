@@ -23,12 +23,15 @@ else:
     _ST3 = True
     strbase = str
 
+
 def using_miktex():
     if sublime.platform() != 'windows':
         return False
 
+    platform_settings = get_setting(sublime.platform(), {})
+
     try:
-        distro = get_setting('distro', 'miktex')
+        distro = platform_settings.get('distro', 'miktex')
         return distro in ['miktex', '']
     except KeyError:
         return True  # assumed

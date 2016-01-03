@@ -9,6 +9,7 @@ else:
 
 __all__ = ['kpsewhich']
 
+
 def kpsewhich(filename, file_format=None):
     # build command
     command = ['kpsewhich']

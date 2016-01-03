@@ -34,15 +34,16 @@ class ScriptBuilder(PdfBuilder):
 		re.IGNORECASE | re.UNICODE
 	)
 
-	def __init__(self, tex_root, output, builder_settings):
+	def __init__(self, tex_root, output, builder_settings, platform_settings):
 		# Sets the file name parts, plus internal stuff
-		super(ScriptBuilder, self).__init__(tex_root, output, builder_settings) 
+		super(ScriptBuilder, self).__init__(tex_root, output, builder_settings, platform_settings) 
 		# Now do our own initialization: set our name
 		self.name = "Script Builder"
 		# Display output?
 		self.display_log = builder_settings.get("display_log", False)
-		self.cmd = builder_settings.get('script_command')
-		self.env = builder_settings.get('env')
+		plat = sublime.platform()
+		self.cmd = builder_settings.get(plat, {}).get("script_command")
+		self.env = builder_settingsget(plat, {}).get("env")
 
 
 	# Very simple here: we yield a single command

@@ -47,7 +47,8 @@ def get_sublime_executable():
 							return process
 		return None
 
-	sublime_executable = get_setting('sublime_executable', None)
+	plat_settings = get_setting(sublime.platform(), {})
+	sublime_executable = plat_settings.get('sublime_executable', None)
 
 	if sublime_executable:
 		return sublime_executable
@@ -126,12 +127,14 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 		sublime_command = get_sublime_executable()
 
 		if sublime_command is not None:
-			wait_time = get_setting('keep_focus_delay', 0.5)
+			platform = sublime.platform()
+			plat_settings = get_setting(platform, {})
+			wait_time = plat_settings.get('keep_focus_delay', 0.5)
 
 			def keep_focus():
 				startupinfo = None
 				shell = False
-				if sublime.platform() == 'windows':
+				if platform == 'windows':
 					startupinfo = subprocess.STARTUPINFO()
 					startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 					shell = _ST3
@@ -152,6 +155,9 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 		# Check prefs for PDF focus and sync
 		keep_focus = get_setting('keep_focus', True)
 		forward_sync = get_setting('forward_sync', True)
+
+		prefs_lin = get_setting("linux", {})
+		prefs_win = get_setting("windows", {})
 
 		# If invoked from keybinding, we sync
 		# Rationale: if the user invokes the jump command, s/he wants to see the result of the compilation.
@@ -189,8 +195,8 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 		
 
 		# platform-specific code:
-		plat = sublime.platform()
-		if plat == 'osx':
+		plat = sublime_plugin.sys.platform
+		if plat == 'darwin':
 			options = ["-r","-g"] if keep_focus else ["-r"]		
 			if forward_sync:
 				path_to_skim = '/Applications/Skim.app/'
@@ -204,7 +210,7 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 				skim = os.path.join(sublime.packages_path(),
 								'LaTeXTools', 'skim', 'displayfile')
 				subprocess.Popen(['sh', skim] + options + [pdffile])
-		elif plat == 'windows':
+		elif plat == 'win32':
 			# determine if Sumatra is running, launch it if not
 			print ("Windows, Calling Sumatra")
 
@@ -212,7 +218,8 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 			si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 			si.wShowWindow = 4 #constant for SHOWNOACTIVATE
 
-			su_binary = get_setting('sumatra', 'SumatraPDF.exe')
+			su_binary = prefs_win.get("sumatra", "SumatraPDF.exe") or 'SumatraPDF.exe'
+			startCommands = [su_binary, "-reuse-instance"]
 			if forward_sync:
 				startCommands.append("-forward-search")
 				startCommands.append(srcfile)
@@ -224,7 +231,7 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 
 			if keep_focus:
 				self.focus_st()
-		elif plat == 'linux': # for some reason, I get 'linux2' from sys.platform
+		elif 'linux' in plat: # for some reason, I get 'linux2' from sys.platform
 			print ("Linux!")
 			
 			# the required scripts are in the 'evince' subdir
@@ -243,10 +250,10 @@ class jump_to_pdfCommand(sublime_plugin.TextCommand):
 			# Run scripts through sh because the script files will lose their exec bit on github
 
 			# Get python binary if set:
-			py_binary = get_setting('python2') or 'python'
-			sb_binary = get_setting('sublime') or 'sublime_text'
+			py_binary = prefs_lin["python2"] or 'python'
+			sb_binary = prefs_lin["sublime"] or 'sublime-text'
 			# How long we should wait after launching sh before syncing
-			sync_wait = get_setting('sync_wait', 1.0)
+			sync_wait = prefs_lin["sync_wait"] or 1.0
 
 			evince_running = ("evince " + pdffile in running_apps)
 			if (not keep_focus) or (not evince_running):
