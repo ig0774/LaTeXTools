@@ -10,7 +10,7 @@ if sublime.version() < '3000':
 	from latextools_plugin import (
 		add_plugin_path, get_plugin, NoSuchPluginException
 	)
-	from latextools_utils import is_tex_file, get_setting
+	from latextools_utils import is_tex_file, get_setting, parse_tex_directives
 
 	strbase = basestring
 else:
@@ -20,7 +20,7 @@ else:
 	from .latextools_plugin import (
 		add_plugin_path, get_plugin, NoSuchPluginException
 	)
-	from .latextools_utils import is_tex_file, get_setting
+	from .latextools_utils import is_tex_file, get_setting, parse_tex_directives
 
 	strbase = str
 
@@ -354,6 +354,13 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			sublime.error_message("Platform as yet unsupported. Sorry!")
 			return
 
+		# parse root for any %!TEX directives
+		tex_directives = parse_tex_directives(
+			self.file_name,
+			multi_values=['options'],
+			key_maps={'ts-program': 'program'}
+		)
+
 		# Get platform settings, builder, and builder settings
 		platform_settings  = get_setting(self.plat, {})
 		builder_name = get_setting("builder", "traditional")
@@ -398,6 +405,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.builder = builder(
 			self.file_name,
 			self.output,
+			tex_directives,
 			builder_settings,
 			platform_settings
 		)

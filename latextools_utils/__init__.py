@@ -17,12 +17,14 @@ def is_tex_buffer(view, point=0):
 try:
     from latextools_utils.settings import get_setting
     from latextools_utils.is_tex_file import get_tex_extensions, is_tex_file
+    from latextools_utils.tex_directives import parse_tex_directives
     import latextools_utils.analysis
     import latextools_utils.cache
     import latextools_utils.utils
 except ImportError:
     from .settings import get_setting
     from .is_tex_file import get_tex_extensions, is_tex_file
+    from .tex_directives import parse_tex_directives
     from . import analysis
     from . import cache
     from . import utils
