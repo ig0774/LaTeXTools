@@ -30,7 +30,7 @@ _ST3 = sublime.version() >= '3000'
 class ScriptBuilder(PdfBuilder):
 
 	CONTAINS_VARIABLE = re.compile(
-		r'\$(?:file|file_path|file_name|file_ext|file_base_name)',
+		r'\$(?:file|file_path|file_name|file_ext|file_base_name)\b',
 		re.IGNORECASE | re.UNICODE
 	)
 
@@ -44,9 +44,8 @@ class ScriptBuilder(PdfBuilder):
 		# Display output?
 		self.display_log = builder_settings.get("display_log", False)
 		plat = sublime.platform()
-		self.cmd = builder_settings.get(plat, {}).get("script_command")
-		self.env = builder_settings.get(plat, {}).get("env")
-
+		self.cmd = builder_settings.get(plat, {}).get("script_commands", None)
+		self.env = builder_settings.get(plat, {}).get("env", None)
 
 	# Very simple here: we yield a single command
 	# Also add environment variables
@@ -66,6 +65,8 @@ class ScriptBuilder(PdfBuilder):
 				"You MUST set a command in your LaTeXTools.sublime-settings " +
 				"file before launching the script builder."
 			)
+			# I'm not sure this is the best way to handle things...
+			raise StopIteration()
 
 		if isinstance(self.cmd, strbase):
 			self.cmd = [self.cmd]

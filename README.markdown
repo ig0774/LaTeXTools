@@ -575,15 +575,15 @@ For the most part, the script builder works as described in the [Compiling LaTeX
 
 The script builder is controlled through two settings in the *platform-specific* part of the `builder_settings` section of `LaTeXTools.sublime-settings`:
 
-- `command` — the command or list of commands to run. This setting **must** have a value or you will get an error message.
+- `script_commands` — the command or list of commands to run. This setting **must** have a value or you will get an error message.
 - `env` — a dictionary defining any environment variables to be set for the environment the command is run in.
 
-The `command` setting should be either a string or a list. If it is a string, it represents a single command to be executed. If it is a list, it should be either a list of strings representing single commands or a list of lists, though the two may be mixed. For example:
+The `script_commands` setting should be either a string or a list. If it is a string, it represents a single command to be executed. If it is a list, it should be either a list of strings representing single commands or a list of lists, though the two may be mixed. For example:
 
 ```json
 "builder_settings": {
 	"osx": {
-		"command": "pdflatex -synctex=1"
+		"script_commands": "pdflatex -synctex=1"
 	}
 }
 ```
@@ -593,7 +593,7 @@ Will simply run `pdflatex` against the master document, as will:
 ```json
 "builder_settings": {
 	"osx": {
-		"command": ["pdflatex -synctex=1"]
+		"script_commands": ["pdflatex -synctex=1"]
 	}
 }
 ```
@@ -603,7 +603,7 @@ Or:
 ```json
 "builder_settings": {
 	"osx": {
-		"command": [["pdflatex", "-synctex=1"]]
+		"script_commands": [["pdflatex", "-synctex=1"]]
 	}
 }
 ```
@@ -613,7 +613,7 @@ More interestingly, the main list can be used to supply a series of commands. Fo
 ```json
 "builder_settings": {
 	"osx": {
-		"command": [
+		"script_commands": [
 			"pdflatex -synctex=1",
 			"bibtex",
 			"pdflatex -synctex=1",
@@ -631,16 +631,16 @@ Each command can use the following variables which will be expanded before it is
 |--------|--------|
 |`$file`   | The full path to the main file, e.g., _C:\Files\document.tex_|
 |`$file_name`| The name of the main file, e.g., _document.tex_|
-|`$file_extension`| The extension portion of the main file, e.g., _tex_|
+|`$file_ext`| The extension portion of the main file, e.g., _tex_|
 |`$file_base_name`| The name portion of the main file without the, e.g., _document_|
-|`$file_path`| The directory of the main file, e.g., _document_|
+|`$file_path`| The directory of the main file, e.g., _C:\Files_|
 
 For example:
 
 ```json
 "builder_settings": {
 	"osx": {
-		"command": ["pdflatex -synctex=1 $file_base_name"]
+		"script_commands": ["pdflatex -synctex=1 $file_base_name"]
 	}
 }
 ```
@@ -652,7 +652,7 @@ Commands are executed in the same path as `$file_path`, i.e. the folder containi
 ### Caveats ###
 
 LaTeXTools makes some assumptions that should be adhered to or else things won't work as expected:
-- the final product is a PDF whose base name is the same as the base name of the main file
+- the final product is a PDF which will be written in the same directory as the main file and named `$file_base_name.pdf`
 - the LaTeX log will be written in the same directory as the main file and named `$file_base_name.log`
 - if you change the `PATH` in the environment (by using the `env` setting), you need to ensure that the `PATH` is still sane, e.g., that it contains the path for the TeX executables and other command line resources that may be necessary.
 
