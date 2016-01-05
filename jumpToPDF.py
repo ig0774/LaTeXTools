@@ -67,6 +67,8 @@ def get_viewer():
 								'your LaTeXTools Preferences.')
 		raise NoViewerException()
 
+	return viewer
+
 
 def focus_st():
 	sublime_command = get_sublime_exe()
