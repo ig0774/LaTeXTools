@@ -1,4 +1,5 @@
 import latextools_plugin
+import sys
 
 # most methods take a kwargs variable, which currently only consists of the
 # `keep_focus` setting
@@ -59,3 +60,7 @@ class BaseViewer(latextools_plugin.LaTeXToolsPlugin):
         current platform / environment
         '''
         return True
+
+latextools_plugin.add_whitelist_module('pdfBuilder',
+    sys.modules[BaseViewer.__module__]
+)
