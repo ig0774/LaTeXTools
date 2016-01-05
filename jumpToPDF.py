@@ -61,7 +61,7 @@ def get_viewer():
 	# assume no-args constructor
 	viewer = viewer()
 
-	if not viewer.supports_platform(platform):
+	if not viewer.supports_platform(sublime.platform()):
 		sublime.error_message(viewer_name + ' does not support the ' +
 								'current platform. Please change the viewer in ' +
 								'your LaTeXTools Preferences.')
