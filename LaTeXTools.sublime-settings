@@ -220,7 +220,7 @@
 	//
 	// "sumatra"		uses SumatraPDF; this is the default on
 	//					Windows
-	"viewer": ""
+	"viewer": "",
 
 	// OPTION: "viewer_settings"
 	// Specify viewer-dependent settings and preferences
@@ -240,7 +240,7 @@
 		"linux" : {
 			// See README or third-party documentation
 		}
-	}
+	},
 
 // ------------------------------------------------------------------
 // Opening files included into the tex source code
