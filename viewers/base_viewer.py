@@ -61,6 +61,6 @@ class BaseViewer(latextools_plugin.LaTeXToolsPlugin):
         '''
         return True
 
-latextools_plugin.add_whitelist_module('pdfBuilder',
+latextools_plugin.add_whitelist_module('base_viewer',
     sys.modules[BaseViewer.__module__]
 )
