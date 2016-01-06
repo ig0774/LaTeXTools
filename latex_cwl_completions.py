@@ -458,6 +458,12 @@ def parse_keyword(keyword):
         return replace
 
 
+# returns the cwl completions instances
+def get_cwl_completions():
+    plugin_loaded()
+    return CWL_COMPLETIONS
+
+
 # ensure that CWL_COMPLETIONS has a value
 # its better to do it here because its more stable across reloads
 def plugin_loaded():
