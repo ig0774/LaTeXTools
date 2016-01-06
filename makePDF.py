@@ -8,7 +8,8 @@ if sublime.version() < '3000':
 	import getTeXRoot
 	import parseTeXlog
 	from latextools_plugin import (
-		add_plugin_path, get_plugin, NoSuchPluginException
+		add_plugin_path, get_plugin, NoSuchPluginException,
+		_classname_to_internal_name
 	)
 	from latextools_utils import is_tex_file, get_setting, parse_tex_directives
 
@@ -18,7 +19,8 @@ else:
 	from . import getTeXRoot
 	from . import parseTeXlog
 	from .latextools_plugin import (
-		add_plugin_path, get_plugin, NoSuchPluginException
+		add_plugin_path, get_plugin, NoSuchPluginException,
+		_classname_to_internal_name
 	)
 	from .latextools_utils import is_tex_file, get_setting, parse_tex_directives
 
@@ -361,11 +363,16 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		# This *must* exist, so if it doesn't, the user didn't migrate
 		if builder_name is None:
 			sublime.error_message("LaTeXTools: you need to migrate your preferences. See the README file for instructions.")
+			self.window.run_command('hide_panel', {"panel": "output.exec"})
 			return
 
 		# Default to 'traditional' builder
 		if builder_name in ['', 'default']:
 			builder_name = 'traditional'
+
+		# this is to convert old-style names (e.g. AReallyLongName)
+		# to new style plugin names (a_really_long_name)
+		builder_name = _classname_to_internal_name(builder_name)
 
 		builder_settings = get_setting("builder_settings", {})
 
@@ -417,8 +424,10 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		try:
 			builder = get_plugin('{0}_builder'.format(builder_name))
 		except NoSuchPluginException:
-			sublime.error_message("Cannot find builder " + builder_name + ".\n" +
-								  "Check your LaTeXTools Preferences")
+			sublime.error_message("Cannot find builder " + builder_name + ".\n" \
+							      "Check your LaTeXTools Preferences")
+			self.window.run_command('hide_panel', {"panel": "output.exec"})
+			return
 
 		print(repr(builder))
 		self.builder = builder(
