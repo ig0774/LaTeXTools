@@ -27,15 +27,16 @@ else:
     from .latextools_utils import get_setting
     from .latextools_utils.subfiles import walk_subfiles
 
-# Do not do completions in these envrioments
+# Do not do completions in these environments
 ENV_DONOT_AUTO_COM = [
     OLD_STYLE_CITE_REGEX,
     NEW_STYLE_CITE_REGEX,
     OLD_STYLE_REF_REGEX,
     NEW_STYLE_REF_REGEX,
-    TEX_INPUT_FILE_REGEX,
-    re.compile(r'\\\\')
+    TEX_INPUT_FILE_REGEX
 ]
+# whether the leading backslash is escaped
+ESCAPE_REGEX = re.compile(r"\w*(\\\\)+([^\\]|$)")
 
 # global setting to check whether the LaTeX-cwl package is available or not
 CWL_COMPLETION_ENABLED = False
@@ -224,6 +225,16 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         }.get(completion_level, is_prefixed or is_env)
 
         if not do_complete:
+            return []
+
+        # do not autocomplete if the leading backslash is escaped
+        if ESCAPE_REGEX.match(line):
+            # if there the autocompletion has been opened with the \ trigger
+            # (no prefix) and the user has not enabled auto completion for the
+            # scope, then hide the auto complete popup
+            selector = view.settings().get("auto_complete_selector")
+            if not prefix and not view.score_selector(point, selector):
+                view.run_command("hide_auto_complete")
             return []
 
         # Do not do completions in actions
