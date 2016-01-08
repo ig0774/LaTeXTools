@@ -5,9 +5,10 @@ import os
 import re
 
 try:
-    from ..latextools_utils import is_tex_file, get_tex_extensions
+    from .is_tex_file import is_tex_file, get_tex_extensions
 except:
-    from latextools_utils import is_tex_file, get_tex_extensions
+    from latextools_utils import get_tex_extensions
+    from latextools_utils.is_tex_file import is_tex_file
 
 # I've combined this into one regex in case import order becomes important
 INPUT_FILE = re.compile(r'''

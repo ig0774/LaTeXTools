@@ -6,10 +6,12 @@ import sublime
 if sublime.version() < '3000':
 	# we are on ST2 and Python 2.X
 	_ST3 = False
-	from latextools_utils import is_tex_file, parse_tex_directives
+	from latextools_utils import parse_tex_directives
+	from latextools_utils.is_tex_file import is_tex_file
 else:
 	_ST3 = True
-	from .latextools_utils import is_tex_file, parse_tex_directives
+	from .latextools_utils import parse_tex_directives
+	from .latextools_utils.is_tex_file import is_tex_file
 
 
 # normalizes the paths stored in sublime session files on Windows

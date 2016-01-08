@@ -11,7 +11,8 @@ if sublime.version() < '3000':
 		add_plugin_path, get_plugin, NoSuchPluginException,
 		_classname_to_internal_name
 	)
-	from latextools_utils import is_tex_file, get_setting, parse_tex_directives
+	from latextools_utils import get_setting, parse_tex_directives
+	from latextools_utils.is_tex_file import is_tex_file
 
 	strbase = basestring
 else:
@@ -22,7 +23,8 @@ else:
 		add_plugin_path, get_plugin, NoSuchPluginException,
 		_classname_to_internal_name
 	)
-	from .latextools_utils import is_tex_file, get_setting, parse_tex_directives
+	from .latextools_utils import get_setting, parse_tex_directives
+	from .latextools_utils.is_tex_file import is_tex_file
 
 	strbase = str
 
