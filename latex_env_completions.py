@@ -66,7 +66,8 @@ class LatexFillEnvCommand(sublime_plugin.TextCommand):
 
         if get_setting('cwl_autoload', True):
             texroot = get_tex_root(view)
-            get_packages(os.path.split(texroot)[0], texroot, packages)
+            if texroot:
+                get_packages(os.path.split(texroot)[0], texroot, packages)
 
         if not packages:
             return
