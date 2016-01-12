@@ -97,7 +97,7 @@ class EntryWrapper(Mapping):
             short = True
             key = key[:-6]
 
-        if key == 'keyword':
+        if key == 'keyword' or key == 'citekey':
             return self.entry.cite_key
 
         if key in Name.NAME_FIELDS:
