@@ -35,7 +35,7 @@ __all__ = ['external_command']
 
 def _get_texpath():
     try:
-        texpath = get_setting('texpath')
+        texpath = get_setting(sublime.platform(), {}).get('texpath')
     except AttributeError:
         # hack to reload this module in case the calling module was reloaded
         exc_info = sys.exc_info
