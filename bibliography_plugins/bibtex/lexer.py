@@ -111,7 +111,7 @@ class Lexer(object):
             return 0
         self.add_token('PREAMBLE', match.group(1))
 
-        return len(match.group(0)) + 1
+        return len(match.group(0))
 
     def string_token(self):
         match = STRING.match(self.code, self.current_index)
@@ -119,7 +119,7 @@ class Lexer(object):
             return 0
         self.add_token('STRING', match.group(1))
 
-        return len(match.group(0)) + 1
+        return len(match.group(0))
 
     def comment_token(self):
         match = COMMENT.match(self.code, self.current_index)
@@ -143,9 +143,9 @@ class Lexer(object):
         match = ENTRY_TYPE.match(self.code, self.current_index)
         if not match:
             return 0
-        self.add_token('ENTRY_TYPE', match.group(0))
+        self.add_token('ENTRY_TYPE', match.group(1))
 
-        return len(match.group(0)) + 1
+        return len(match.group(0))
 
     def identifier_token(self):
         match = IDENTIFIER.match(self.code, self.current_index)
@@ -324,11 +324,11 @@ class Lexer(object):
 
 # Roughly speaking, these are the tokens
 WHITESPACE          = re.compile(r'([\s\n]+)', re.UNICODE)
-PREAMBLE            = re.compile(r'@(preamble)(?=\s*\{)', re.UNICODE | re.IGNORECASE)
-STRING              = re.compile(r'@(string)(?=\s*\{)', re.UNICODE | re.IGNORECASE)
+PREAMBLE            = re.compile(r'@(preamble)\s*\{', re.UNICODE | re.IGNORECASE)
+STRING              = re.compile(r'@(string)\s*\{', re.UNICODE | re.IGNORECASE)
 COMMENT             = re.compile(r'@(comment)[^\n]+', re.UNICODE | re.IGNORECASE)
 ENTRY_START         = re.compile(r'@(?=[^\W\d_][^,\s]*\s*\{)', re.UNICODE)
-ENTRY_TYPE          = re.compile(r'[^\W\d_][^,\s]*(?=\s*\{)', re.UNICODE)
+ENTRY_TYPE          = re.compile(r'([^\W\d_][^,\s]*)\s*\{', re.UNICODE)
 IDENTIFIER          = re.compile(r'[^\W\d_][^,\s}#]*(?=\s*[,]|\s*#\s*|\s*\}?(?:\n|$))', re.UNICODE)
 NUMBER              = re.compile(r'\d+', re.UNICODE)
 KEY                 = re.compile(r'([^\W\d_][^,\s]*)\s*=\s*', re.UNICODE)
