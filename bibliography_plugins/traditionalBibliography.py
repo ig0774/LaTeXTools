@@ -1,8 +1,8 @@
 from latextools_plugin import LaTeXToolsPlugin
 
-import pybtex
-from pybtex.bibtex.utils import split_name_list
-from pybtex.database.input import bibtex
+from bibtex import Parser
+from bibtex.names import Name
+from bibtex.tex import tokenize_list
 
 import latex_chars
 
@@ -23,35 +23,14 @@ else:
 
 def _get_people_short(people):
     if len(people) <= 2:
-        return u' & '.join([u' '.join(x.last()) for x in people])
+        return u' & '.join([x.last for x in people])
     else:
-        return u' '.join(people[0].last()) + u', et al.'
+        return people[0].last + u', et al.'
 
 def remove_latex_commands(s):
     u'''
     Simple function to remove any LaTeX commands or brackets from the string,
     replacing it with its contents.
-
-    >>> remove_latex_commands(u'A Marxist Schelling')
-    u'A Marxist Schelling'
-
-    >>> remove_latex_commands(u'A {Marxist} Schelling')
-    u'A Marxist Schelling'
-
-    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus}')
-    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
-
-    >>> remove_latex_commands(ur'A \\emph{Marxist} Schelling')
-    u'A Marxist Schelling'
-
-    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu \\emph{Ernst Blochs} spekulativen Materialismus}')
-    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
-
-    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu \\emph{Ernst {Blochs}} spekulativen Materialismus}')
-    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
-
-    >>> remove_latex_commands(ur'\\noindent Some text')
-    u'Some text'
     '''
     chars = []
     FOUND_SLASH = False
@@ -90,45 +69,18 @@ class EntryWrapper(Mapping):
             short = True
             key = key[:-6]
 
-        if key == 'keyword':
-            return self.entry.key
+        if key == 'keyword' or key == 'citekey':
+            return self.entry.cite_key
 
-        if key in pybtex.database.Person.valid_roles:
-            try:
-                people = self.entry.persons[key]
-                if short:
-                    result = _get_people_short(people)
-                else:
-                    result = _get_people_long(people)
-            except KeyError:
-                if 'crossref' in self.entry.fields:
-                    try:
-                        people = self.entry.get_crossref().persons[key]
-                        if short:
-                            result = _get_people_short(people)
-                        else:
-                            result = _get_people_long(people)
-                    except KeyError:
-                        pass
-
-                if not result and key == 'author':
-                    if short:
-                        result = self['editor_short']
-                    else:
-                        result = self['editor']
-
-                if not result:
-                    return u''
-        elif key == 'translator':
-            people = [pybtex.database.Person(name) for name in
-                      split_name_list(self.entry.fields[key])]
+        if key in Name.NAME_FIELDS:
+            people = [Name(x) for x in tokenize_list(self.entry[key])]
             if short:
                 result = _get_people_short(people)
             else:
                 result = _get_people_long(people)
 
         if not result:
-            result = self.entry.fields[key]
+            result = self.entry[key]
 
         return remove_latex_commands(codecs.decode(result, 'latex'))
 
@@ -141,7 +93,7 @@ class EntryWrapper(Mapping):
 class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
     def get_entries(self, *bib_files):
         entries = []
-        parser = bibtex.Parser()
+        parser = Parser()
         for bibfname in bib_files:
             try:
                 bibf = codecs.open(bibfname, 'r', 'UTF-8', 'ignore')  # 'ignore' to be safe
@@ -150,14 +102,15 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                 sublime.status_message("Cannot open bibliography file %s !" % (bibfname,))
                 continue
             else:
-                bib_data = parser.parse_stream(bibf)
+                bib_data = parser.parse(bibf.read())
+            finally:
                 bibf.close()
 
-                print ('Loaded %d bibitems' % (len(bib_data.entries)))
+                print ('Loaded %d bibitems' % (len(bib_data)))
 
-                for key in bib_data.entries:
-                    entry = bib_data.entries[key]
-                    if entry.type == 'xdata' or entry.type == 'comment' or entry.type == 'string':
+                for key in bib_data:
+                    entry = bib_data[key]
+                    if entry.entry_type in ('xdata', 'comment', 'string'):
                         continue
 
                     entries.append(EntryWrapper(entry))
