@@ -1,3 +1,4 @@
+# coding=utf-8
 from ..names import tokenize_name, Name, NameResult
 
 import unittest

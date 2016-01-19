@@ -39,3 +39,9 @@ class TestTokenizeList(unittest.TestCase):
             tokenize_list(u'Chemicals and'),
             [u'Chemicals']
         )
+
+    def test_changing_and(self):
+        self.assertEqual(
+            tokenize_list(u'Chemikalien und Eingeweide', _and='und'),
+            [u'Chemikalien', u'Eingeweide']
+        )

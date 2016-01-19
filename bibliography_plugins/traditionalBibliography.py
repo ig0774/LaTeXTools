@@ -30,35 +30,20 @@ def _get_people_long(people):
 
 def _get_people_short(people):
     if len(people) <= 2:
+<<<<<<< HEAD
         return u' & '.join([unicode(x.last) for x in people])
     else:
         return unicode(people[0].last) + u', et al.'
+=======
+        return u' & '.join([x.last for x in people])
+    else:
+        return people[0].last + u', et al.'
+>>>>>>> better_bibliography_support_plugin
 
 def remove_latex_commands(s):
     u'''
     Simple function to remove any LaTeX commands or brackets from the string,
     replacing it with its contents.
-
-    >>> remove_latex_commands(u'A Marxist Schelling')
-    u'A Marxist Schelling'
-
-    >>> remove_latex_commands(u'A {Marxist} Schelling')
-    u'A Marxist Schelling'
-
-    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus}')
-    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
-
-    >>> remove_latex_commands(ur'A \\emph{Marxist} Schelling')
-    u'A Marxist Schelling'
-
-    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu \\emph{Ernst Blochs} spekulativen Materialismus}')
-    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
-
-    >>> remove_latex_commands(ur'\\textgerman{Ein marxistischer Schelling --- Zu \\emph{Ernst {Blochs}} spekulativen Materialismus}')
-    u'Ein marxistischer Schelling --- Zu Ernst Blochs spekulativen Materialismus'
-
-    >>> remove_latex_commands(ur'\\noindent Some text')
-    u'Some text'
     '''
     chars = []
     FOUND_SLASH = False
@@ -161,13 +146,14 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                 continue
             else:
                 bib_data = parser.parse(bibf.read())
+            finally:
                 bibf.close()
 
                 print ('Loaded %d bibitems' % (len(bib_data)))
 
                 for key in bib_data:
                     entry = bib_data[key]
-                    if entry.entry_type == 'xdata' or entry.entry_type == 'comment' or entry.entry_type == 'string':
+                    if entry.entry_type in ('xdata', 'comment', 'string'):
                         continue
 
                     entries.append(EntryWrapper(entry))

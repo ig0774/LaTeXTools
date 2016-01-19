@@ -234,7 +234,7 @@ class TestCommentToken(LexerTest):
         )
 
     def test_comment_token_fails_match_without_at(self):
-        self.lexer.code = 'comment{{'
+        self.lexer.code = 'comment{'
         result = self.lexer.comment_token()
 
         self.assertEqual(
@@ -247,6 +247,18 @@ class TestCommentToken(LexerTest):
 
     def test_comment_token_consumes_whole_line(self):
         self.lexer.code = '@comment{blah blah blah blah blah'
+        result = self.lexer.comment_token()
+
+        self.assertEqual(
+            result,
+            33,
+            'expecting 33 characters to be consumed, found {0}'.format(
+                result
+            )
+        )
+
+    def test_comment_token_does_not_consume_next_line(self):
+        self.lexer.code = '@comment{blah blah blah blah blah\nblah blah blah'
         result = self.lexer.comment_token()
 
         self.assertEqual(
