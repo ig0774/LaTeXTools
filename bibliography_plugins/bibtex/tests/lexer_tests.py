@@ -101,7 +101,7 @@ class TestPreambleToken(LexerTest):
 
         self.assertEqual(
             result,
-            10,
+            11,
             'expecting 10 characters to be consumed, found {0}'.format(
                 result
             )
@@ -200,7 +200,7 @@ class TestStringToken(LexerTest):
 
         self.assertEqual(
             result,
-            8,
+            9,
             'expecting 8 characters to be consumed, found {0}'.format(
                 result
             )
@@ -438,7 +438,7 @@ class TestEntryTypeToken(LexerTest):
 
         self.assertEqual(
             result,
-            6,
+            7,
             'expecting 6 characters to be consumed, found {0}'.format(
                 result
             )
@@ -1418,6 +1418,109 @@ class TestTokenize(LexerTest):
             'other_constant',
             'expected third token value to be "constant", was "{0}"'.format(
                 tokens[2][1]
+            )
+        )
+
+        self.assertEqual(
+            tokens[-1][0],
+            'EOF',
+            'expected last token to be an "EOF" token, was "{0}"'.format(
+                tokens[-1][0]
+            )
+        )
+
+    def test_entries_with_spaces_before_brackets(self):
+        tokens = self.lexer.tokenize('''
+            @book  { citekey,
+                Author = { Bloggs, Joe },
+            }
+        ''')
+
+        self.assertEqual(
+            len(tokens),
+            7,
+            'expected 7 tokens, found {0}'.format(
+                len(tokens)
+            )
+        )
+
+        self.assertEqual(
+            tokens[0][0],
+            'ENTRY_START',
+            'expected first token to be an "ENTRY_START" token, was "{0}"'.format(
+                tokens[0][0]
+            )
+        )
+
+        self.assertEqual(
+            tokens[1][0],
+            'ENTRY_TYPE',
+            'expected second token to be an "ENTRY_TYPE" token, was "{0}"'.format(
+                tokens[1][0]
+            )
+        )
+
+        self.assertEqual(
+            tokens[1][1],
+            'book',
+            'expected second token value to be "book", was "{0}"'.format(
+                tokens[1][1]
+            )
+        )
+
+        self.assertEqual(
+            tokens[2][0],
+            'IDENTIFIER',
+            'expected third token to be an "IDENTIFIER" token, was "{0}"'.format(
+                tokens[2][0]
+            )
+        )
+
+        self.assertEqual(
+            tokens[2][1],
+            'citekey',
+            'expected third token value to be "citekey", was "{0}"'.format(
+                tokens[2][1]
+            )
+        )
+
+        self.assertEqual(
+            tokens[3][0],
+            'KEY',
+            'expected fourth token to be an "KEY" token, was "{0}"'.format(
+                tokens[3][0]
+            )
+        )
+
+        self.assertEqual(
+            tokens[3][1],
+            'Author',
+            'expected fourth token value to be "Author", was "{0}"'.format(
+                tokens[3][1]
+            )
+        )
+
+        self.assertEqual(
+            tokens[4][0],
+            'VALUE',
+            'expected fifth token to be an "VALUE" token, was "{0}"'.format(
+                tokens[4][0]
+            )
+        )
+
+        self.assertEqual(
+            tokens[4][1],
+            'Bloggs, Joe',
+            'expected fifth token value to be "Bloggs, Joe", was "{0}"'.format(
+                tokens[3][1]
+            )
+        )
+
+        self.assertEqual(
+            tokens[5][0],
+            'ENTRY_END',
+            'expected sixth token to be an "ENTRY_END" token, was "{0}"'.format(
+                tokens[5][0]
             )
         )
 
