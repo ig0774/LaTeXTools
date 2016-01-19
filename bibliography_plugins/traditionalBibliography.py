@@ -30,15 +30,9 @@ def _get_people_long(people):
 
 def _get_people_short(people):
     if len(people) <= 2:
-<<<<<<< HEAD
         return u' & '.join([unicode(x.last) for x in people])
     else:
         return unicode(people[0].last) + u', et al.'
-=======
-        return u' & '.join([x.last for x in people])
-    else:
-        return people[0].last + u', et al.'
->>>>>>> better_bibliography_support_plugin
 
 def remove_latex_commands(s):
     u'''
