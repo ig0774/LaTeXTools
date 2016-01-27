@@ -10,7 +10,26 @@ except ImportError:
 
 LATEX_SYNTAX = 'Packages/LaTeX/LaTeX.tmLanguage'
 
+
 class TeXSyntaxListener(sublime_plugin.EventListener):
+
+    def get_syntax(self):
+        if hasattr(sublime, 'find_resource'):
+            syntaxes = sublime.find_resource('LaTeX (LaTeXTools).tmLanguage')
+            if len(syntaxes) == 0:
+                return LATEX_SYNTAX
+            return syntaxes[0]
+        else:
+            syntax_file = os.path.join(
+                sublime.packages_path(),
+                'LaTeXTools',
+                'LaTeX (LaTeXTools).tmLanguage'
+            )
+
+            if os.path.exists(syntax_file):
+                return syntax_file
+            return LATEX_SYNTAX
+
     def on_load(self, view):
         self.detect_and_apply_syntax(view)
 
@@ -30,4 +49,4 @@ class TeXSyntaxListener(sublime_plugin.EventListener):
 
         file_name = view.file_name()
         if is_tex_file(file_name):
-            view.set_syntax_file(LATEX_SYNTAX)
+            view.set_syntax_file(get_syntax())
