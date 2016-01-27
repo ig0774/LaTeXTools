@@ -15,7 +15,7 @@
 	<key>keyEquivalent</key>
 	<string>^~L</string>
 	<key>name</key>
-	<string>LaTeX (custom)</string>
+	<string>LaTeX</string>
 	<key>patterns</key>
 	<array>
 		<dict>
