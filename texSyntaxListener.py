@@ -1,3 +1,4 @@
+import os
 import sublime
 import sublime_plugin
 
@@ -14,8 +15,8 @@ LATEX_SYNTAX = 'Packages/LaTeX/LaTeX.tmLanguage'
 class TeXSyntaxListener(sublime_plugin.EventListener):
 
     def get_syntax(self):
-        if hasattr(sublime, 'find_resource'):
-            syntaxes = sublime.find_resource('LaTeX (LaTeXTools).tmLanguage')
+        if hasattr(sublime, 'find_resources'):
+            syntaxes = sublime.find_resources('LaTeX (LaTeXTools).tmLanguage')
             if len(syntaxes) == 0:
                 return LATEX_SYNTAX
             return syntaxes[0]
@@ -27,7 +28,7 @@ class TeXSyntaxListener(sublime_plugin.EventListener):
             )
 
             if os.path.exists(syntax_file):
-                return syntax_file
+                return 'Packages/LaTeXTools/LaTeX (LaTeXTools).tmLanguage'
             return LATEX_SYNTAX
 
     def on_load(self, view):
@@ -49,4 +50,4 @@ class TeXSyntaxListener(sublime_plugin.EventListener):
 
         file_name = view.file_name()
         if is_tex_file(file_name):
-            view.set_syntax_file(get_syntax())
+            view.set_syntax_file(self.get_syntax())
