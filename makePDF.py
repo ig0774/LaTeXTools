@@ -13,7 +13,6 @@ if sublime.version() < '3000':
 	)
 	from latextools_utils import get_setting, parse_tex_directives
 	from latextools_utils.is_tex_file import is_tex_file
-
 	strbase = basestring
 else:
 	_ST3 = True
