@@ -68,6 +68,7 @@ try:
     from latextools_utils.tex_directives import parse_tex_directives
     import latextools_utils.analysis
     import latextools_utils.cache
+    import latextools_utils.sublime
     import latextools_utils.utils
 except ImportError:
     from .settings import get_setting
@@ -75,4 +76,5 @@ except ImportError:
     from .tex_directives import parse_tex_directives
     from . import analysis
     from . import cache
+    from . import sublime
     from . import utils
