@@ -12,7 +12,17 @@
 		<integer>1</integer>
 		<key>symbolTransformation</key>
 		<string>
-			s/\\(?:sub)*(.)(?:ection|hapter)(?:\*)?\{([^\}]+)\}/\u$1 $2/g;
+			(# It's not easy to do this correctly in a single regex so...)
+			s/\\(?:part|addpart)\*?(?:\[[^\]]*\])??(?:\{([^\}]*)\})/P $1/g;
+			s/\\(?:chapter|addchap)\*?(?:\[[^\]]*\])??(?:\{([^\}]*)\})/\uC $1/g;
+			s/\\(?:section|addsec|minisec)\*?(?:\[[^\]]*\])??(?:\{([^\}]*)\})/§ $1/g;
+			s/\\(?:subsection|addsubsec)\*?(?:\[[^\]]*\])??(?:\{([^\}]*)\})/§§ $1/g;
+			s/\\(?:subsubsection|addsubsubsec)\*?(?:\[[^\]]*\])??(?:\{([^\}]*)\})/§§§ $1/g;
+			s/\\(?:sub)?paragraph\*?(?:\[[^\]]*\])??(?:\{([^\}]*)\})/p $1/g;
+			(# Clean out up to three levels of nested LaTeX commands)
+			s/\\[A-Za-z]+\*?\s?(?:\{(.*)\})?/$1/g;
+			s/\\[A-Za-z]+\*?\s?(?:\{(.*)\})?/$1/g;
+			s/\\[A-Za-z]+\*?\s?(?:\{(.*)\})?/$1/g;
 		</string>
 	</dict>
 	<key>uuid</key>
