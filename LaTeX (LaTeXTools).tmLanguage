@@ -124,7 +124,8 @@
 						(?:sub){0,2}section							# Functions
 					  | (?:sub)?paragraph
 					  | chapter|part|addpart
-					  | addchap|addsec|minisec
+					  | addchap|add(?:sub){0,2}sec
+					  | minisec
 					)
 					(?:\*)?											# Optional Unnumbered
 				)
