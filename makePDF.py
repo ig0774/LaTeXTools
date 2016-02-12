@@ -208,6 +208,7 @@ class CmdThread ( threading.Thread ):
 		else:
 			errors = []
 			warnings = []
+			badboxes = []
 
 			try:
 				(errors, warnings, badboxes) = parseTeXlog.parse_tex_log(data)
@@ -229,7 +230,8 @@ class CmdThread ( threading.Thread ):
 				else:
 					content.append("")
 
-				if badboxes:
+
+				if badboxes and self.caller.display_bad_boxes:
 					if warnings or errors:
 						content.extend(["", "Bad Boxes:"])
 					else:
@@ -237,12 +239,14 @@ class CmdThread ( threading.Thread ):
 					content.append("")
 					content.extend(badboxes)
 				else:
-					content.append("")
+					if warnings:
+						content.append("")
 
 				hide_panel = {
 					"always": True,
 					"no_errors": not errors,
 					"no_warnings": not errors and not warnings,
+					"no_badboxes": not errors and not warnings and not badboxes,
 					"never": False
 				}.get(self.caller.hide_panel_level, False)
 
@@ -254,14 +258,33 @@ class CmdThread ( threading.Thread ):
 					if errors:
 						message += " with errors"
 					if warnings:
-						message += " and" if errors else " with"
+						if errors:
+							if badboxes and self.caller.display_bad_boxes:
+								message += ","
+							else:
+								message += " and"
+						else:
+							message += " with"
 						message += " warnings"
-					sublime.status_message(message)
+
+					if badboxes and self.caller.display_bad_boxes:
+						if errors or warnings:
+							message += " and"
+						else:
+							message += " with"
+						message += "bad boxes"
+
+					if _ST3:
+						sublime.status_message(message)
+					else:
+						sublime.set_timeout(lambda: sublime.status_message(message), 10)
 			except Exception as e:
 				content=["",""]
 				content.append("LaTeXtools could not parse the TeX log file")
 				content.append("(actually, we never should have gotten here)")
 				content.append("")
+
+				content.append("Python exception: " + repr(e))
 				content.append("")
 				content.append("Please let me know on GitHub. Thanks!")
 
@@ -362,6 +385,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		platform_settings  = get_setting(self.plat, {})
 		builder_name = get_setting("builder", "traditional")
 		self.hide_panel_level = get_setting("hide_build_panel", "never")
+		self.display_bad_boxes = get_setting("display_bad_boxes", False)
 		# This *must* exist, so if it doesn't, the user didn't migrate
 		if builder_name is None:
 			sublime.error_message("LaTeXTools: you need to migrate your preferences. See the README file for instructions.")
