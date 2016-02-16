@@ -41,7 +41,7 @@ def _get_texpath():
         exc_info = sys.exc_info
         try:
             reload(sys.modules[_get_texpath.__module__])
-            texpath = get_setting('texpath')
+            texpath = get_setting(sublime.platform(), {}).get('texpath')
         except:
             reraise(*exc_info)
 
