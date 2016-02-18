@@ -323,6 +323,11 @@ LaTeX Package keymap for OS X
 		"context":  [
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
 		"command": "delete_temp_files"},
+	// Delete/clear local Cache
+	{ 	"keys": ["super+l","super+d","super+c"], 
+		"context":  [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
+		"command": "clear_local_latex_cache"},
 
 	// super+l,w to display word count
 	{	"keys": ["super+l", "w"],
