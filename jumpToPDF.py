@@ -6,8 +6,9 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
 	_ST3 = False
 	import getTeXRoot
-	from latextools_utils import get_setting, get_sublime_exe
 	from latextools_utils.is_tex_file import is_tex_file
+	from latextools_utils import get_setting
+	from latextools_utils.sublime_utils import get_sublime_exe
 	from latextools_plugin import (
 		get_plugin, add_plugin_path, NoSuchPluginException,
 		add_whitelist_module
@@ -15,8 +16,9 @@ if sublime.version() < '3000':
 else:
 	_ST3 = True
 	from . import getTeXRoot
-	from .latextools_utils import get_setting, get_sublime_exe
 	from .latextools_utils.is_tex_file import is_tex_file
+	from .latextools_utils import get_setting
+	from .latextools_utils.sublime_utils import get_sublime_exe
 	from .latextools_plugin import (
 		get_plugin, add_plugin_path, NoSuchPluginException,
 		add_whitelist_module
