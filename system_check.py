@@ -12,7 +12,6 @@ import threading
 
 from io import StringIO
 
-
 try:
     from latextools_utils import get_setting
     from latextools_utils.system import which
@@ -115,7 +114,7 @@ def tabulate(table, wrap_column=0, output=sys.stdout):
                     table[j + 1][i] = lines
                     added_row = True
 
-            output.write(unicode(column).ljust(column_widths[i] + padding))
+            output.write(column.ljust(column_widths[i] + padding))
 
         added_row = False
         output.write(u'\n')
@@ -232,6 +231,8 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
 
     def on_done(self, results):
         def _on_done():
+            old_view = sublime.active_window().active_view()
+
             buf = StringIO()
             for item in results:
                 tabulate(item, output=buf)
@@ -273,11 +274,12 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
 
             if builder_settings is not None:
                 table = [[u'Builder Setting', u'Value']]
-                for key in builder_settings:
-                    value = builder_settings[key]
+                # this is a bit hackish, but appears necessary for things
+                # to work on ST2
+                for key, value in builder_settings._values.items():
                     # get the actual values from a SettingsWrapper
-                    if hasattr(value, 'values'):
-                        value = value.values
+                    if hasattr(value, '_values'):
+                        value = value._values
                     table.append([key, value])
                 tabulate(table, output=buf)
 
