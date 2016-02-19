@@ -21,6 +21,7 @@ LOAD_ORDER = [
     'latextools_utils',
 
     # no internal dependencies
+    'latextools_utils.system',
     'latextools_utils.settings',
     'latextools_utils.utils',
     'latextools_utils.tex_directives',
