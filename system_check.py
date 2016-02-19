@@ -15,11 +15,11 @@ from io import StringIO
 try:
     from latextools_utils import get_setting
     from latextools_utils.system import which
-    from jumpToPDF import get_sublime_executable
+    from latextools_utils.sublime_utils import get_sublime_exe
 except ImportError:
     from .latextools_utils import get_setting
     from .latextools_utils.system import which
-    from .jumpToPDF import get_sublime_executable
+    from .latextools_utils.sublime_utils import get_sublime_exe
 
 if sys.version_info >= (3,):
     unicode = str
@@ -219,7 +219,7 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             get_setting(sublime.platform(), {}).get('distro') == 'miktex'
 
         t = SystemCheckThread(
-            sublime_exe=get_sublime_executable(),
+            sublime_exe=get_sublime_exe(),
             uses_miktex=uses_miktex,
             texpath=_get_texpath() or os.environ['PATH'],
             build_env=get_setting('builder_settings', {})
