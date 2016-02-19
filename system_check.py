@@ -10,7 +10,11 @@ import sys
 import textwrap
 import threading
 
-from io import StringIO
+try:
+    from io import StringIO
+except ImportError:
+    # support ST2 on Linux
+    from StringIO import StringIO
 
 try:
     from latextools_utils import get_setting
