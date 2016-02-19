@@ -27,9 +27,15 @@ if sys.version_info >= (3,):
 
     def expand_vars(texpath):
         return os.path.expandvars(texpath)
+
+    def update_environment(old, new):
+        old.update(new.items())
 else:
     def expand_vars(texpath):
-        return os.path.expandvars(texpath)
+        return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
+
+    def update_environment(old, new):
+        old.update((dict((k.encode(sys.getfilesystemencoding()), v) for (k, v) in new.items())))
 
 
 def _get_texpath():
@@ -37,7 +43,8 @@ def _get_texpath():
     return expand_vars(texpath) if texpath is not None else None
 
 
-def get_version_info(executable, path=None):
+def get_version_info(executable, env=None):
+    print('Checking {0}...'.format(executable))
     startupinfo = None
     shell = False
     if sublime.platform() == 'windows':
@@ -46,56 +53,58 @@ def get_version_info(executable, path=None):
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         shell = True
 
-    env = copy.copy(os.environ)
-    if path is not None:
-        env['PATH'] = path
+    if env is None:
+        env = os.environ
 
-    p = subprocess.Popen(
-        [executable, '--version'],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        startupinfo=startupinfo,
-        shell=shell,
-        env=env
-    )
+    try:
+        p = subprocess.Popen(
+            [executable, '--version'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            startupinfo=startupinfo,
+            shell=shell,
+            env=env
+        )
 
-    stdout, _ = p.communicate()
-    return stdout.decode('utf-8').strip().split('\n', 1)[0]
+        stdout, _ = p.communicate()
+        return stdout.decode('utf-8').strip().split('\n', 1)[0]
+    except:
+        return None
 
 
 def get_max_width(table, column):
     return max(len(unicode(row[column])) for row in table)
 
 
-def tabulate(table, wrap_column=80, output=sys.stdout):
+def tabulate(table, wrap_column=0, output=sys.stdout):
     column_widths = [get_max_width(table, i) for i in range(len(table[0]))]
-    column_widths = [width if width <= wrap_column else wrap_column
-                     for width in column_widths]
+    if wrap_column is not None and wrap_column != 0:
+        column_widths = [width if width <= wrap_column else wrap_column
+                         for width in column_widths]
 
     headers = table.pop(0)
 
     for i in range(len(headers)):
         padding = 2 if i < len(headers) - 1 else 0
-        print(headers[i].ljust(column_widths[i] + padding), end=u'',
-              file=output)
-    print(u'', file=output)
+        output.write(unicode(headers[i]).ljust(column_widths[i] + padding))
+    output.write(u'\n')
 
     for i in range(len(headers)):
         padding = 2 if i < len(headers) - 1 else 0
         if headers[i]:
-            print((u'-' * len(headers[i])).ljust(column_widths[i] + padding),
-                  end=u'', file=output)
+            output.write((u'-' * len(headers[i])).ljust(column_widths[i] + padding))
         else:
-            print(u''.ljust(column_widths[i] + padding), end=u'', file=output)
-    print(u'', file=output)
+            output.write(u''.ljust(column_widths[i] + padding))
+    output.write(u'\n')
 
     added_row = False
     for j, row in enumerate(table):
         for i in range(len(row)):
             padding = 2 if i < len(row) - 1 else 0
             column = unicode(row[i])
-            if len(column) > 95:
-                wrapped = textwrap.wrap(column, 95)
+            if wrap_column is not None and wrap_column != 0 and \
+                    len(column) > wrap_column:
+                wrapped = textwrap.wrap(column, wrap_column)
                 column = wrapped.pop(0)
                 lines = u''.join(wrapped)
 
@@ -106,34 +115,48 @@ def tabulate(table, wrap_column=80, output=sys.stdout):
                     table[j + 1][i] = lines
                     added_row = True
 
-            print(unicode(column).ljust(column_widths[i] + padding), end=u'',
-                  file=output)
+            output.write(unicode(column).ljust(column_widths[i] + padding))
 
         added_row = False
-        print(u'', file=output)
-
-    print(u'', file=output)
+        output.write(u'\n')
+    output.write(u'\n')
 
 
 class SystemCheckThread(threading.Thread):
 
-    def __init__(self, sublime_exe=None, uses_miktex=False, on_done=None):
+    def __init__(self, sublime_exe=None, uses_miktex=False, on_done=None,
+                 texpath=None, build_env=None):
         super(SystemCheckThread, self).__init__()
         self.sublime_exe = sublime_exe
         self.uses_miktex = uses_miktex
+        self.texpath = texpath
+        self.build_env = build_env
         self.on_done = on_done
 
     def run(self):
-        texpath = _get_texpath() or os.environ['PATH']
+        texpath = self.texpath
         results = []
+
+        env = copy.deepcopy(os.environ)
+
+        if self.texpath is not None:
+            env['PATH'] = self.texpath
+        if self.build_env is not None:
+            update_environment(env, self.build_env)
 
         table = [
             ['Variable', 'Value']
         ]
 
-        table.append([
-            'PATH', texpath
-        ])
+        for var in ['PATH', 'TEXINPUTS', 'BSTINPUTS']:
+            table.append([var, env.get(var, '')])
+
+        if self.uses_miktex:
+            for var in ['BIBTEX', 'LATEX', 'PDFLATEX', 'MAKEINDEX',
+                        'MAKEINFO', 'TEX', 'PDFTEX', 'TEXINDEX']:
+                value = env.get(var, None)
+                if value is not None:
+                    table.append([var, value])
 
         results.append(table)
 
@@ -141,40 +164,47 @@ class SystemCheckThread(threading.Thread):
             ['Program', 'Location', 'Required', 'Status', '', 'Version']
         ]
 
-        sublime_exe = get_sublime_executable()
-        available = sublime_exe is not None
-        table.append([
-            'sublime',
-            sublime_exe,
-            u'yes',
-            u'available' if available else u'missing',
-            u'\u2705' if available else u'\u274c',
-            get_version_info(sublime_exe, path=texpath) if available else u''
-        ])
+        # skip sublime_exe on OS X
+        # we only use this for the hack to re-focus on ST
+        # which doesn't work on OS X anyway
+        if sublime.platform() != 'osx':
+            sublime_exe = self.sublime_exe
+            available = sublime_exe is not None
+            version_info = get_version_info(sublime_exe, env=env) if available else None
+            table.append([
+                'sublime',
+                sublime_exe,
+                u'yes',
+                u'available' if available and version_info is not None else u'missing',
+                u'\u2705' if available and version_info is not None else u'\u274c',
+                version_info if version_info is not None else u'unavailable'
+            ])
 
         program = 'latexmk' if not self.uses_miktex else 'texify'
         location = which(program, path=texpath)
         available = location is not None
+        version_info = get_version_info(location, env=env) if available else None
         table.append([
             program,
             location,
             u'yes',
-            u'available' if available else u'missing',
-            u'\u2705' if available else u'\u274c',
-            get_version_info(location, path=texpath) if available else u''
+            u'available' if available and version_info is not None else u'missing',
+            u'\u2705' if available and version_info is not None else u'\u274c',
+            version_info if version_info is not None else u'unavailable'
         ])
 
         for program in ['pdflatex', 'xelatex', 'lualatex', 'biber',
                         'bibtex', 'kpsewhich']:
             location = which(program, path=texpath)
             available = location is not None
+            version_info = get_version_info(location, env=env) if available else None
             table.append([
                 program,
                 location,
-                u'no',
-                u'available' if available else u'missing',
-                u'\u2705' if available else u'\u274c',
-                get_version_info(location, path=texpath) if available else u''
+                u'yes',
+                u'available' if available and version_info is not None else u'missing',
+                u'\u2705' if available and version_info is not None else u'\u274c',
+                version_info if version_info is not None else u'unavailable'
             ])
 
         results.append(table)
@@ -190,7 +220,11 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             get_setting(sublime.platform(), {}).get('distro') == 'miktex'
 
         t = SystemCheckThread(
+            sublime_exe=get_sublime_executable(),
             uses_miktex=uses_miktex,
+            texpath=_get_texpath() or os.environ['PATH'],
+            build_env=get_setting('builder_settings', {})
+                        .get(sublime.platform(), {}).get('env'),
             on_done=self.on_done
         )
 
@@ -198,38 +232,72 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
 
     def on_done(self, results):
         def _on_done():
+            buf = StringIO()
+            for item in results:
+                tabulate(item, output=buf)
+
+            builder_name = get_setting('builder', 'traditional')
+            builder_settings = get_setting('builder_settings')
+            builder_path = get_setting('builder_path')
+            builder_file_name = builder_name + 'Builder.py'
+
+            if builder_name in ['simple', 'traditional', 'script', 'default', '']:
+                builder_path = None
+            else:
+                builder_path = os.path.join(sublime.packages_path(), builder_path)
+
+            # get the actual builder
+            ltt_path = os.path.join(sublime.packages_path(),
+                                    'LaTeXTools', 'builders')
+
+            if builder_path:
+                bld_path = os.path.join(sublime.packages_path(), builder_path)
+            else:
+                bld_path = ltt_path
+            bld_file = os.path.join(bld_path, builder_file_name)
+
+            builder_available = os.path.isfile(bld_file)
+
+            tabulate([
+                [u'Builder', u'Status', u''],
+                [
+                    builder_name,
+                    u'available' if builder_available else u'missing',
+                    u'\u2705' if builder_available else u'\u274c'
+                ]
+            ],
+                output=buf)
+
+            if builder_path:
+                tabulate([[u'Builder Path'], [builder_path]], output=buf)
+
+            if builder_settings is not None:
+                table = [[u'Builder Setting', u'Value']]
+                for key in builder_settings:
+                    value = builder_settings[key]
+                    # get the actual values from a SettingsWrapper
+                    if hasattr(value, 'values'):
+                        value = value.values
+                    table.append([key, value])
+                tabulate(table, output=buf)
+
             view = sublime.active_window().new_file()
             view.set_scratch(True)
             view.settings().set('word_wrap', False)
             view.set_name('LaTeXTools System Check')
             view.set_encoding('UTF-8')
 
-            buf = StringIO()
-            for table in results:
-                tabulate(table, output=buf)
-
-            tabulate([[u'Builder'], [get_setting('builder')]], output=buf)
-
-            builder_path = get_setting('builder_path')
-            if builder_path:
-                tabulate([[u'Builder Path'], [builder_path]], output=buf)
-
-            table = [['Builder Setting', 'Value']]
-            builder_settings = get_setting('builder_settings')
-            for key in builder_settings:
-                table.append([key, builder_settings[key]])
-            tabulate(table)
-
-            view.run_command('latextools_append_text',
+            view.run_command('latextools_insert_text',
                              {'text': buf.getvalue()})
 
-            print(buf.getvalue())
+            view.set_read_only(True)
+
             buf.close()
 
         sublime.set_timeout(_on_done, 0)
 
 
-class LatextoolsAppendTextCommand(sublime_plugin.TextCommand):
+class LatextoolsInsertTextCommand(sublime_plugin.TextCommand):
 
     def run(self, edit, text):
         view = self.view
