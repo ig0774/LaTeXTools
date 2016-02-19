@@ -22,7 +22,7 @@
                             },
                             { "caption": "-" },
                             {
-                                "command": "latextools_check_system",
+                                "command": "latextools_system_check",
                                 "caption": "Check System"
                             },
                             { "caption": "-" },
