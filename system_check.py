@@ -280,7 +280,8 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                 table = [[u'Builder Setting', u'Value']]
                 # this is a bit hackish, but appears necessary for things
                 # to work on ST2
-                for key, value in builder_settings._values.items():
+                for key in sorted(builder_settings._values.keys()):
+                    value = builder_settings._values[key]
                     # get the actual values from a SettingsWrapper
                     if hasattr(value, '_values'):
                         value = value._values
