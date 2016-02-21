@@ -128,8 +128,8 @@ def tabulate(table, wrap_column=0, output=sys.stdout):
 
 class SystemCheckThread(threading.Thread):
 
-    def __init__(self, sublime_exe=None, uses_miktex=False, on_done=None,
-                 texpath=None, build_env=None):
+    def __init__(self, sublime_exe=None, uses_miktex=False, texpath=None,
+                 build_env=None, on_done=None):
         super(SystemCheckThread, self).__init__()
         self.sublime_exe = sublime_exe
         self.uses_miktex = uses_miktex
@@ -165,7 +165,7 @@ class SystemCheckThread(threading.Thread):
         results.append(table)
 
         table = [
-            ['Program', 'Location', 'Required', 'Status', '', 'Version']
+            ['Program', 'Location', 'Status', '', 'Version']
         ]
 
         # skip sublime_exe on OS X
@@ -178,26 +178,13 @@ class SystemCheckThread(threading.Thread):
             table.append([
                 'sublime',
                 sublime_exe,
-                u'yes',
                 u'available' if available and version_info is not None else u'missing',
                 u'\u2705' if available and version_info is not None else u'\u274c',
                 version_info if version_info is not None else u'unavailable'
             ])
 
-        program = 'latexmk' if not self.uses_miktex else 'texify'
-        location = which(program, path=texpath)
-        available = location is not None
-        version_info = get_version_info(location, env=env) if available else None
-        table.append([
-            program,
-            location,
-            u'yes',
-            u'available' if available and version_info is not None else u'missing',
-            u'\u2705' if available and version_info is not None else u'\u274c',
-            version_info if version_info is not None else u'unavailable'
-        ])
-
-        for program in ['pdflatex', 'xelatex', 'lualatex', 'biber',
+        for program in ['latexmk' if not self.uses_miktex else 'texify',
+                        'pdflatex', 'xelatex', 'lualatex', 'biber',
                         'bibtex', 'kpsewhich']:
             location = which(program, path=texpath)
             available = location is not None
@@ -205,7 +192,6 @@ class SystemCheckThread(threading.Thread):
             table.append([
                 program,
                 location,
-                u'yes',
                 u'available' if available and version_info is not None else u'missing',
                 u'\u2705' if available and version_info is not None else u'\u274c',
                 version_info if version_info is not None else u'unavailable'
