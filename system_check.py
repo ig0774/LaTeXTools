@@ -5,6 +5,7 @@ import sublime_plugin
 
 import copy
 import os
+import re
 import subprocess
 import sys
 import textwrap
@@ -70,7 +71,7 @@ def get_version_info(executable, env=None):
         )
 
         stdout, _ = p.communicate()
-        return stdout.decode('utf-8').strip().split('\n', 1)[0]
+        return re.split(r'\r?\n', stdout.decode('utf-8').strip(), 1)[0]
     except:
         return None
 
@@ -235,8 +236,6 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
 
     def on_done(self, results):
         def _on_done():
-            old_view = sublime.active_window().active_view()
-
             buf = StringIO()
             for item in results:
                 tabulate(item, output=buf)
