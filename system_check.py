@@ -5,6 +5,7 @@ import sublime_plugin
 
 import copy
 import os
+import re
 import subprocess
 import sys
 import textwrap
@@ -70,7 +71,7 @@ def get_version_info(executable, env=None):
         )
 
         stdout, _ = p.communicate()
-        return stdout.decode('utf-8').strip().split('\n', 1)[0]
+        return re.split(r'\r?\n', stdout.decode('utf-8').strip(), 1)[0]
     except:
         return None
 
@@ -127,8 +128,8 @@ def tabulate(table, wrap_column=0, output=sys.stdout):
 
 class SystemCheckThread(threading.Thread):
 
-    def __init__(self, sublime_exe=None, uses_miktex=False, on_done=None,
-                 texpath=None, build_env=None):
+    def __init__(self, sublime_exe=None, uses_miktex=False, texpath=None,
+                 build_env=None, on_done=None):
         super(SystemCheckThread, self).__init__()
         self.sublime_exe = sublime_exe
         self.uses_miktex = uses_miktex
@@ -164,7 +165,7 @@ class SystemCheckThread(threading.Thread):
         results.append(table)
 
         table = [
-            ['Program', 'Location', 'Required', 'Status', '', 'Version']
+            ['Program', 'Location', 'Status', '', 'Version']
         ]
 
         # skip sublime_exe on OS X
@@ -177,26 +178,13 @@ class SystemCheckThread(threading.Thread):
             table.append([
                 'sublime',
                 sublime_exe,
-                u'yes',
                 u'available' if available and version_info is not None else u'missing',
                 u'\u2705' if available and version_info is not None else u'\u274c',
                 version_info if version_info is not None else u'unavailable'
             ])
 
-        program = 'latexmk' if not self.uses_miktex else 'texify'
-        location = which(program, path=texpath)
-        available = location is not None
-        version_info = get_version_info(location, env=env) if available else None
-        table.append([
-            program,
-            location,
-            u'yes',
-            u'available' if available and version_info is not None else u'missing',
-            u'\u2705' if available and version_info is not None else u'\u274c',
-            version_info if version_info is not None else u'unavailable'
-        ])
-
-        for program in ['pdflatex', 'xelatex', 'lualatex', 'biber',
+        for program in ['latexmk' if not self.uses_miktex else 'texify',
+                        'pdflatex', 'xelatex', 'lualatex', 'biber',
                         'bibtex', 'kpsewhich']:
             location = which(program, path=texpath)
             available = location is not None
@@ -204,7 +192,6 @@ class SystemCheckThread(threading.Thread):
             table.append([
                 program,
                 location,
-                u'yes',
                 u'available' if available and version_info is not None else u'missing',
                 u'\u2705' if available and version_info is not None else u'\u274c',
                 version_info if version_info is not None else u'unavailable'
@@ -235,8 +222,6 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
 
     def on_done(self, results):
         def _on_done():
-            old_view = sublime.active_window().active_view()
-
             buf = StringIO()
             for item in results:
                 tabulate(item, output=buf)
@@ -280,7 +265,8 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                 table = [[u'Builder Setting', u'Value']]
                 # this is a bit hackish, but appears necessary for things
                 # to work on ST2
-                for key, value in builder_settings._values.items():
+                for key in sorted(builder_settings._values.keys()):
+                    value = builder_settings._values[key]
                     # get the actual values from a SettingsWrapper
                     if hasattr(value, '_values'):
                         value = value._values
