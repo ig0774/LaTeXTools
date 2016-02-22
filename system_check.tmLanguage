@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array>
+		<string>latextools-system-check</string>
+	</array>
+	<key>name</key>
+	<string>LaTeXTools System Check</string>
+	<key>hidden</key>
+	<true/>
+	<key>patterns</key>
+	<array>
+		<dict>
+			<key>match</key>
+			<string>-{3,}</string>
+			<key>name</key>
+			<string>comment.other.latextools-system-check.header</string>
+		</dict>
+		<dict>
+			<key>begin</key>
+			<string>^(?=(?:Variable|Program|Builder).+$)</string>
+			<key>end</key>
+			<string>^\n$</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>(?:Variable|Program|Builder).+$</string>
+					<key>name</key>
+					<string>comment.other.latextools-system-check.header</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>$self</string>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>^Builder\s+Status\s*$</string>
+			<key>name</key>
+			<string>comment.other.latextools-system-check.header</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>^Builder Setting\s+Value\s*$</string>
+			<key>name</key>
+			<string>comment.other.latextools-system-check.header</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>available</string>
+			<key>name</key>
+			<string>markup.inserted.latextools-system-check.available</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>missing</string>
+			<key>name</key>
+			<string>variable.latextools-system-check.available</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>available</string>
+			<key>name</key>
+			<string>markup.inserted.latextools-system-check.available</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>True|False</string>
+			<key>name</key>
+			<string>constant.language.latextools-system-check.available</string>
+		</dict>
+	</array>
+	<key>scopeName</key>
+	<string>text.latextools-system-check</string>
+</dict>
+</plist>

@@ -6,10 +6,12 @@ import sublime_plugin
 import copy
 import os
 import re
+import signal
 import subprocess
 import sys
 import textwrap
 import threading
+import traceback
 
 try:
     from io import StringIO
@@ -34,6 +36,14 @@ if sys.version_info >= (3,):
 
     def update_environment(old, new):
         old.update(new.items())
+
+    # reraise implementation from 6
+    def reraise(tp, value, tb=None):
+        if value is None:
+            value = tp()
+        if value.__traceback__ is not tb:
+            raise value.with_traceback(tb)
+        raise value
 else:
     def expand_vars(texpath):
         return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
@@ -41,10 +51,75 @@ else:
     def update_environment(old, new):
         old.update((dict((k.encode(sys.getfilesystemencoding()), v) for (k, v) in new.items())))
 
+    # reraise implementation from 6
+    exec("""def reraise(tp, value, tb=None):
+    raise tp, value, tb
+""")
+
 
 def _get_texpath():
     texpath = get_setting(sublime.platform(), {}).get('texpath')
     return expand_vars(texpath) if texpath is not None else None
+
+
+class SubprocessTimeoutThread(threading.Thread):
+
+    def __init__(self, timeout, *args, **kwargs):
+        super(SubprocessTimeoutThread, self).__init__()
+        self.args = args
+        self.kwargs = kwargs
+        # ignore the preexec_fn if specified
+        if 'preexec_fn' in kwargs:
+            del self.kwargs['preexec_fn']
+
+        self.timeout = timeout
+
+        self.returncode = None
+        self.stdout = None
+        self.stderr = None
+
+    def run(self):
+        if sublime.platform != 'windows':
+            preexec_fn = os.setsid
+        else:
+            preexec_fn = None
+
+        try:
+            self._p = p = subprocess.Popen(
+                *self.args,
+                preexec_fn=preexec_fn,
+                **self.kwargs
+            )
+
+            self.stdout, self.stderr = p.communicate()
+            self.returncode = p.returncode
+        except Exception as e:
+            # just in case...
+            self.kill_process()
+            reraise(e)
+
+    def start(self):
+        super(SubprocessTimeoutThread, self).start()
+        self.join(self.timeout)
+
+        # if the timeout occurred, kill the entire process chain
+        if self.isAlive():
+            self.kill_process()
+
+    def kill_process(self):
+        try:
+            if sublime.platform == 'windows':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                subprocess.call(
+                    'taskkill /t /f /pid {pid}'.format(pid=self._p.pid),
+                    startupinfo=startupinfo,
+                    shell=True
+                )
+            else:
+                os.killpg(self._p.pid, signal.SIGKILL)
+        except:
+            traceback.print_exc()
 
 
 def get_version_info(executable, env=None):
@@ -61,7 +136,8 @@ def get_version_info(executable, env=None):
         env = os.environ
 
     try:
-        p = subprocess.Popen(
+        t = SubprocessTimeoutThread(
+            30,  # wait 30 seconds
             [executable, '--version'],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -70,7 +146,12 @@ def get_version_info(executable, env=None):
             env=env
         )
 
-        stdout, _ = p.communicate()
+        t.start()
+
+        stdout = t.stdout
+        if stdout is None:
+            return None
+
         return re.split(r'\r?\n', stdout.decode('utf-8').strip(), 1)[0]
     except:
         return None
@@ -165,7 +246,7 @@ class SystemCheckThread(threading.Thread):
         results.append(table)
 
         table = [
-            ['Program', 'Location', 'Status', '', 'Version']
+            ['Program', 'Location', 'Status', 'Version']
         ]
 
         # skip sublime_exe on OS X
@@ -179,7 +260,6 @@ class SystemCheckThread(threading.Thread):
                 'sublime',
                 sublime_exe,
                 u'available' if available and version_info is not None else u'missing',
-                u'\u2705' if available and version_info is not None else u'\u274c',
                 version_info if version_info is not None else u'unavailable'
             ])
 
@@ -193,7 +273,6 @@ class SystemCheckThread(threading.Thread):
                 program,
                 location,
                 u'available' if available and version_info is not None else u'missing',
-                u'\u2705' if available and version_info is not None else u'\u274c',
                 version_info if version_info is not None else u'unavailable'
             ])
 
@@ -249,11 +328,10 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             builder_available = os.path.isfile(bld_file)
 
             tabulate([
-                [u'Builder', u'Status', u''],
+                [u'Builder', u'Status'],
                 [
                     builder_name,
-                    u'available' if builder_available else u'missing',
-                    u'\u2705' if builder_available else u'\u274c'
+                    u'available' if builder_available else u'missing'
                 ]
             ],
                 output=buf)
@@ -277,6 +355,8 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             view.set_scratch(True)
             view.settings().set('word_wrap', False)
             view.set_name('LaTeXTools System Check')
+            view.settings().set('syntax',
+                                'Packages/LaTeXTools/system_check.tmLanguage')
             view.set_encoding('UTF-8')
 
             view.run_command('latextools_insert_text',
