@@ -246,7 +246,7 @@ class SystemCheckThread(threading.Thread):
         results.append(table)
 
         table = [
-            ['Program', 'Location', 'Status', '', 'Version']
+            ['Program', 'Location', 'Status', 'Version']
         ]
 
         # skip sublime_exe on OS X
@@ -260,7 +260,6 @@ class SystemCheckThread(threading.Thread):
                 'sublime',
                 sublime_exe,
                 u'available' if available and version_info is not None else u'missing',
-                u'\u2705' if available and version_info is not None else u'\u274c',
                 version_info if version_info is not None else u'unavailable'
             ])
 
@@ -274,7 +273,6 @@ class SystemCheckThread(threading.Thread):
                 program,
                 location,
                 u'available' if available and version_info is not None else u'missing',
-                u'\u2705' if available and version_info is not None else u'\u274c',
                 version_info if version_info is not None else u'unavailable'
             ])
 
@@ -330,11 +328,10 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             builder_available = os.path.isfile(bld_file)
 
             tabulate([
-                [u'Builder', u'Status', u''],
+                [u'Builder', u'Status'],
                 [
                     builder_name,
-                    u'available' if builder_available else u'missing',
-                    u'\u2705' if builder_available else u'\u274c'
+                    u'available' if builder_available else u'missing'
                 ]
             ],
                 output=buf)
@@ -358,6 +355,8 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             view.set_scratch(True)
             view.settings().set('word_wrap', False)
             view.set_name('LaTeXTools System Check')
+            view.settings().set('syntax',
+                                'Packages/LaTeXTools/system_check.tmLanguage')
             view.set_encoding('UTF-8')
 
             view.run_command('latextools_insert_text',
