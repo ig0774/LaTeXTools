@@ -6,10 +6,12 @@ import sublime_plugin
 import copy
 import os
 import re
+import signal
 import subprocess
 import sys
 import textwrap
 import threading
+import traceback
 
 try:
     from io import StringIO
@@ -34,6 +36,14 @@ if sys.version_info >= (3,):
 
     def update_environment(old, new):
         old.update(new.items())
+
+    # reraise implementation from 6
+    def reraise(tp, value, tb=None):
+        if value is None:
+            value = tp()
+        if value.__traceback__ is not tb:
+            raise value.with_traceback(tb)
+        raise value
 else:
     def expand_vars(texpath):
         return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
@@ -41,10 +51,76 @@ else:
     def update_environment(old, new):
         old.update((dict((k.encode(sys.getfilesystemencoding()), v) for (k, v) in new.items())))
 
+    # reraise implementation from 6
+    exec("""def reraise(tp, value, tb=None):
+    raise tp, value, tb
+""")
+
 
 def _get_texpath():
     texpath = get_setting(sublime.platform(), {}).get('texpath')
     return expand_vars(texpath) if texpath is not None else None
+
+
+class SubprocessTimeoutThread(threading.Thread):
+
+    def __init__(self, timeout, *args, **kwargs):
+        super(SubprocessTimeoutThread, self).__init__()
+        self.args = args
+        self.kwargs = kwargs
+        # ignore the preexec_fn if specified
+        if 'preexec_fn' in kwargs:
+            del self.kwargs['preexec_fn']
+
+        self.timeout = timeout
+
+        self.returncode = None
+        self.stdout = None
+        self.stderr = None
+
+    def run(self):
+        if sublime.platform != 'windows':
+            preexec_fn = os.setsid
+        else:
+            preexec_fn = None
+
+        try:
+            self._p = p = subprocess.Popen(
+                *self.args,
+                preexec_fn=preexec_fn,
+                **self.kwargs
+            )
+
+            stdout, stderr = p.communicate()
+
+            self.callback(p.returncode, stdout, stderr)
+        except Exception as e:
+            # just in case...
+            self.kill_process()
+            reraise(e)
+
+    def start(self):
+        super(SubprocessTimeoutThread, self).start()
+        self.join(self.timeout)
+
+        # if the timeout occurred, kill the entire process chain
+        if self.isAlive():
+            self.kill_process()
+
+    def kill_process(self):
+        try:
+            if sublime.platform == 'windows':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                subprocess.call(
+                    'taskkill /t /f /pid {pid}'.format(pid=self._p.pid),
+                    startupinfo=startupinfo,
+                    shell=True
+                )
+            else:
+                os.killpg(self._p.pid, signal.SIGKILL)
+        except:
+            traceback.print_exc()
 
 
 def get_version_info(executable, env=None):
@@ -61,7 +137,8 @@ def get_version_info(executable, env=None):
         env = os.environ
 
     try:
-        p = subprocess.Popen(
+        t = SubprocessTimeoutThread(
+            30,  # wait 30 seconds
             [executable, '--version'],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -70,7 +147,12 @@ def get_version_info(executable, env=None):
             env=env
         )
 
-        stdout, _ = p.communicate()
+        t.start()
+
+        stdout = t.stdout
+        if stdout is None:
+            return None
+
         return re.split(r'\r?\n', stdout.decode('utf-8').strip(), 1)[0]
     except:
         return None
