@@ -91,9 +91,8 @@ class SubprocessTimeoutThread(threading.Thread):
                 **self.kwargs
             )
 
-            stdout, stderr = p.communicate()
-
-            self.callback(p.returncode, stdout, stderr)
+            self.stdout, self.stderr = p.communicate()
+            self.returncode = p.returncode
         except Exception as e:
             # just in case...
             self.kill_process()
