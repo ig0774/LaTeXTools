@@ -255,6 +255,10 @@ class SystemCheckThread(threading.Thread):
         if sublime.platform() != 'osx':
             sublime_exe = self.sublime_exe
             available = sublime_exe is not None
+
+            if available and not os.path.isabs(sublime_exe):
+                sublime_exe = which(sublime_exe)
+
             version_info = get_version_info(sublime_exe, env=env) if available else None
             table.append([
                 'sublime',
