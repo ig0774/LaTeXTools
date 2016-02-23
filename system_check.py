@@ -262,7 +262,7 @@ class SystemCheckThread(threading.Thread):
 
                 basename, extension = os.path.splitext(sublime_exe)
                 if extension is not None:
-                    sublime_exe = ''.join(basename, extension.lower())
+                    sublime_exe = ''.join((basename, extension.lower()))
 
             version_info = get_version_info(sublime_exe, env=env) if available else None
             table.append([
@@ -281,7 +281,7 @@ class SystemCheckThread(threading.Thread):
             if available:
                 basename, extension = os.path.splitext(location)
                 if extension is not None:
-                    location = ''.join(basename, extension.lower())
+                    location = ''.join((basename, extension.lower()))
 
             version_info = get_version_info(location, env=env) if available else None
             table.append([
