@@ -79,7 +79,7 @@ class SubprocessTimeoutThread(threading.Thread):
         self.stderr = None
 
     def run(self):
-        if sublime.platform != 'windows':
+        if sublime.platform() != 'windows':
             preexec_fn = os.setsid
         else:
             preexec_fn = None
