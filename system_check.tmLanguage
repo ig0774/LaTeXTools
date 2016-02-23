@@ -20,14 +20,14 @@
 		</dict>
 		<dict>
 			<key>begin</key>
-			<string>^(?=(?:Variable|Program|Builder).+$)</string>
+			<string>^(?=(?:Variable|Program\s+Location|Builder)\s+.+$)</string>
 			<key>end</key>
 			<string>^\n$</string>
 			<key>patterns</key>
 			<array>
 				<dict>
 					<key>match</key>
-					<string>(?:Variable|Program|Builder).+$</string>
+					<string>(?:Variable|Program\s+Location|Builder)\s+.+$</string>
 					<key>name</key>
 					<string>comment.other.latextools-system-check.header</string>
 				</dict>
@@ -51,21 +51,21 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>available</string>
+			<string>\bavailable\b</string>
 			<key>name</key>
 			<string>markup.inserted.latextools-system-check.available</string>
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>missing</string>
+			<string>\bmissing\b</string>
 			<key>name</key>
-			<string>variable.latextools-system-check.available</string>
+			<string>keyword.control.latextools-system-check.available</string>
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>available</string>
+			<string>\bunavailable\b</string>
 			<key>name</key>
-			<string>markup.inserted.latextools-system-check.available</string>
+			<string>keyword.control.latextools-system-check.available</string>
 		</dict>
 		<dict>
 			<key>match</key>
