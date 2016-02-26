@@ -79,7 +79,7 @@ class SubprocessTimeoutThread(threading.Thread):
         self.stderr = None
 
     def run(self):
-        if sublime.platform != 'windows':
+        if sublime.platform() != 'windows':
             preexec_fn = os.setsid
         else:
             preexec_fn = None
@@ -256,8 +256,13 @@ class SystemCheckThread(threading.Thread):
             sublime_exe = self.sublime_exe
             available = sublime_exe is not None
 
-            if available and not os.path.isabs(sublime_exe):
-                sublime_exe = which(sublime_exe)
+            if available:
+                if not os.path.isabs(sublime_exe):
+                    sublime_exe = which(sublime_exe)
+
+                basename, extension = os.path.splitext(sublime_exe)
+                if extension is not None:
+                    sublime_exe = ''.join((basename, extension.lower()))
 
             version_info = get_version_info(sublime_exe, env=env) if available else None
             table.append([
@@ -272,6 +277,12 @@ class SystemCheckThread(threading.Thread):
                         'bibtex', 'kpsewhich']:
             location = which(program, path=texpath)
             available = location is not None
+
+            if available:
+                basename, extension = os.path.splitext(location)
+                if extension is not None:
+                    location = ''.join((basename, extension.lower()))
+
             version_info = get_version_info(location, env=env) if available else None
             table.append([
                 program,
