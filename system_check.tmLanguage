@@ -39,6 +39,12 @@
 		</dict>
 		<dict>
 			<key>match</key>
+			<string>^(?:TeX Root|LaTeX Engine|LaTeX Options)\s*$</string>
+			<key>name</key>
+			<string>comment.other.latextools-system-check.header</string>
+		</dict>
+		<dict>
+			<key>match</key>
 			<string>^Builder\s+Status\s*$</string>
 			<key>name</key>
 			<string>comment.other.latextools-system-check.header</string>

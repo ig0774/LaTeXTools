@@ -22,11 +22,15 @@ except ImportError:
 try:
     from latextools_utils import get_setting
     from latextools_utils.system import which
+    from latextools_utils.tex_directives import parse_tex_directives
     from jumpToPDF import get_sublime_executable
+    from getTeXRoot import get_tex_root
 except ImportError:
     from .latextools_utils import get_setting
     from .latextools_utils.system import which
+    from .latextools_utils.tex_directives import parse_tex_directives
     from .jumpToPDF import get_sublime_executable
+    from .getTeXRoot import get_tex_root
 
 if sys.version_info >= (3,):
     unicode = str
@@ -365,6 +369,37 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                         value = value._values
                     table.append([key, value])
                 tabulate(table, output=buf)
+
+            # is current view a TeX file?
+            view = sublime.active_window().active_view()
+            if view.score_selector(0, 'text.tex.latex') != 0:
+                tex_root = get_tex_root(view)
+                tex_directives = parse_tex_directives(
+                    tex_root,
+                    multi_values=['options'],
+                    key_maps={'ts-program': 'program'}
+                )
+
+                tabulate([[u'TeX Root'], [tex_root]], output=buf)
+
+                tabulate([
+                    [u'LaTeX Engine'],
+                    [
+                        tex_directives.get('program',
+                            get_setting('program', 'pdflatex')
+                        )
+                    ]
+                ], output=buf)
+
+                options = get_setting('builder_settings', {}).get('options', [])
+                options.extend(tex_directives.get('options', []))
+
+                if len(options) > 0:
+                    table = [[u'LaTeX Options']]
+                    for option in options:
+                        table.append([option])
+
+                    tabulate(table, output=buf)
 
             view = sublime.active_window().new_file()
             view.set_scratch(True)
