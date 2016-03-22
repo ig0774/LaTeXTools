@@ -65,12 +65,17 @@ class SettingsWrapper(Mapping):
         return len(self._values)
 
 
-def get_setting(setting, default=None):
+def get_setting(setting, default=None, view=None):
     global_settings = sublime.load_settings('LaTeXTools.sublime-settings')
     try:
-        view_settings = sublime.active_window().active_view().settings()
+        if view is None:
+            view_settings = sublime.active_window().active_view().settings()
+        elif isinstance(view, sublime.View):
+            view_settings = view.settings()
+        else:
+            view_settings = {}
     except:
-        # no view defined
+        # no view defined or view invalid
         view_settings = {}
 
     result = view_settings.get(setting)

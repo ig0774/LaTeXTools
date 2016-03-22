@@ -61,8 +61,8 @@ else:
 """)
 
 
-def _get_texpath():
-    texpath = get_setting(sublime.platform(), {}).get('texpath')
+def _get_texpath(view):
+    texpath = get_setting(sublime.platform(), {}, view).get('texpath')
     return expand_vars(texpath) if texpath is not None else None
 
 
@@ -307,10 +307,12 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
         uses_miktex = \
             get_setting(sublime.platform(), {}).get('distro') == 'miktex'
 
+        self.view = sublime.active_window().active_view()
+
         t = SystemCheckThread(
             sublime_exe=get_sublime_exe(),
             uses_miktex=uses_miktex,
-            texpath=_get_texpath() or os.environ['PATH'],
+            texpath=_get_texpath(self.view) or os.environ['PATH'],
             build_env=get_setting('builder_settings', {})
                         .get(sublime.platform(), {}).get('env'),
             on_done=self.on_done
@@ -324,9 +326,9 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             for item in results:
                 tabulate(item, output=buf)
 
-            builder_name = get_setting('builder', 'traditional')
-            builder_settings = get_setting('builder_settings')
-            builder_path = get_setting('builder_path')
+            builder_name = get_setting('builder', 'traditional', view=self.view)
+            builder_settings = get_setting('builder_settings', view=self.view)
+            builder_path = get_setting('builder_path', view=self.view)
             builder_file_name = builder_name + 'Builder.py'
 
             if builder_name in ['simple', 'traditional', 'script', 'default', '']:
@@ -371,7 +373,7 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                 tabulate(table, output=buf)
 
             # is current view a TeX file?
-            view = sublime.active_window().active_view()
+            view = self.view
             if view.score_selector(0, 'text.tex.latex') != 0:
                 tex_root = get_tex_root(view)
                 tex_directives = parse_tex_directives(
@@ -386,12 +388,14 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                     [u'LaTeX Engine'],
                     [
                         tex_directives.get('program',
-                            get_setting('program', 'pdflatex')
+                            get_setting('program', 'pdflatex', self.view)
                         )
                     ]
                 ], output=buf)
 
-                options = get_setting('builder_settings', {}).get('options', [])
+
+                options = get_setting('builder_settings', {}, self.view).\
+                    get('options', [])
                 options.extend(tex_directives.get('options', []))
 
                 if len(options) > 0:
@@ -401,18 +405,18 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
 
                     tabulate(table, output=buf)
 
-            view = sublime.active_window().new_file()
-            view.set_scratch(True)
-            view.settings().set('word_wrap', False)
-            view.set_name('LaTeXTools System Check')
-            view.settings().set('syntax',
+            new_view = sublime.active_window().new_file()
+            new_view.set_scratch(True)
+            new_view.settings().set('word_wrap', False)
+            new_view.set_name('LaTeXTools System Check')
+            new_view.settings().set('syntax',
                                 'Packages/LaTeXTools/system_check.tmLanguage')
-            view.set_encoding('UTF-8')
+            new_view.set_encoding('UTF-8')
 
-            view.run_command('latextools_insert_text',
+            new_view.run_command('latextools_insert_text',
                              {'text': buf.getvalue()})
 
-            view.set_read_only(True)
+            new_view.set_read_only(True)
 
             buf.close()
 
