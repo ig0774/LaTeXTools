@@ -67,7 +67,6 @@ else:
 import sublime_plugin
 import os, os.path
 import sys
-
 import codecs
 import re
 
@@ -350,7 +349,6 @@ def run_plugin_command(command, *args, **kwargs):
 
     if expect_result and result is None:
         raise BibPluginError("Could not find a plugin to handle '{0}'. See the console for more details".format(command))
-
     return result
 
 TITLE_SEP = re.compile(':|\.|\?')
@@ -589,7 +587,6 @@ def get_cite_completions(view, point, autocompleting=False):
     #### END COMPLETIONS HERE ####
 
     completions = [CompletionWrapper(completion) for completion in completions]
-
     return completions, prefix, post_brace, new_point_a, new_point_b
 
 # Based on html_completions.py
@@ -682,6 +679,9 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
         except BibParsingError as e:
             sublime.error_message(e.message)
             return
+        except BibParsingError as e:
+            sublime.error_message(e.message)
+            return
 
         # filter against keyword, title, or author
         if prefix:
@@ -690,6 +690,10 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
                                                         comp['keyword'].lower(),
                                                         comp['title'].lower(),
                                                         comp['author'].lower())]
+<<<<<<< HEAD
+=======
+
+>>>>>>> better_bibliography_support_plugin
         # Note we now generate citation on the fly. Less copying of vectors! Win!
         def on_done(i):
             print ("latex_cite_completion called with index %d" % (i,) )

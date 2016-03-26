@@ -22,17 +22,18 @@ import sys
 # LaTeX -> Unicode decoder
 latex_chars.register()
 
-if sys.version_info > (3, 0):
-    unicode = str
-
-def _get_people_long(people):
-    return u' and '.join([unicode(x) for x in people])
+if sublime.version() < '3000':
+    def _get_people_long(people):
+        return u' and '.join([unicode(x) for x in people])
+else:
+    def _get_people_long(people):
+        return u' and '.join([str(x) for x in people])
 
 def _get_people_short(people):
     if len(people) <= 2:
-        return u' & '.join([unicode(x.last) for x in people])
+        return u' & '.join([x.last for x in people])
     else:
-        return unicode(people[0].last) + u', et al.'
+        return people[0].last + u', et al.'
 
 def remove_latex_commands(s):
     u'''
@@ -81,7 +82,6 @@ class EntryWrapper(Mapping):
 
         if key in Name.NAME_FIELDS:
             people = [Name(x) for x in tokenize_list(self.entry[key])]
-
             if short:
                 result = _get_people_short(people)
             else:
@@ -128,6 +128,7 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                         bib_files.append(candidate_file)
         return bib_files
 
+
     def get_entries(self, *bib_files):
         entries = []
         parser = Parser()
@@ -149,7 +150,6 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                     entry = bib_data[key]
                     if entry.entry_type in ('xdata', 'comment', 'string'):
                         continue
-
                     entries.append(EntryWrapper(entry))
 
             print("Found %d total bib entries" % (len(entries),))
