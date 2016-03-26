@@ -7,23 +7,15 @@ Marciano's blog:
 [http://tekonomist.wordpress.com]
 
 
-Additional contributors (*thank you thank you thank you*): first of all, Wallace Wu and Juerg Rast, who contributed code for multifile support in ref and cite completions, "new-style" ref/cite completion, and project file support. Also, skuroda (Preferences menu), Sam Finn (initial multifile support for the build command); Daniel Fleischhacker (Linux build fixes), Mads Mobaek (universal newline support), Stefan Ollinger (initial Linux support), RoyalTS (aka Tobias Schidt?) (help with bibtex regexes and citation code, various fixes), Juan Falgueras (latexmk option to handle non-ASCII paths), Jeremy Jay (basic biblatex support), Ray Fang (texttt snippet), Ulrich Gabor (tex engine selection and cleaning aux files), Wes Campaigne and 'jlegewie' (ref/cite completion 2.0!). **Huge** thanks to Daniel Shannon (aka phyllisstein) who first ported LaTeXTools to ST3. Also thanks for Charley Peng, who has been assisting users and generating great pull requests; I'll merge them as soon as possible. Also William Ledoux (various Windows fixes, env support), Sean Zhu (find Skim.app in non-standard locations), Maximilian Berger (new center/table snippet), Lucas Nanni (recursively delete temp files), Sergey Slipchenko (`$` auto-pairing with Vintage) Ian Bacher (use `kpsewhich` to find bib files in the `TEXMF` tree; reworked fill-all command; jump to tex files improvements; delete temp files improvements; builder options; improved LaTeX-cwl support), btstream (original fill-all command; LaTeX-cwl support), Richard Stein (auto-hide build panel, jump to included tex files, LaTeX-cwl support config), Dan Schrage (nobibliography command).
+Additional contributors (*thank you thank you thank you*): first of all, Wallace Wu and Juerg Rast, who contributed code for multifile support in ref and cite completions, "new-style" ref/cite completion, and project file support. Also, skuroda (Preferences menu), Sam Finn (initial multifile support for the build command); Daniel Fleischhacker (Linux build fixes), Mads Mobaek (universal newline support), Stefan Ollinger (initial Linux support), RoyalTS (aka Tobias Schidt?) (help with bibtex regexes and citation code, various fixes), Juan Falgueras (latexmk option to handle non-ASCII paths), Jeremy Jay (basic biblatex support), Ray Fang (texttt snippet), Ulrich Gabor (tex engine selection and cleaning aux files), Wes Campaigne and 'jlegewie' (ref/cite completion 2.0!). **Huge** thanks to Daniel Shannon (aka phyllisstein) who first ported LaTeXTools to ST3. Also thanks for Charley Peng, who has been assisting users and generating great pull requests; I'll merge them as soon as possible. Also William Ledoux (various Windows fixes, env support), Sean Zhu (find Skim.app in non-standard locations), Maximilian Berger (new center/table snippet), Lucas Nanni (recursively delete temp files), Sergey Slipchenko (`$` auto-pairing with Vintage) Ian Bacher (use `kpsewhich` to find bib files in the `TEXMF` tree; reworked fill-all command; jump to tex files improvements; delete temp files improvements; builder options; improved LaTeX-cwl support), btstream (original fill-all command; LaTeX-cwl support), Richard Stein (auto-hide build panel, jump to included tex files, LaTeX-cwl support config, TEX spellcheck support), Dan Schrage (nobibliography command).
 
 *If you have contributed and I haven't acknowledged you, email me!*
 
-*Latest revision:* v3.6.0 (2015-12-12). 
+*Latest revision:* v3.6.3 (2016-02-25). 
 
-*Headline features*: [project-overridable settings](#project-specific-settings) and [user-configurable tex extensions](#support-for-non-tex-files). 
+*Headline features*: Finally, a functional [Script Builder](#script-builder)! Integrate your existing workflow in LaTeXTools, and/or customize every step of the build process.
 
-
-**NEW!** Beginning December 2015, **Ian Bacher** has joined as maintainer / developer of the LaTeXTools plugin. Ian has contributed lots of incredible code, and I am delighted to have him on board. --- *Marciano*.
-
-
-**NOTE**: A reminder on the settings file:
-
-* LaTeXTools uses a single settings file, called `LaTeXTools.sublime-settings`, which *must* exist in the `User` directory. By this I mean that LaTeXTools *will not work* until you have a proper `LaTeXTools.sublime-settings` file in the `User` directory.
-* Because of this, LaTeXtools provides an easy way to create it, and even *automagically* migrate your settings from any old `LaTeXTools Preferences.sublime-settings` file you may have. In Sublime Text, open the command palette from the Tools menu, search for "LaTeXTools: Reconfigure and migrate settings," and hit Return. That's it! See the Settings section for other ways to migrate or reconfigure settings.
-* The old settings file, `LaTeXTools Preferences.sublime-settings`, will no longer be honored. Also, do *not* modify the `LaTeX.sublime-build` file in the LaTeXTools package directory, and if you have a customized copy in `User`, delete it (but do *not* delete the original in the `LaTeXTools` directory). See the Settings section below for ways to *easily* customize the build command. 
+*Reminder*: See the [Settings section](#settings) for details on the Settings system, which was updated in v3.6.1 (2016-01-01).
 
 
 
@@ -31,36 +23,38 @@ Introduction
 ------------
 This plugin provides several features that simplify working with LaTeX files:
 
-* The ST build command takes care of compiling your LaTeX source to PDF using `texify` (Windows/MikTeX) or `latexmk` (OSX/MacTeX, Windows/TeXlive, Linux/TeXlive). Then, it parses the log file and lists errors and warning. Finally, it launches (or refreshes) the PDF viewer (SumatraPDF on Windows, Skim on OSX, and Evince on Linux) and jumps to the current cursor position.
+* The ST build command takes care of compiling your LaTeX source to PDF using `texify` (Windows/MikTeX) or `latexmk` (OSX/MacTeX, Windows/TeXlive, Linux/TeXlive). Then, it parses the log file and lists errors and warning. Finally, it launches (or refreshes) the PDF viewer (SumatraPDF on Windows, Skim on OSX, and Evince on Linux by default) and jumps to the current cursor position.
 * Forward and inverse search with the named PDF previewers is fully supported
 * Easy insertion of references and citations (from BibTeX files)
 * Plugs into the "Goto anything" facility to make jumping to any section or label in your LaTeX file(s)
 * Smart command completion for a variety of text and math commands is provided
 * Additional snippets and commands are also provided
-* The build command is fully customizable. In the near future, so will be the PDF previewer.
+* The build command is fully customizable, as is the PDF previewer.
 
 Requirements and Setup
 ----------------------
 
-First, you need to be running Sublime Text 2 or 3 (ST2 and ST3 henceforth, or simply ST to refer to either ST2 or ST3). For ST3, I have only tested build 3047 and will of course test subsequent builds.
+First, you need to be running Sublime Text 2 or 3 (ST2 and ST3 henceforth, or simply ST to refer to either ST2 or ST3). For ST3, this has been tested against the latest beta builds.
 
 Second, get the LaTeXTools plugin. These days, the easiest way to do so is via Package Control: see [here](https://sublime.wbond.net) for details on how to set it up (it's very easy). Once you have Package Control up and running, invoke it (via the Command Palette from the Tools menu, or from Preferences), select the Install Package command, and look for LaTeXTools.
 
-If you prefer a more hands-on approach, you can always clone the git repository, or else just grab this plugin's .zip file from GitHub and extract it to your Packages directory (you can open it easily from ST, by clicking on Preferences|Browse Packages). Then, (re)launch ST.
+If you prefer a more hands-on approach, you can always clone the git repository, or else just grab this plugin's .zip file from GitHub and extract it to your Packages directory (you can open it easily from ST, by clicking on Preferences|Browse Packages). Then, (re)launch ST. Please note that if you do a manual installation, the Package **must** be named "LaTeXTools".
 
 I encourage you to install Package Control anyway, because it's awesome, and it makes it easy to keep your installed packages up-to-date (see the aforelinked page for details). 
 
-Third, if you are installing LaTeXTools for the first time, you need to create a configuration file, `LaTeXTools.sublime-settings`, in your `User` directory (off the `Packages`) directory. To do so, open the command palette from the Tools menu, search for "LaTeXTools: Reconfigure and migrate settings," and hit Return. That's it! See the Settings section for details on configuration options.
-
-Fourth, follow the OS-specific instructions below.
+Third, follow the OS-specific instructions below.
 
 <br>
 
-On **OSX**, you need to be running the MacTeX distribution (which is pretty much the only one available on the Mac anyway) and the Skim PDF previewer. Just download and install these in the usual way. I have tested MacTeX versions 2010--2014, both 32 and 64 bits; these work fine. MacTeX 2015 also works. On the other hand, MacTeX 2008 does *not* seem to work out of the box (compilation fails), so please upgrade. 
+On **OSX**, you need to be running the MacTeX distribution (which is pretty much the only one available on the Mac anyway). Just download and install it in the usual way. I have tested MacTeX versions 2010--2014, both 32 and 64 bits; these work fine. MacTeX 2015 also works. On the other hand, MacTeX 2008 does *not* seem to work out of the box (compilation fails), so please upgrade.
+
+It is recommended that you install the Skim PDF viewer, as this provides support for forward and inverse search. By default, LaTeXTools assumes that you're using Skim. If you're not using Skim, see the section on viewers below.
 
 **El Capitan note**: sadly, with each OS X release, Apple deviates more and more from established Unix conventions. The latest "innovation" is that, beginning with El Capitan, apps can no longer write to `/usr`. MacTeX 2015 remedies this by creating a link to TeX binaries in `/Library/TeX`. The default LaTeXTools settings file now adds `/Library/TeX/texbin` to the `texpath`. In practice, this means the following.
 
-* If you are running MacTeX 2015, you can use the "LaTeXTools: Reconfigure and migrate settings" command (from the command palette) to generate a fresh settings file in your `User` directory; this will have the correct `texpath`. **However**, if you already have customizations in your settings file, **these will be lost** (I'm thinking about a better way to handle this going forward). So, the easiest fix might be to edit your own `LaTeXTools.sublime-settings` file (in your `User` directory) and modify `texpath` by adding `/Library/TeX/texbin` as the first entry.
+* If you are running MacTeX 2015 and have *not* customized the `texpath` option in your user settings file, you do not need to take further action.
+
+* If you are running MacTex 2015 and have customized `texpath`, open your user settings file (remember, you can do so from the `Preferences | Package Settings | LaTeXTools` submenu) and add `/Library/TeX/texbin` as the first entry in `texpath`.
 
 * If you are running earlier MacTeX versions, unfortunately you do *not* have the `/Library/TeX/texbin` link at all, so adding that path to `texpath` would not help. You have two options: create the link yourself, or edit the `texpath` option to point to the appropriate directory. Check Section 8 of [this document](https://tug.org/mactex/UpdatingForElCapitan.pdf) for details.
 
@@ -75,15 +69,13 @@ To configure inverse search, open the Preferences dialog of the Skim app, select
 
 In case you are using an old version of Skim, you can always choose the Custom preset and enter `/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl` (for ST3) in the Command field, and `"%file":%line` in the Arguments field. (This is correct as of 7/18/2013; you may want to double-check that ST3 is indeed in `/Applications/Sublime Text`; just go to the Applications folder in the Finder. Adapt as needed for ST2).
 
-If you have installed Skim in a non-standard location, there is not much you can do short of hacking the `jumpToPDF.py` file (**not supported!**). This will change in the near future. 
-
 Finally, edit the file `LaTeXTools.sublime-settings` in the `User` directory to make sure that the configuration reflects your preferred TeX distribution. Open the file and scroll down to the  section titled "Platform settings." Look at the block for your OS, namely `"osx"`. Within that block, verify that the `"texpath"` setting is correct. Note that `"texpath"` **must** include `$PATH` somewhere.
 
 <br>
 
-On **Windows**, both MikTeX and TeXlive are supported. You must be running a current (>=1.4) version of the Sumatra PDF previewer. Install these as usual; then, add the SumatraPDF directory to your PATH or set the `sumatra` command in the `windows` platform setting.
+On **Windows**, both MikTeX and TeXlive are supported. It is recommded that you use the Sumatra PDF viewer, as using another viewer will require more configuration, but see the section on viewers below. If you do use Sumatra, you must be running a current (>=1.4) version. Install these as usual. If you are using Sumatra, add the SumatraPDF directory to your PATH or configure the `sumatra` setting in the `windows` platform setting of your `LaTeXTools.sublime-settings` in your **User** directory.
 
-You now need to set up inverse search in Sumatra PDF. However, the GUI for doing this is hidden in Sumatra until you open a PDF file that has actual synchronization information (that is, an associated `.synctex.gz` file): see [here](http://forums.fofou.org/sumatrapdf/topic?id=2026321). If you have one such file, then open it, go to Settings|Options, and enter `"C:\Program Files\Sublime Text 2\sublime_text.exe" "%f:%l"` for ST2, and `"C:\Program Files\Sublime Text 3\sublime_text.exe" "%f:%l"` for ST3, as the inverse-search command line (in the text-entry field at the bottom of the options dialog). If you don't already have a file with sync information, you can easily create one: compile any LaTex file you already have (or create a new one) with `pdflatex -synctex=1 <file.tex>`, and then open the resulting PDF file in SumatraPDF. 
+You now need to set up inverse search in Sumatra PDF. However, the GUI for doing this is hidden in Sumatra until you open a PDF file that has actual synchronization information (that is, an associated `.synctex.gz` file): see [here](http://forums.fofou.org/sumatrapdf/topic?id=2026321). If you have one such file, then open it, go to **Settings|Options**, and enter `"C:\Program Files\Sublime Text 2\sublime_text.exe" "%f:%l"` for ST2, and `"C:\Program Files\Sublime Text 3\sublime_text.exe" "%f:%l"` for ST3, as the inverse-search command line (in the text-entry field at the bottom of the options dialog). If you don't already have a file with sync information, you can easily create one: compile any LaTex file you already have (or create a new one) with `pdflatex -synctex=1 <file.tex>`, and then open the resulting PDF file in SumatraPDF. 
 
 As an alternative, you can open a command-line console (run `cmd.exe`), and issue the following command:
 
@@ -97,7 +89,6 @@ Finally, edit the file `LaTeXTools.sublime-settings` in the `User` directory to 
 
 TeXlive has one main advantage over MikTeX: it supports file names and paths with spaces.
 
-
 <br>
 
 **Linux** support is coming along nicely. However, as a general rule, you will need to do some customization before things work. This is due to differences across distributions (a.k.a. "fragmentation"). Do not expect things to work out of the box.
@@ -106,7 +97,9 @@ You need to install TeXlive; if you are on Ubuntu, note that `apt-get install te
 
 You also need to edit the file `LaTeXTools.sublime-settings` in the `User` directory to make sure that the configuration reflects your preferred TeX distribution.  Open that file and scroll down to the  section titled "Platform settings." Look at the block for your OS, namely `"linux"`. Within that block, verify that the `"texpath"` setting is correct. Notice that this **must** include `$PATH` somewhere, or things will not work.
 
-You may also have to set the `command` option in `"builder_settings"`, which tells the builder how to invoke `latexmk`. By default (i.e., if `command` is empty or not given) it is `["latexmk", "-cd", "-e", "-f", "-pdf", "-interaction=nonstopmode", "-synctex=1"]`. Users have reported the following possible issues and fixes (thanks!), so if you get a "Cannot compile!" error, try the following.
+You may also have to set the `command` option in `"builder_settings"`, which tells the builder how to invoke `latexmk`. By default (i.e., if `command` is empty or not given) it is `["latexmk", "-cd", "-e", "-f", "-pdf", "-interaction=nonstopmode", "-synctex=1"]`.
+
+If you customize the command to include a custom PDF command, users have reported the following possible issues and fixes (thanks!), so if you get a "Cannot compile!" error, try the following:
 
 * some distros do *not* want a space before and after the `=` in `$pdflatex = %E`. But some *do* want the space there (sigh!)
 * sometimes `latexmk` is not on the `PATH`, or the path is not correctly picked up by ST. In this case, instead of `"latexmk"`, use `"/usr/bin/latexmk"` or wherever `latexmk` is in your system. 
@@ -114,9 +107,7 @@ You may also have to set the `command` option in `"builder_settings"`, which tel
 
 There are several variants to deal with; each distro is a little bit different, so there are basically no universal defaults. There's not much I can do about it. Good luck! 
 
-Only the Evince PDF viewer is supported; it's installed by default on Ubuntu or, more generally, any distro that provides the Gnome desktop, and you don't need to configure anything. Backward and forward search Work For Me (TM). Hopefully they will work for you, too, but let me know if this is not the case.
-
-Note: I already have patches to support Okular. Indeed, Okular is very easy to support, as it provides a sane command-line interface; Evince insists on using DBus, which requires considerable gyrations (luckily, it was relatively easy to adapt solutions already existing for other editors to ST). What is harder is supporting *both* Evince and Okular. This would need a revamp of the building-related facilites of the plugin, basically supporting user settings to select a particular viewer. But the incentive to add such support is very low as far as other platforms are concerned: only SumatraPDF supports forward/inverse search on Windows, and Skim is the easiest-to-control and most powerful/complete PDF viewer on OS X that does. Bottom line: multiple viewer support is probably not coming in the near future. Sorry!
+Only support for the Evince PDF viewer is built-in, but see the section on viewers below for details on how to setup other viewers. Evince is installed by default on Ubuntu or, more generally, any distro that provides the Gnome desktop, and you don't need to configure anything. Backward and forward search Work For Me (TM). Hopefully they will work for you, too, but let me know if this is not the case.
 
 
 Keybindings
@@ -148,21 +139,26 @@ The default ST Build command takes care of the following:
 
 * It saves the current file
 * It invokes the tex build command (`texify` for MikTeX; `latexmk` for TeXlive and MacTeX).
-* It parses the tex log file and lists all errors and warnings in an output panel at the bottom of the ST window: click on any error/warning to jump to the corresponding line in the text, or use the ST-standard Next Error/Previous Error commands.
+* It parses the tex log file and lists all errors, warnings and, if enabled, bad boxes in an output panel at the bottom of the ST window: click on any error/warning/bad boxes to jump to the corresponding line in the text, or use the ST-standard Next Error/Previous Error commands.
 * It invokes the PDF viewer for your platform and performs a forward search: that is, it displays the PDF page where the text corresponding to the current cursor position is located.
 
 **Project files** are fully supported! Some of the options related to building `tex` files are described here. However, you should consult the [subsection on project-specific settings](#project-specific-settings) for further details. 
 
-**Multi-file documents** are supported as follows. If the first line in the current file consists of the text `%!TEX root = <master file name>`, then tex & friends are invoked on the specified master file, instead of the current one. Note: the only file that gets saved automatically is the current one. Also, the master file name **must** have a `.tex` extension, or it won't be recognized. As an alternative, if you use a project file, you can set the `TEXroot` option (under `settings`):
+**Multi-file documents** are supported as follows. If the first line in the current file consists of the text `%!TEX root = <master file name>`, then tex & friends are invoked on the specified master file, instead of the current one. Note: the only file that gets saved automatically is the current one. Also, the master file name **must** have a valid tex extension (i.e., one configured in the `tex_file_exts` settings), or it won't be recognized. 
+
+As an alternative, to using the `%!TEX root = <master file name>` syntax, if you use a Sublime project, you can set the `TEXroot` option (under `settings`):
 	
-	{
-		... <folder-related settings> ...
+```json
+{
+	... <folder-related settings> ...
 
-		"settings": {
-			"TEXroot": "yourfilename.tex"
-		}
+	"settings": {
+		"TEXroot": "yourfilename.tex"
 	}
+}
+```
 
+Note that if you specify a relative path as the `TEXroot` in the project file, the path is determined *relative to the location of the project file itself*. It may be less ambiguous to specify an absolute path to the `TEXroot` if possible.
 
 **TeX engine selection** is supported. If the first line of the current file consists of the text `%!TEX program = <program>`, where `program` is `pdflatex`, `lualatex` or `xelatex`, the corresponding engine is selected. If no such directive is specified, `pdflatex` is the default. Multi-file documents are supported: the directive must be in the *root* (i.e. master) file. Also, for compatibility with TeXshop, you can use `TS-program` instead of `program`. **Note**: for this to work, you must **not** customize the `command` option in `LaTeXTools.sublime-settings`. If you do, you will not get this functionality. Finally, if you use project files, the `program` builder setting can also be customized there, under `settings`.
 
@@ -209,6 +205,7 @@ To automatically hide the build panel set the option `hide_build_panel` in the s
 - __always__: always hide the panel even if the build failed
 - __no_errors__: only hide the panel if the build was successful althrough warnings appear
 - __no_warnings__: only hide the build panel if neither errors nor warnings occur
+- __no_badboxes__: only hide the build panel if there are no errors, warnings, or bad boxes
 - __never__: never hide the build panel
 
 Forward and Inverse Search
@@ -220,7 +217,9 @@ When working in an ST view on a TeX document, `C-l,j` will display the PDF page 
 
 If you are viewing a PDF file, then hitting `CMD+Shift+Click` in Skim (OSX), double-clicking in Sumatra (Windows), or hitting `Ctrl+click` in Evince (Linux) will bring you to the location in the source tex file corresponding to the PDF text you clicked on. This is called "inverse search".
 
-To open a PDF file without performing a forward search, use `C-l,v`. I'm not sure this is very useful, but the facility is there for now.
+To open a PDF file without performing a forward search, use `C-l,v`.
+
+For support of forward and inverse search in other viewers, see the viewer section below.
 
 References and Citations
 ------------------------
@@ -239,7 +238,7 @@ The basic idea is to help you insert labels in `\ref{}` commands and bibtex keys
 
 Now for the details. (Many of these features were contributed by Wes Campaigne and jlewegie, whom I thank profusely.)
 
-By default, as soon as you type, for example, `\ref{` or `\cite`, a quick panel is shown (this is the fancy drop-down list ST displays at the top of the screen), listing, respectively, all the labels in your files, or all the entries in the bibliographies you reference your file(s) using the `\bibliography{}` command. This is the default *auto-trigger* behavior, and it can be a big time saver. You can, however, turn it off, either temporarily using a toggle, or permanently by way of preference settings: see below. Once the quick panel is shown, you can narrow down the entries shown by typing a few characters. As with any ST quick panel, what you type will be fuzzy-matched against the label names or, for citations, the content of the first displayed line in each entry (by default, the author names, year of publication, short title and citation key: see below). This is *wildly* convenient, and one of the best ST features: try it!
+By default, as soon as you type, for example, `\ref{` or `\cite{`, a quick panel is shown (this is the fancy drop-down list ST displays at the top of the screen), listing, respectively, all the labels in your files, or all the entries in the bibliographies you reference your file(s) using the `\bibliography{}` command. This is the default *auto-trigger* behavior, and it can be a big time saver. You can, however, turn it off, either temporarily using a toggle, or permanently by way of preference settings: see below. Once the quick panel is shown, you can narrow down the entries shown by typing a few characters. As with any ST quick panel, what you type will be fuzzy-matched against the label names or, for citations, the content of the first displayed line in each entry (by default, the author names, year of publication, short title and citation key: see below). This is *wildly* convenient, and one of the best ST features: try it!
 
 If auto-triggering is off, when you type e.g. `\ref{`, ST helpfully provides the closing brace, leaving your cursor between the two braces. Now, you need to type `C-l,x` to get the quick panel  showing all labels in the current file. You can also type e.g. `\ref{aa` [again, the closing brace is provided by ST], then `C-l, x`, and LaTeXTools will show a list of labels that fuzzy-match the string `aa`. 
 
@@ -249,7 +248,7 @@ One often needs to enter **multiple citations**, as e.g. in `\cite{paper1,paper2
 
 The display of bibliographic entries is *customizable*. There is a setting, `cite-panel-format`, that controls exactly what to display in each of the two lines each entry gets in the citation quick panel. Options include author, title, short title, year, bibtex key, and journal. This is useful because people may prefer to use different strategies to refer to papers---author-year, short title-year, bibtex key (!), etc. Since only the first line in each quick panel entry is searchable, how you present the information matters. The default should be useful for most people; if you wish to change the format, check the `LaTeXTools.sublime-settings` file for detailed information. (As usual, copy that file to the `User` directory and edit your copy, not the original). s
 
-Thanks to recent contributed code, **multi-file documents** are *fully supported*. If you have a `% !TEX root = ...` directive at the top of the current file, LaTeXTools looks for references, as well as `\bibliography{}` commands, in the root file and in all recursively included files. You can also use a project file to specify the root file (to be documented). 
+Thanks to recent contributed code, **multi-file documents** are *fully supported*. LaTeXTools looks for references, as well as `\bibliography{}` commands, in the root file and in all recursively included files. Please see the information on **multi-file documents** in the section on [**Compiling LaTeX Files**](#compiling-latex-files) for details on how to setup multi-file documents
 
 LaTeXTools now also looks `\addbibresource{}` commands, which provides basic compatibility with biblatex.
 
@@ -271,7 +270,7 @@ Fill Helper: filling in package and file names automatically
 
 **Keybinding:** *autotriggered* by default (see below). Otherwise, `C-l,C-f`.
 
-Thanks to the amazing work by users btstream and Ian Bacher, LaTeXTools now offers a list of available files and packages when using commands such as `\usepackage`, `\include`, `\includegraphics` and `\input`. Assuming autocompletion is toggled on (the default):
+Thanks to the amazing work by users btstream and Ian Bacher, LaTeXTools now offers a list of available files and packages when using commands such as `\usepackage`, `\include`, `\includegraphics`, `\includesvg` and `\input`. Assuming autocompletion is toggled on (the default):
 
 * when you type `\usepackage{`, a list of available package is displayed in the ST drop-down menu. Pick the one you need, and it will be inserted in your file, with a closing brace.
 
@@ -368,6 +367,7 @@ The following settings are provided:
   - `prefixed` (default): show completions only if the current word is prefixed with `\`
   - `always`: always show cwl completions
   - `never`: never display the popup
+* `env_auto_trigger`: if `true`, autocomplete environment names upon typing `\begin{` or `\end{` (default: `false`)
 
 
 Command completion, snippets, etc.
@@ -376,6 +376,63 @@ Command completion, snippets, etc.
 By default, ST provides a number of snippets for LaTeX editing; the LaTeXTools plugin adds a few more. You can see what they are, and experiment, by selecting Tools|Snippets|LaTeX and Tools|Snippets|LaTeXTools from the menu.
 
 In addition, the LaTeXTools plugin provides useful completions for both regular and math text; check out files `LaTeX.sublime-completions` and `LaTeX math.sublime-completions` in the LaTeXTools directory for details. Some of these are semi-intelligent: i.e. `bf` expands to `\textbf{}` if you are typing text, and to `\mathbf{}` if you are in math mode. Others allow you to cycle among different completions: e.g. `f` in math mode expands to `\phi` first, but if you hit Tab again you get `\varphi`; if you hit Tab a third time, you get back `\phi`.
+
+Viewers
+-------
+
+By default, LaTeXTools supports the following viewers, depending on platform:
+ * On OS X, Skim
+ * On Windows, Sumatra
+ * On Linux, Evince
+
+However, there is now support for custom viewers, if not a lot of choice available at the moment (patches welcome). Currently the only non-default viewers supported are Preview on OS X and Okular on Linux. Preview can be selected by changing the `viewer` setting in your LaTeXTools preferences to `"preview"`. Okular can be used by changing the `viewer` setting in your LaTeXTools preferences to `"okular"`.
+
+### Command Viewer ###
+
+Some support for other viewers is provided via the `command` viewer, which allows the execution of arbitrary commands to view a pdf or perform a forward search. At the very least this provides a way to use okular.
+
+Using the command viewer requires that you configure the command(s) to be run in the platform-specific part of the `viewer_settings` block in your LaTeXTools preferences. There are three commands available:
+
+ * `forward_sync_command`: the command to executing a forward search (`ctrl + l, j` or `cmd + l, j`).
+ * `view_command`: the command to simply view the PDF document.
+
+Of these, on `view_command` needs to be specified, though you will not have forward search capabilities unless you specify a `forward_sync_command` as well.
+
+The following variables will be substitued with appropriate values inside your commands:
+
+|Variable|Description|
+|$pdf_file           | full path of PDF file, e.g. _C:\Files\document.pdf_|
+|$pdf_file_name      | name of the PDF file, e.g. _document.pdf_|
+|$pdf_file_ext       | extension of the PDF file, e.g. _pdf_|
+|$pdf_file_base_name | name of the PDF file without the extension, e.g. _document_|
+|$pdf_file_path      | full path to directory containing PDF file, e.g. _C:\Files_|
+|$sublime_binary     | full path to the Sublime binary|
+
+In addition, the following variables are available for the `forward_sync_command` only:
+|$src_file           | full path of the tex file, e.g. _C:\Files\document.tex_|
+|$src_file_name      | name of the tex file, e.g., _document.tex_|
+|$src_file_ext       | extension of the tex file, e.g. _tex_|
+|$src_file_base_name | name of the tex file without the extension, e.g. _document_|
+|$src_file_path      | full path to directory containing tex file, e.g. _C:\Files_|
+|$line               | line to sync to|
+|$col                | column to sync to|
+
+If none of these variables occur in the command string, the `$pdf_file` will be appended to the end of the command.
+
+Commands are executed in the `$pdf_file_path`, i.e., the folder containing the `$pdf_file`.
+
+For example, you can use the command viewer to support Okular with the following settings in your `LaTeXTools.sublime-settings` file:
+
+```json
+"viewer": "command",
+
+"viewer_settings": {
+	"linux": {
+		"forward_sync_command": "okular --unique $pdf_file#src:$line$src_file",
+		"view_command": "okular --unique"
+	}
+}
+```
 
 
 Support for non-`.tex` files
@@ -391,6 +448,12 @@ This behaviour is controlled through two settings, `tex_file_exts` and `latextoo
 Note that while the extension detection is used by features of LaTeXTools, including, other features---especially the auto-completions---depend on the syntax of the file being set to `LaTeX` as well.
 
 
+Spell-checking
+--------------
+
+LaTeXTools parses the `%!TEX spellcheck` directive to set the language for the spell-checker integrated in Sublime Text. The [Dictionaries](https://github.com/titoBouzout/Dictionaries) package is recommended and supported. If you have additional dictionaries, you can add them using the `tex_spellcheck_paths` setting. This is a mapping from the locales to the dictionary paths. Each locale must be lowercase and minus (-) separated and the dictionary paths must be compatible with the Sublime Text spell-checker. For example `{"en-us": "Packages/Language - English/en_US.dic"}` would be a valid value.
+
+
 Miscellaneous
 -------------
 
@@ -401,15 +464,21 @@ You can consult the documentation for any LaTeX package by invoking the `View Pa
 Settings
 --------
 
-LaTeXTools now supports user-defined settings. The *default* settings file is called `LaTeXTools.sublime-settings`. This **must** be in the `User` directory. As described above, when you first install LaTeXTools, the file `LaTeXTools.sublime-settings` does not exist anywhere. A migration / reconfiguration command is provided to create this settings file in `User`, and automatically migrate your existing settings from the old file (`LaTeXTools Preferences.sublime-settings`). . You can run it in three ways:
+LaTeXTools supports user-defined settings. The settings file is called `LaTeXTools.sublime-settings`. A default version resides in the LaTeXTools plugin directory and **must not be edited**. This contains default settings that will work in many cases, for standard configurations of TeX distros and PDF viewers. You can however create another settings file in your `User` directory; again, the file must be named `LaTeXTools.sublime-settings`.
 
-* from the Command Palette (in the Tools) menu, search for "LaTeXTools: Reconfigure and migrate settings"
-* from the "Reconfigure LaTeXTools and migrate settings" item in the Preferences, Package Settings, LaTeXTools menu
-* from the Sublime Text console (`Ctrl+backtick` on all platforms), typing `sublime.run_command("latextools_migrate")`.
+You can create and edit such a file manually. It is a standard Sublime Text JSON file; the settings currently honored by LaTeXTools are listed below. However, the *simplest way to create a settings file* is to open the `Preferences | Package Settings | LaTeXTools` submenu and select the `Settings - User` option. If you do not currently have a `LaTeXTools.sublime-settings` settings file in your `User` directory (e.g., if you are installing LaTeXTools for the first time), you will be given the option to create one. The newly created settings file will be an exact copy of the default one, and will open in a tab for you to customize. 
 
-If you ever want to revert your settings to their default state, just invoke the migration command again, as above.
+If you *do* already have an existing `LaTeXTools.sublime-settings` file in your `User` directory, the `Settings - User` option will open that file in a tab for you to further customize. Similarly, the `Settings - Default` option will open the default settings file in a tab, in *read-only mode*. This may be useful for you to copy from, or if you want to see what other options may be available without consulting this README file.
 
-*Warning*:  in general, tweaking options can cause breakage. For instance, if on Linux you change the default `python2` setting (empty by default) to a non-existent binary, forward and inverse search will stop working. With great power comes great responsibility! If you think you have found a bug, *delete your settings file in the `User` directory and rerun the `latextools_migrate` command before reporting it!* Thanks :-)
+If at any time you wish to erase your customizations and start afresh, you can simply delete the `LaTeXTools.sublime-settings` file in your `User` directory. (Again, *warning*: do *not* touch the settings file in the LaTeXTools plugin directory!) Alternatively, from the `Preferences | Package Settings | LaTeXTools` submenu, or from the Command Palette, you can choose `Reset user settings to default`. This will delete any existing settings file in `User` and create a copy of the default one. This will  *remove all your customizations*. 
+
+(Historical note: This is no longer relevant in 2016, but just for the record, if you have a pre-2014, old-style settings file, this option will import it).
+
+<br>
+
+*Warning*:  in general, tweaking options can cause breakage. For instance, if on Linux you change the default `python2` setting (empty by default) to a non-existent binary, forward and inverse search will stop working. With great power comes great responsibility! If you think you have found a bug, *delete your settings file in the `User` directory, or use the `Reset user settings to default` command before reporting it!* Thanks :-)
+
+<br>
 
 The following options are currently available (defaults in parentheses):
 
@@ -425,6 +494,7 @@ The following options are currently available (defaults in parentheses):
 - `temp_files_ignored_folders`: subdirectories to skip when deleting temp files.
 * `tex_file_exts` (`['.tex']`): a list of extensions that should be considered TeX documents. Any extensions in this list will be treated exactly the same as `.tex` files. See the section on [Support for non-`.tex` files](#support-for-non-tex-files).
 * `latextools_set_syntax` (`true`): if `true` LaTeXTools will automatically set the syntax to `LaTeX` when opening or saving any file with an extension in the `tex_file_exts` list.
+* `tex_spellcheck_paths` (`{}`): A mapping from the locales to the paths of the dictionaries. See the section [Spell-checking](#spell-checking)
 
 **Platform settings**:
 - all platforms:
@@ -446,12 +516,18 @@ The following options are currently available (defaults in parentheses):
 NOTE: for the time being, you will need to refer to the `LaTeXTools.sublime-settings` file for detailed explanations. Also, since the new build system is meant to be fully customizable, if you use a third-party builder (which hopefully will become available!), you need to refer to its documentation.
 - `builder`: the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior.
 - `builder_path`: builders can reside anywhere Sublime Text can access. Specify a path *relative to the Sublime text Packages directory*. In particular, `User` is a good choice. If you use a third-party builder, specify the builder-provided directory.
+- `display_bad_boxes` (`false`): if `true` LaTeXTools will display any bad boxes encountered after a build. Note that this is disabled by default.
 - `builder-settings`: these are builder-specific settings. For the `default`/`traditional` builder, the following settings are useful:
   * `program`: one of `pdflatex` (the default), `xelatex` or `lualatex`. This selects the TeX engine.
   * `command`: the precise `latexmk` or `texify` command to be invoked. This is specified exactly as in the `cmd` entry of the old `LaTeX.sublime-build` file (which is no longer honored): it must be a list of strings. The defaults (hardcoded, not shown in the settings file) are `["latexmk", "-cd", "-e", "$pdflatex = '%E -interaction=nonstopmode -synctex=1 %S %O'", "-f", "-pdf"]` for TeXLive, and `["texify", "-b", "-p", "--tex-option=\"--synctex=1\""]` for MiKTeX.
   * `options`: allows you to specify a TeX option, such as `--shell-escape`. This must be a tuple: that is, use `options: ["--shell-escape"]`
   * In addition, there can be platform-specific settings. An important one for Windows is `distro`, which must be set to either `miktex` or `texlive`.
   * A platform-specific setting that is common to all builders is `env`. This can be used to set environment variables *before* running the actual builder. Setting e.g. `TEXINPUTS` is a possible use case.
+
+**Viewer settings**:
+
+ * `viewer`: the viewer you want to use. Leave blank (`""`) or set to `"default"`for the platform-specific viewer. Can also be set to `"preview"` if you want to use Preview on OS X, `"okular"` if you want to use Okular on Linux or `"command"` to run arbitrary commands. For details on the `"command"` option, see the section of the viewer documentation above.
+ * `viewer_settings`: these are viewer-specific settings. Please see the viewers documentation above.
 
 **Bibliographic references settings**:
 
@@ -488,12 +564,108 @@ For minor customizations of the default builder, as noted in the Build and Setti
 
 Some information on the new flexible builder system: to create and use a new builder, you place the code somewhere off the ST `Packages` directory (for instance, in `User`), then set the `builder` and `builder_path` options in your `LaTeXTools.sublime-settings` file accordingly. A builder can define its own options, also in `LaTeXTools.sublime-settings`, which will be passed whenever a build is invoked.
 
-Due to time constraints, I have not yet been able to document how to write a builder. The basic idea is that you subclass the `PdfBuilder` class in the file `LaTeXTools/builders/pdfBuilder.py`. The comments in that file describe how builders interact with the build command (hint: they use Pyton's `yield` command). I provide three builders (one is in progress and not usable yet). The code is in the `LaTeXTools/builders` directory. You can use them as examples:
+Due to time constraints, I have not yet been able to document how to write a builder. The basic idea is that you subclass the `PdfBuilder` class in the file `LaTeXTools/builders/pdfBuilder.py`. The comments in that file describe how builders interact with the build command (hint: they use Pyton's `yield` command). I provide three builders. The code is in the `LaTeXTools/builders` directory. You can use them as examples:
 - `traditional` is the traditional builder. 
 - `simple` does not use external tools, but invokes `pdflatex` and friends, each time checking the log file to figure out what to do next. It is a very, very simple "make" tool, but it demonstrates the back-and-forth interaction between LaTeXTools and a builder.
-- `script` (in progress!) will eventually allow the user to specify a list of compilation commands in the settings file, and just execute them in sequence. 
+- `script` (see below) allows the user to specify a list of compilation commands in the settings file, and just execute them in sequence. 
 
 Let me know if you are interested in writing a custom builder!
+
+Script Builder
+--------------
+
+LaTeXTools now supports the long-awaited script builder. It has two primary goals: first, to support customization of simple build workflows and second, to enable LaTeXTools to integrate with external build systems in some fashion.
+
+Note that the script builder should be considered an advanced feature. Unlike the "traditional" builder it is not designed to "just work," and is not recommend for those new to using TeX and friends. You are responsible for making sure your setup works. Please read this section carefully before using the script builder.
+
+For the most part, the script builder works as described in the [Compiling LaTeX files](#compiling-latex-files) section *except that* instead of invoking either `texify` or `latexmk`, it invokes a user-defined series of commands. Note that although the Script Builder supports **Multi-file documents**, it does not support either the engine selection or passing other options via the `%!TEX` macros.
+
+The script builder is controlled through two settings in the *platform-specific* part of the `builder_settings` section of `LaTeXTools.sublime-settings`, or of the current project file (if any):
+
+- `script_commands` — the command or list of commands to run. This setting **must** have a value or you will get an error message.
+- `env` — a dictionary defining any environment variables to be set for the environment the command is run in.
+
+The `script_commands` setting should be either a string or a list. If it is a string, it represents a single command to be executed. If it is a list, it should be either a list of strings representing single commands or a list of lists, though the two may be mixed. For example:
+
+```json
+"builder_settings": {
+	"osx": {
+		"script_commands": "pdflatex -synctex=1 -interaction=nonstopmode"
+	}
+}
+```
+
+Will simply run `pdflatex` against the master document, as will:
+
+```json
+"builder_settings": {
+	"osx": {
+		"script_commands": ["pdflatex -synctex=1 -interaction=nonstopmode"]
+	}
+}
+```
+
+Or:
+
+```json
+"builder_settings": {
+	"osx": {
+		"script_commands": [["pdflatex", "-synctex=1 -interaction=nonstopmode"]]
+	}
+}
+```
+
+More interestingly, the main list can be used to supply a series of commands. For example, to use the simple pdflatex -> bibtex -> pdflatex -> pdflatex series, you can use the following settings:
+
+```json
+"builder_settings": {
+	"osx": {
+		"script_commands": [
+			"pdflatex -synctex=1 -interaction=nonstopmode",
+			"bibtex",
+			"pdflatex -synctex=1 -interaction=nonstopmode",
+			"pdflatex -synctex=1 -interaction=nonstopmode"
+		]
+	}
+}
+```
+
+Note, however, that the script builder is quite unintelligent in handling such cases. It will not note any failures nor only execute the rest of the sequence if required. It will simply continue to execute commands until it hits the end of the chain of commands. This means, in the above example, it will run `bibtex` regardless of whether there are any citations.
+
+It is especially important to ensure that, in case of errors, TeX and friends do not stop for user input. For example, if you use `pdflatex` on either TeXLive or MikTeX, pass the `-interaction=nonstopmode` option. 
+
+Each command can use the following variables which will be expanded before it is executed:
+
+|Variable|Description|
+|--------|--------|
+|`$file`   | The full path to the main file, e.g., _C:\Files\document.tex_|
+|`$file_name`| The name of the main file, e.g., _document.tex_|
+|`$file_ext`| The extension portion of the main file, e.g., _tex_|
+|`$file_base_name`| The name portion of the main file without the, e.g., _document_|
+|`$file_path`| The directory of the main file, e.g., _C:\Files_|
+
+For example:
+
+```json
+"builder_settings": {
+	"osx": {
+		"script_commands": ["pdflatex -synctex=1 -interaction=nonstopmode $file_base_name"]
+	}
+}
+```
+
+Note that if none of these variables occur in the command string, the `$file_base_name` will be appended to the end of the command. This may mean that a wrapper script is needed if, for example, using `make`.
+
+Commands are executed in the same path as `$file_path`, i.e. the folder containing the main document.
+
+### Caveats ###
+
+LaTeXTools makes some assumptions that should be adhered to or else things won't work as expected:
+- the final product is a PDF which will be written in the same directory as the main file and named `$file_base_name.pdf`
+- the LaTeX log will be written in the same directory as the main file and named `$file_base_name.log`
+- if you change the `PATH` in the environment (by using the `env` setting), you need to ensure that the `PATH` is still sane, e.g., that it contains the path for the TeX executables and other command line resources that may be necessary.
+
+In addition, to ensure that forward and backward sync work, you need to ensure that the `-synctex=1` flag is set for your latex command. Again, don't forget the `-interaction=nonstopmode` flag (or whatever is needed for your tex programs not to expect user input in case of error).
 
 Troubleshooting
 ---------------
