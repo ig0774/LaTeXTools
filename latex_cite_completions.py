@@ -1,32 +1,34 @@
 '''
-This module implements the cite-completion behaviour, largely by relying on implementations
-registered with latextools_plugin and configured using the `bibliograph_plugins`
-configuration key.
+This module implements the cite-completion behaviour, largely by relying on
+implementations registered with latextools_plugin and configured using the
+`bibliograph_plugins` configuration key.
 
 At present, there are two supported methods on custom plugins.
 
 `get_entries`:
-    This method should take a sequence of bib_files and return a sequence of Mapping-like
-    objects where the key corresponds to a Bib(La)TeX key and returns the matching value. We
-    provide default fallbacks for any of the quick panel formatting options that might not
-    be automatically mapped to a field, e.g., `author_short`, etc. or to deal with missing
-    data, e.g. entries that have no `journal` but use the `journaltitle` field. Plugins can 
-    override this behaviour, however, by explicitly setting a value for whatever key they like. 
+    This method should take a sequence of bib_files and return a sequence of
+    Mapping-like objects where the key corresponds to a Bib(La)TeX key and
+    returns the matching value. We provide default fallbacks for any of the
+    quick panel formatting options that might not be automatically mapped to
+    a field, e.g., `author_short`, etc. or to deal with missing data, e.g.
+    entries that have no `journal` but use the `journaltitle` field. Plugins
+    can override this behaviour, however, by explicitly setting a value for
+    whatever key they like.
 
 `on_insert_citation`:
-    This method should take a single string value indicating the citekey of the entry that
-    has just been cited. This is provided to allow the plugin to react to the insertion event.
-    This method will be called on a separate thread and should not interact with the Sublime
-    view if possible, as this may cause a race condition.
+    This method should take a single string value indicating the citekey of the
+    entry that has just been cited. This is provided to allow the plugin to
+    react to the insertion event. This method will be called on a separate
+    thread and should not interact with the Sublime view if possible, as this
+    may cause a race condition.
 '''
 # ST2/ST3 compat
-from __future__ import print_function 
+from __future__ import print_function
 import sublime
 if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    import kpsewhich
     from kpsewhich import kpsewhich
     import latextools_plugin
     from latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
@@ -156,31 +158,34 @@ def find_bib_files(rootdir, src, bibfiles):
 
 def run_plugin_command(command, *args, **kwargs):
     '''
-    This function is intended to run a command against a user-configurable list of
-    bibliography plugins set using the `bibliography_plugins` setting.
+    This function is intended to run a command against a user-configurable list
+    of bibliography plugins set using the `bibliography_plugins` setting.
 
     Parameters:
-        `command`: a string representing the command to invoke, which should generally
-            be the name of a function to be called on the plugin class.
+        `command`: a string representing the command to invoke, which should
+            generally be the name of a function to be called on the plugin
+                class.
         `*args`: the args to pass to the function
         `**kwargs`: the keyword args to pass to the function
 
-    Additionally, the following keyword parameters can be specified to control how this
-    function works:
-        `stop_on_first`: if True (default), no more attempts will be made to run the
-            command after the first plugin that returns a non-None result
-        `expect_result`: if True (default), a BibPluginError will be raised if no plugin
-            returns a non-None result
+    Additionally, the following keyword parameters can be specified to control
+    how this function works:
+        `stop_on_first`: if True (default), no more attempts will be made to
+            run the command after the first plugin that returns a non-None
+            result
+        `expect_result`: if True (default), a BibPluginError will be raised if
+            no plugin returns a non-None result
 
     Example:
         run_plugin_command('get_entries', *bib_files)
-        This will attempt to invoke the `get_entries` method of any configured plugin,
-        passing in the discovered bib_files, and returning the result.
+        This will attempt to invoke the `get_entries` method of any configured
+        plugin, passing in the discovered bib_files, and returning the result.
 
-    The general assumption of this function is that we only care about the first valid
-    result returned from a plugin and that plugins that should not handle a request will
-    either not implement the method or implement a version of the method which raises a
-    NotImplementedError if that plugin should not handle the current situation.
+    The general assumption of this function is that we only care about the
+    first valid result returned from a plugin and that plugins that should not
+    handle a request will either not implement the method or implement a
+    version of the method which raises a NotImplementedError if that plugin
+    should not handle the current situation.
     '''
     stop_on_first = kwargs.pop('stop_on_first', True)
     expect_result = kwargs.pop('expect_result', True)
