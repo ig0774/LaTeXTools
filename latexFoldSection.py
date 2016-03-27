@@ -15,13 +15,24 @@ else:
 SECTION_TYPES = ['part', 'chapter', 'section', 'subsection',
                  'subsubsection', 'paragraph', 'subparagraph']
 
+SECTION_TYPES_PATTERNS = {
+    'part': r'((?:add)?part)',
+    'chapter': r'(chapter|addchap)',
+    'section': r'(section|addsec)',
+    'subsection': r'(subsection|addsubsec)',
+    'subsubsection': r'(subsubsection|addsubsubsec)',
+    'paragraph': r'paragraph',
+    'subparagraph': r'subparagraph'
+}
+
 
 def get_begin_mark_pattern(sec_type):
-    return r'\\' + sec_type + r'\*?(?:\[.*\])?\{.*\}(?:\s*%\s\(fold\))?'
+    return r'\\' + SECTION_TYPES_PATTERNS[sec_type] + \
+        r'\*?(?:\[.*\])?\{.*\}(?:\s*%\s\(fold\))?'
 
 
 def get_end_mark_pattern(sec_type):
-    return r'%\s*' + sec_type + r'.*\s*\(end\)'
+    return r'%\s*' + SECTION_TYPES_PATTERNS[sec_type] + r'.*\s*\(end\)'
 
 
 # Find top level's mark name in this buffer
