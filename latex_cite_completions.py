@@ -690,10 +690,7 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
                                                         comp['keyword'].lower(),
                                                         comp['title'].lower(),
                                                         comp['author'].lower())]
-<<<<<<< HEAD
-=======
 
->>>>>>> better_bibliography_support_plugin
         # Note we now generate citation on the fly. Less copying of vectors! Win!
         def on_done(i):
             print ("latex_cite_completion called with index %d" % (i,) )
