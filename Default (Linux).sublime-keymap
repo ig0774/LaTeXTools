@@ -414,5 +414,5 @@ LaTeX Package keymap for Linux
 		"context":  [
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 		],
-	},
+	}
 ]
