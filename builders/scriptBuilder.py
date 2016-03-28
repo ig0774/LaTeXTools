@@ -1,16 +1,21 @@
 from pdfBuilder import PdfBuilder
 import sublime
 
-import subprocess
-from subprocess import Popen, PIPE, STDOUT
-
-from copy import copy
 import os
 import re
 import shlex
 import sys
 
 from string import Template
+
+try:
+	from latextools_utils.external_command import (
+		external_command, get_texpath, update_env
+	)
+except:
+	from LaTeXTools.latextools_utils.external_command import (
+		external_command, get_texpath, update_env
+	)
 
 if sys.version_info < (3, 0):
 	strbase = basestring
@@ -46,6 +51,8 @@ class ScriptBuilder(PdfBuilder):
 		plat = sublime.platform()
 		self.cmd = builder_settings.get(plat, {}).get("script_commands", None)
 		self.env = builder_settings.get(plat, {}).get("env", None)
+		# Loaded here so it is calculated on the main thread
+		self.texpath = get_texpath() or os.environ['PATH']
 
 	# Very simple here: we yield a single command
 	# Also add environment variables
@@ -56,9 +63,10 @@ class ScriptBuilder(PdfBuilder):
 		# create an environment to be used for all subprocesses
 		# adds any settings from the `env` dict to the current
 		# environment
-		env = copy(os.environ)
+		env = dict(os.environ)
+		env['PATH'] = self.texpath
 		if self.env is not None and isinstance(self.env, dict):
-			env.update(self.env)
+			update_env(env, self.env)
 
 		if self.cmd is None:
 			sublime.error_message(
@@ -102,27 +110,14 @@ class ScriptBuilder(PdfBuilder):
 				" ".join([quote(s) for s in cmd]))
 			)
 
-			startupinfo = None
-			preexec_fn = None
-
-			if sublime.platform() == 'windows':
-				startupinfo = subprocess.STARTUPINFO()
-				startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-			else:
-				preexec_fn = os.setsid
-
-			p = Popen(
-				cmd,
-				stdout=PIPE,
-				stderr=STDOUT,
-				startupinfo=startupinfo,
-				shell=False,
-				env=env,
-				cwd=self.tex_dir,
-				preexec_fn=preexec_fn
+			yield (
+				# run with use_texpath=False as we have already configured
+				# the environment above, including the texpath
+				external_command(
+					cmd, env=env, cwd=self.tex_dir, use_texpath=False
+				),
+				""
 			)
-
-			yield (p, "")
 
 			self.display("done.\n")
 
