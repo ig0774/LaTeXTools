@@ -21,11 +21,6 @@ except:
     from latextools_utils import get_setting
     from latextools_utils.external_command import external_command
 
-try:
-    from latextools_utils.external_command import external_command
-except ImportError:
-    from .latextools_utils.external_command import external_command
-
 if sys.version_info < (3, 0):
     strbase = basestring
     _ST3 = True

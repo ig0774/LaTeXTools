@@ -3,13 +3,15 @@ import sublime
 import sublime_plugin
 
 import os
+from subprocess import CalledProcessError
 
 if sublime.version() < '3000':
-    from latextools_utils.external_command import external_command
+    from latextools_utils.external_command import check_output
     from getTeXRoot import get_tex_root
 else:
-    from .latextools_utils.external_command import external_command
+    from .latextools_utils.external_command import check_output
     from .getTeXRoot import get_tex_root
+
 
 class TexcountCommand(sublime_plugin.TextCommand):
     """
@@ -30,17 +32,17 @@ class TexcountCommand(sublime_plugin.TextCommand):
         command.append(os.path.basename(tex_root))
 
         try:
-            return_code, result, stderr = external_command(
-                command, cwd=cwd
+            self.view.window().show_quick_panel(
+                check_output(command, cwd=cwd).splitlines()[1:-4],
+                None
             )
-            if return_code == 0:
-                self.view.window().show_quick_panel(result.splitlines()[1:-4], None)
-            else:
-                sublime.error_message(
-                    'Error while running TeXCount: {0}'.format(
-                        str(stderr)
-                    )
+
+        except CalledProcessError as e:
+            sublime.error_message(
+                'Error while running TeXCount: {0}'.format(
+                    str(e.output)
                 )
+            )
         except OSError:
             sublime.error_message(
                 'Could not run texcount. Please ensure that your texpath setting is configured correctly in the LaTeXTools settings.'
