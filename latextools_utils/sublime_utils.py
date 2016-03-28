@@ -18,7 +18,7 @@ except ImportError:
 
 __all__ = [
 	'normalize_path', 'get_project_file_name', 'get_sublime_exe',
-    'run_on_main_thread', 'TimeoutError'
+	'run_on_main_thread', 'TimeoutError'
 ]
 
 _ST3 = sublime.version() > '3000'
@@ -71,7 +71,6 @@ def run_on_main_thread(func, timeout=10, default_value=__sentinel__):
 				return _get_result.result
 	else:
 		return func()
->>>>>>> unified_external_command
 
 # used by get_sublime_exe()
 SUBLIME_VERSION = re.compile(r'Build (\d{4})', re.UNICODE)
