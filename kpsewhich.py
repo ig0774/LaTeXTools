@@ -1,11 +1,15 @@
 from __future__ import print_function
 
 import sublime
+from subprocess import CalledProcessError
+import traceback
 
 if sublime.version() < '3000':
-    from latextools_utils.external_command import external_command
+    _ST3 = False
+    from latextools_utils.external_command import check_output
 else:
-    from .latextools_utils.external_command import external_command
+    _ST3 = True
+    from .latextools_utils.external_command import check_output
 
 __all__ = ['kpsewhich']
 
@@ -18,12 +22,20 @@ def kpsewhich(filename, file_format=None):
     command.append(filename)
 
     try:
-        return_code, path, _ = external_command(command)
-        if return_code == 0:
-            return path
-        else:
-            sublime.error_message('An error occurred while trying to run kpsewhich. TEXMF tree could not be accessed.')
+        return check_output(command)
+    except CalledProcessError as e:
+        sublime.error_message(
+            'An error occurred while trying to run kpsewhich. '
+            'Files in your TEXINPUTS could not be accessed.'
+        )
+        if e.output:
+            print(e.output)
+        traceback.print_exc()
     except OSError:
-        sublime.error_message('Could not run kpsewhich. Please ensure that your texpath setting is configured correctly in the LaTeXTools settings.')
+        sublime.error_message(
+            'Could not run kpsewhich. Please ensure that your texpath '
+            'setting is correct.'
+        )
+        traceback.print_exc()
 
     return None

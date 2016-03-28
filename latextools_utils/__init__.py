@@ -20,6 +20,7 @@ try:
     from latextools_utils.tex_directives import parse_tex_directives
     import latextools_utils.analysis
     import latextools_utils.cache
+    import latextools_utils.external_command
     import latextools_utils.sublime_utils
     import latextools_utils.utils
 except ImportError:
@@ -28,6 +29,6 @@ except ImportError:
     from .tex_directives import parse_tex_directives
     from . import analysis
     from . import cache
+    from . import external_command
     from . import sublime_utils
     from . import utils
-

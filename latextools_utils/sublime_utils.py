@@ -1,26 +1,86 @@
+# This module provides some functions that handle differences between ST2 and
+# ST3. For the most part, they provide ST2-compatible functionality that is
+# already available in ST3.
+
 import json
 import os
 import re
 import sublime
 import subprocess
 import sys
+import threading
+import time
 
 try:
 	from latextools_utils.settings import get_setting
 except ImportError:
 	from .settings import get_setting
 
+__all__ = [
+	'normalize_path', 'get_project_file_name', 'get_sublime_exe',
+    'run_on_main_thread', 'TimeoutError'
+]
 
-__all__ = ['normalize_path', 'get_project_file_name']
+_ST3 = sublime.version() > '3000'
+
+
+class TimeoutError(Exception):
+	pass
+
+
+__sentinel__ = object()
+
+
+# ensures a function is run on the main thread on ST2 and returns the result
+# note that this function blocks the thread it is executed on and should only
+# be used when the result of a function call is necessary to continue.
+# 	`func` should be a no-args callable, usually a `functools.partial`
+# 	`timeout` is in seconds. Note that this is, at best, an approximate
+# 		maximum. Actual execution may exceed this value. Raises a TimeoutError
+# 		if a timeout occurs unless a `default_value` is specified.
+# 	`default_value` indicates a value to be returned if a timeout occurs. If
+# 		specified, no TimeoutError will be raised
+# Both `timeout` and `default_value` are ignored if run on ST3 or executed
+# from the main thread.
+def run_on_main_thread(func, timeout=10, default_value=__sentinel__):
+	timeout = timeout * 10
+	# if we are not called from the main thread on ST2
+	if not _ST3 and threading.current_thread().getName() != 'MainThread':
+		lock = threading.RLock()
+
+		def _get_result():
+			with lock:
+				_get_result.result = func()
+
+		sublime.set_timeout(_get_result, 0)
+
+		i = 0
+		while i < timeout:
+			with lock:
+				if hasattr(_get_result, 'result'):
+					break
+			time.sleep(.1)
+			i += 1
+
+		with lock:
+			if not hasattr(_get_result, 'result'):
+				if default_value is not __sentinel__:
+					return default_value
+				raise TimeoutError()
+			else:
+				return _get_result.result
+	else:
+		return func()
+>>>>>>> unified_external_command
 
 # used by get_sublime_exe()
 SUBLIME_VERSION = re.compile(r'Build (\d{4})', re.UNICODE)
 
 # normalizes the paths stored in sublime session files on Windows
 # from:
-#     /c/path/to/file.ext
+# 	/c/path/to/file.ext
 # to:
-#     c:\path\to\file.ext
+# 	c:\path\to\file.ext
 def normalize_path(path):
 	if sublime.platform() == 'windows':
 		return os.path.normpath(

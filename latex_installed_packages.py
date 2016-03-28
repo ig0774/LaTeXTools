@@ -8,17 +8,21 @@ import json
 
 from collections import defaultdict
 
+from functools import partial
+from subprocess import CalledProcessError
 import threading
+import traceback
 
 if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     strbase = basestring
-    from latextools_utils.external_command import external_command
+    from latextools_utils.external_command import check_output
 else:
     _ST3 = True
     strbase = str
-    from .latextools_utils.external_command import external_command
+
+    from .latextools_utils.external_command import check_output
 
 __all__ = ['LatexGenPkgCacheCommand']
 
@@ -31,15 +35,33 @@ def _get_tex_searchpath(file_type):
     command.append('--show-path={0}'.format(file_type))
 
     try:
-        return_code, paths, _ = external_command(command)
-        if return_code == 0:
-            return paths
-        else:
-            sublime.error_message('An error occurred while trying to run kpsewhich. TEXMF tree could not be accessed.')
+        return check_output(command)
+    except CalledProcessError as e:
+        sublime.set_timeout(
+            partial(
+                sublime.error_message,
+                'An error occurred while trying to run kpsewhich. '
+                'Files in your TEXMF tree could not be accessed.'
+            ),
+            0
+        )
+        if e.output:
+            print(e.output)
+        traceback.print_exc()
     except OSError:
-        sublime.error_message('Could not run kpsewhich. Please ensure that your texpath setting is configured correctly in the LaTeXTools settings.')
+        sublime.set_timeout(
+            partial(
+                sublime.error_message,
+                'Could not run kpsewhich. Please ensure that your texpath '
+                'setting is configured correctly in your LaTeXTools '
+                'settings.'
+            ),
+            0
+        )
+        traceback.print_exc()
 
     return None
+
 
 def _get_files_matching_extensions(paths, extensions=[]):
     if isinstance(extensions, strbase):
@@ -48,7 +70,7 @@ def _get_files_matching_extensions(paths, extensions=[]):
     matched_files = defaultdict(lambda: [])
 
     for path in paths.split(os.pathsep):
-        # bad idea... also our current directory isn't meaningful from a WindowCommand
+        # our current directory isn't usually meaningful from a WindowCommand
         if path == '.':
             continue
 
@@ -73,6 +95,7 @@ def _get_files_matching_extensions(paths, extensions=[]):
         for key, value in matched_files.items()])
 
     return matched_files
+
 
 def _generate_package_cache():
     installed_tex_items = _get_files_matching_extensions(
@@ -117,7 +140,14 @@ def _generate_package_cache():
     with open(pkg_cache_file, 'w+') as f:
         json.dump(pkg_cache, f)
 
-    sublime.status_message('Finished generating LaTeX package cache')
+    sublime.set_timeout(
+        partial(
+            sublime.status_message,
+            'Finished generating LaTeX package cache'
+        ),
+        0
+    )
+
 
 # Generates a cache for installed latex packages, classes and bst.
 # Used for fill all command for \documentclass, \usepackage and
@@ -125,11 +155,7 @@ def _generate_package_cache():
 class LatexGenPkgCacheCommand(sublime_plugin.WindowCommand):
 
     def run(self):
-        if _ST3:
-            # on ST3+, use a separate thread to generate the package cache
-            thread = threading.Thread(target=_generate_package_cache)
-            thread.daemon = True
-            thread.start()
-        else:
-            # on ST2, sublime API must be accessed from main thread so...
-            _generate_package_cache()
+        # use a separate thread to update cache
+        thread = threading.Thread(target=_generate_package_cache)
+        thread.daemon = True
+        thread.start()

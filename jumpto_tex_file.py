@@ -11,14 +11,15 @@ import sublime
 import sublime_plugin
 
 try:
-    from getTeXRoot import get_tex_root
-except ImportError:
+    _ST3 = True
     from .getTeXRoot import get_tex_root
-
-try:
-    from latextools_utils import get_tex_extensions, is_tex_buffer, get_setting
-except ImportError:
-    from .latextools_utils import get_tex_extensions, is_tex_buffer, get_setting
+    from .latextools_utils import get_setting
+    from .latextools_utils.external_command import external_command
+except:
+    _ST3 = False
+    from getTeXRoot import get_tex_root
+    from latextools_utils import get_setting
+    from latextools_utils.external_command import external_command
 
 try:
     from latextools_utils.external_command import external_command
@@ -188,6 +189,7 @@ def _jumpto_image_file(view, window, tex_root, file_name):
             # if $file is not used, append the file path
             else:
                 command.append(file_path)
+
             external_command(command)
 
     psystem = sublime.platform()
