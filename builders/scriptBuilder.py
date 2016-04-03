@@ -3,7 +3,6 @@ import sublime
 
 import os
 import re
-import shlex
 import sys
 
 from string import Template
@@ -34,25 +33,26 @@ _ST3 = sublime.version() >= '3000'
 #
 class ScriptBuilder(PdfBuilder):
 
+	FILE_VARIABLES = r'file|file_path|file_name|file_ext|file_base_name'
+
 	CONTAINS_VARIABLE = re.compile(
-		r'\$(?:file|file_path|file_name|file_ext|file_base_name)\b',
+		r'\$\{?(?:' + FILE_VARIABLES + r'|output_directory)\}?\b',
 		re.IGNORECASE | re.UNICODE
 	)
 
-	def __init__(self, tex_root, output, engine, options,
-				 tex_directives, builder_settings, platform_settings):
+	def __init__(self, *args):
 		# Sets the file name parts, plus internal stuff
-		super(ScriptBuilder, self).__init__(tex_root, output, engine, options,
-			tex_directives, builder_settings, platform_settings)
+		super(ScriptBuilder, self).__init__(*args)
 		# Now do our own initialization: set our name
 		self.name = "Script Builder"
 		# Display output?
-		self.display_log = builder_settings.get("display_log", False)
+		self.display_log = self.builder_settings.get("display_log", False)
 		plat = sublime.platform()
-		self.cmd = builder_settings.get(plat, {}).get("script_commands", None)
-		self.env = builder_settings.get(plat, {}).get("env", None)
+		self.cmd = self.builder_settings.get(plat, {}).get("script_commands", None)
+		self.env = self.builder_settings.get(plat, {}).get("env", None)
 		# Loaded here so it is calculated on the main thread
 		self.texpath = get_texpath() or os.environ['PATH']
+
 
 	# Very simple here: we yield a single command
 	# Also add environment variables
@@ -80,41 +80,35 @@ class ScriptBuilder(PdfBuilder):
 			self.cmd = [self.cmd]
 
 		for cmd in self.cmd:
-			if isinstance(cmd, strbase):
-				if not _ST3:
-					cmd = str(cmd)
-
-				cmd = shlex.split(cmd)
-
-				if not _ST3:
-					cmd = [unicode(c) for c in cmd]
-
 			replaced_var = False
-			for i, component in enumerate(cmd):
-				if self.CONTAINS_VARIABLE.search(component):
-					template = Template(component)
-					component = template.safe_substitute(
-						file=self.tex_root,
-						file_path=self.tex_dir,
-						file_name=self.tex_name,
-						file_ext=self.tex_ext,
-						file_base_name=self.base_name
-					)
-					cmd[i] = component
-					replaced_var = True
+			if isinstance(cmd, strbase):
+				cmd, replaced_var = self.substitute(cmd)
+			else:
+				for i, component in enumerate(cmd):
+					cmd[i], replaced = self.substitute(component)
+					replaced_var = replaced_var or replaced
 
 			if not replaced_var:
-				cmd.append(self.base_name)
+				if isinstance(cmd, strbase):
+					cmd += ' ' + self.base_name
+				else:
+					cmd.append(self.base_name)
 
-			self.display("Invoking '{0}'... ".format(
-				" ".join([quote(s) for s in cmd]))
-			)
+			if sublime.platform() != 'windows':
+				if not isinstance(cmd, strbase):
+					cmd = u' '.join([quote(s) for s in cmd])
+				self.display("Invoking '{0}'... ".format(cmd))
+			else:
+				if not isinstance(cmd, strbase):
+					self.display("Invoking '{0}'... ".format([quote(s) for s in cmd]))
+				else:
+					self.display("Invoking '{0}'... ".format(cmd))
 
 			yield (
 				# run with use_texpath=False as we have already configured
 				# the environment above, including the texpath
 				external_command(
-					cmd, env=env, cwd=self.tex_dir, use_texpath=False
+					cmd, env=env, shell=True, cwd=self.tex_dir, use_texpath=False
 				),
 				""
 			)
@@ -126,3 +120,20 @@ class ScriptBuilder(PdfBuilder):
 				self.display("\nCommand results:\n")
 				self.display(self.out)
 				self.display("\n\n")
+
+	def substitute(self, command):
+		replaced_var = False
+		if self.CONTAINS_VARIABLE.search(command):
+			replaced_var = True
+
+			template = Template(command)
+			command = template.safe_substitute(
+				file=self.tex_root,
+				file_path=self.tex_dir,
+				file_name=self.tex_name,
+				file_ext=self.tex_ext,
+				file_base_name=self.base_name,
+				output_directory=self.output_directory or u'.'
+			)
+
+		return (command, replaced_var)
