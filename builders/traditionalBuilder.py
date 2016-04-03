@@ -11,7 +11,7 @@ from pdfBuilder import PdfBuilder
 
 DEBUG = False
 
-DEFAULT_COMMAND_LATEXMK = ["latexmk", "-cd", "-e", "-f", "-%E",
+DEFAULT_COMMAND_LATEXMK = ["latexmk", "-cd", "-f", "-%E",
 					"-interaction=nonstopmode", "-synctex=1"]
 
 DEFAULT_COMMAND_WINDOWS_MIKTEX = ["texify", "-b", "-p", "--engine=%E",
@@ -26,20 +26,18 @@ DEFAULT_COMMAND_WINDOWS_MIKTEX = ["texify", "-b", "-p", "--engine=%E",
 #
 class TraditionalBuilder(PdfBuilder):
 
-	def __init__(self, tex_root, output, engine, options,
-				 tex_directives, builder_settings, platform_settings):
+	def __init__(self, *args):
 		# Sets the file name parts, plus internal stuff
-		super(TraditionalBuilder, self).__init__(tex_root, output, engine,
-			options, tex_directives, builder_settings, platform_settings)
+		super(TraditionalBuilder, self).__init__(*args)
 		#Now do our own initialization: set our name
 		self.name = "Traditional Builder"
 		# Display output?
-		self.display_log = builder_settings.get("display_log", False)
+		self.display_log = self.builder_settings.get("display_log", False)
 		# Build command, with reasonable defaults
 		plat = sublime.platform()
 		# Figure out which distro we are using
 		try:
-			distro = platform_settings["distro"]
+			distro = self.platform_settings["distro"]
 		except KeyError: # default to miktex on windows and texlive elsewhere
 			if plat == 'windows':
 				distro = "miktex"
@@ -49,7 +47,7 @@ class TraditionalBuilder(PdfBuilder):
 			default_command = DEFAULT_COMMAND_WINDOWS_MIKTEX
 		else: # osx, linux, windows/texlive, everything else really!
 			default_command = DEFAULT_COMMAND_LATEXMK
-		self.cmd = builder_settings.get("command", default_command)
+		self.cmd = self.builder_settings.get("command", default_command)
 
 	#
 	# Very simple here: we yield a single command
@@ -97,6 +95,13 @@ class TraditionalBuilder(PdfBuilder):
 
 		# handle any options
 		if texify or latexmk:
+			if self.output_directory is not None and latexmk:
+				# DO NOT ADD QUOTES HERE
+				# TODO test on Windows
+				cmd.append(
+					"--output-directory=" +
+					self.output_directory
+				)
 			for option in self.options:
 				if texify:
 					cmd.append("--tex-option=\"" + option + "\"")
