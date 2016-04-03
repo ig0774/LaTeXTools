@@ -97,7 +97,6 @@ class TraditionalBuilder(PdfBuilder):
 		if texify or latexmk:
 			if self.output_directory is not None and latexmk:
 				# DO NOT ADD QUOTES HERE
-				# TODO test on Windows
 				cmd.append(
 					"--output-directory=" +
 					self.output_directory
