@@ -67,15 +67,23 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			# folder, making it effectively inaccessible; here we just delete
 			# all the files
 			else:
-				for root, _, file_names in os.walk(path):
+				for root, directories, file_names in os.walk(path):
+					for directory in directories:
+						try:
+							shutil.rmtree(directory)
+						except OSError:
+							if os.path.exists(path):
+								# report the exception if the folder didn't end up deleted
+								traceback.print_exc()
 					for file_name in file_names:
 						try:
 							os.remove(os.path.join(root, file_name))
 						except OSError:
-							# basically here for locked files in Windows,
-							# but who knows what we might find?
-							print('Error while trying to delete {0}'.format(file_name))
-							traceback.print_exc()
+							if os.path.exists(path):
+								# basically here for locked files in Windows,
+								# but who knows what we might find?
+								print('Error while trying to delete {0}'.format(file_name))
+								traceback.print_exc()
 		# if get_output_directory isn't used, do the standard thing
 		else:
 			path = os.path.dirname(root_file)
@@ -100,10 +108,11 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 								try:
 									os.remove(file_name_to_del)
 								except OSError:
-									# basically here for locked files in Windows,
-									# but who knows what we might find?
-									print('Error while trying to delete {0}'.format(file_name_to_del))
-									traceback.print_exc()
+									if os.path.exists(path):
+										# basically here for locked files in Windows,
+										# but who knows what we might find?
+										print('Error while trying to delete {0}'.format(file_name_to_del))
+										traceback.print_exc()
 							# exit extension
 							break
 
