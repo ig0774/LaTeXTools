@@ -539,18 +539,27 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.output_view.run_command("do_finish_edit")
 		# can_switch_to_pdf indicates a pdf should've been created
 		if can_switch_to_pdf:
-			# copy the output pdf (only) to the same directory as the main file
-			if (
-				(get_setting('copy_output_on_build', True) or True) and
-				self.output_directory is not None
-			):
-				shutil.copy2(
-					os.path.join(
-						self.output_directory,
-						os.path.basename(self.tex_base) + u'.pdf'
-					),
-					os.path.dirname(self.file_name)
-				)
+			# if using output_directory, follow the copy_output_on_build setting
+			# files are copied to the same directory as the main tex file
+			if self.output_directory is not None:
+				copy_on_build = get_setting('copy_output_on_build', True) or True
+				if copy_on_build is True:
+					shutil.copy2(
+						os.path.join(
+							self.output_directory,
+							os.path.basename(self.tex_base) + u'.pdf'
+						),
+						os.path.dirname(self.file_name)
+					)
+				elif isinstance(copy_on_build, list):
+					for ext in copy_on_build:
+						shutil.copy2(
+							os.path.join(
+								self.output_directory,
+								os.path.basename(self.tex_base) + ext
+							),
+							os.path.dirname(self.file_name)
+						)
 
 			self.view.run_command("jump_to_pdf", {"from_keybinding": False})
 
