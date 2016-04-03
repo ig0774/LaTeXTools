@@ -23,7 +23,6 @@ import os
 import shutil
 
 
-
 class ClearLocalLatexCacheCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		view = self.window.active_view()

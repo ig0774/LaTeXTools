@@ -12,7 +12,8 @@ if sublime.version() < '3000':
 		_classname_to_internal_name
 	)
 	from latextools_utils.is_tex_file import is_tex_file
-	from latextools_utils import get_setting, parse_tex_directives
+	from latextools_utils import get_setting
+	from latextools_utils.tex_directives import parse_tex_directives
 	from latextools_utils.external_command import (
 		execute_command, external_command, get_texpath, update_env
 	)
@@ -27,9 +28,9 @@ else:
 		add_plugin_path, get_plugin, NoSuchPluginException,
 		_classname_to_internal_name
 	)
-
-	from .latextools_utils import get_setting, parse_tex_directives
 	from .latextools_utils.is_tex_file import is_tex_file
+	from .latextools_utils import get_setting
+	from .latextools_utils.tex_directives import parse_tex_directives
 	from .latextools_utils.external_command import (
 		execute_command, external_command, get_texpath, update_env
 	)
@@ -184,6 +185,9 @@ class CmdThread ( threading.Thread ):
 					self.caller.output_directory,
 					os.path.basename(self.caller.tex_base) + ".log"
 				)
+
+				if not os.path.exists(log_file):
+					log_file = self.caller.tex_base + ".log"
 			
 			with open(log_file, 'rb') as f:
 				data = f.read()
@@ -443,8 +447,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		# Safety check: if we are using a built-in builder, disregard
 		# builder_path, even if it was specified in the pref file
-
-		if builder_name in ['simple', 'traditional', 'script', 'basic', 'default', '']:
+		if builder_name in ['simple', 'traditional', 'script', 'basic']:
 			builder_path = None
 
 		if builder_path:

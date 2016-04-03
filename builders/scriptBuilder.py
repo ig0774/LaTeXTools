@@ -133,7 +133,7 @@ class ScriptBuilder(PdfBuilder):
 				file_name=self.tex_name,
 				file_ext=self.tex_ext,
 				file_base_name=self.base_name,
-				output_directory=self.output_directory or u'.'
+				output_directory=self.output_directory or self.tex_dir
 			)
 
 		return (command, replaced_var)
