@@ -6,14 +6,17 @@ if sublime.version() < '3000':
 	# we are on ST2 and Python 2.X
 	import getTeXRoot
 	from latextools_utils import get_setting
+	from latextools_utils.output_directory import get_output_directory
 else:
 	_ST3 = True
 	from . import getTeXRoot
 	from .latextools_utils import get_setting
+	from .latextools_utils.output_directory import get_output_directory
 
 
 import sublime_plugin
 import os
+import shutil
 
 import traceback
 
@@ -34,33 +37,59 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			print(message)
 			return
 
-		path = os.path.dirname(root_file)
+		path = get_output_directory(view)
+		if path is not None:
+			if sublime.platform() != 'windows':
+				try:
+					shutil.rmtree(path)
+				except OSError:
+					if os.path.exists(path):
+						# report the exception if the folder didn't end up deleted
+						traceback.print_exc()
+						return
+			# Windows special case
+			# if we delete the *directory*, Sumatra will still hold a lock on the
+			# folder, making it effectively inaccessible; here we just delete
+			# all the files
+			else:
+				for root, _, file_names in os.walk(path):
+					for file_name in file_names:
+						try:
+							os.remove(os.path.join(root, file_name))
+						except OSError:
+							# basically here for locked files in Windows,
+							# but who knows what we might find?
+							print('Error while trying to delete {0}'.format(file_name))
+							traceback.print_exc()
+		# if get_output_directory isn't used, do the standard thing
+		else:
+			path = os.path.dirname(root_file)
 
-		# Load the files to delete from the settings
-		temp_files_exts = get_setting('temp_files_exts',
-			['.blg', '.bbl', '.aux', '.log', '.brf', '.nlo', '.out', '.dvi',
-			 '.ps', '.lof', '.toc', '.fls', '.fdb_latexmk', '.pdfsync',
-			 '.synctex.gz', '.ind', '.ilg', '.idx'])
+			# Load the files to delete from the settings
+			temp_files_exts = get_setting('temp_files_exts',
+				['.blg', '.bbl', '.aux', '.log', '.brf', '.nlo', '.out', '.dvi',
+				 '.ps', '.lof', '.toc', '.fls', '.fdb_latexmk', '.pdfsync',
+				 '.synctex.gz', '.ind', '.ilg', '.idx'])
 
-		ignored_folders = get_setting('temp_files_ignored_folders',
-			['.git', '.svn', '.hg'])
-		ignored_folders = set(ignored_folders)
+			ignored_folders = get_setting('temp_files_ignored_folders',
+				['.git', '.svn', '.hg'])
+			ignored_folders = set(ignored_folders)
 
-		for dir_path, dir_names, file_names in os.walk(path):
-			dir_names[:] = [d for d in dir_names if d not in ignored_folders]
-			for file_name in file_names:
-				for ext in temp_files_exts:
-					if file_name.endswith(ext):
-						file_name_to_del = os.path.join(dir_path, file_name)
-						if os.path.exists(file_name_to_del):
-							try:
-								os.remove(file_name_to_del)
-							except OSError:
-								# basically here for locked files in Windows,
-								# but who knows what we might find?
-								print('Error while trying to delete {0}'.format(file_name_to_del))
-								traceback.print_exc()
-						# exit extension
-						break
+			for dir_path, dir_names, file_names in os.walk(path):
+				dir_names[:] = [d for d in dir_names if d not in ignored_folders]
+				for file_name in file_names:
+					for ext in temp_files_exts:
+						if file_name.endswith(ext):
+							file_name_to_del = os.path.join(dir_path, file_name)
+							if os.path.exists(file_name_to_del):
+								try:
+									os.remove(file_name_to_del)
+								except OSError:
+									# basically here for locked files in Windows,
+									# but who knows what we might find?
+									print('Error while trying to delete {0}'.format(file_name_to_del))
+									traceback.print_exc()
+							# exit extension
+							break
 
 		sublime.status_message("Deleted temp files")

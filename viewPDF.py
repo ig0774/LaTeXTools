@@ -30,11 +30,22 @@ class View_pdfCommand(sublime_plugin.WindowCommand):
 		if not is_tex_file(view.file_name()):
 			sublime.error_message("%s is not a TeX source file: cannot view." % (os.path.basename(view.file_name()),))
 			return
-		quotes = ""# \"" MUST CHECK WHETHER WE NEED QUOTES ON WINDOWS!!!
-		root = getTeXRoot.get_tex_root(view)
 
-		rootFile, rootExt = os.path.splitext(root)
-		pdfFile = quotes + rootFile + '.pdf' + quotes
+		root = getTeXRoot.get_tex_root(view)
+		root_path, _ = os.path.splitext(root)
+
+		output_directory = get_output_directory(self.view)
+		if output_directory is None:
+			pdffile = root_path + u'.pdf'
+		else:
+			pdffile = os.path.join(
+				output_directory,
+				os.path.basename(root_path) + u'.pdf'
+			)
+
+			if not os.path.exists(pdffile):
+				pdffile = root_path + u'.pdf'
+
 		s = platform.system()
 		script_path = None
 		if s == "Darwin":

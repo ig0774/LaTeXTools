@@ -8,7 +8,9 @@ if sublime.version() < '3000':
 	import parseTeXlog
 	strbase = basestring
 	from latextools_utils.is_tex_file import is_tex_file
-	from latextools_utils import get_setting, parse_tex_directives
+	from latextools_utils import get_setting
+	from latextools_utils.tex_directives import parse_tex_directives
+	from latextools_utils.output_directory import get_output_directory
 
 	strbase = basestring
 else:
@@ -17,7 +19,9 @@ else:
 	from . import parseTeXlog
 	strbase = str
 	from .latextools_utils.is_tex_file import is_tex_file
-	from .latextools_utils import get_setting, parse_tex_directives
+	from .latextools_utils import get_setting
+	from .latextools_utils.tex_directives import parse_tex_directives
+	from .latextools_utils.output_directory import get_output_directory
 
 	strbase = str
 
@@ -33,6 +37,7 @@ import types
 import re
 import codecs
 import traceback
+import shutil
 
 DEBUG = False
 
@@ -200,7 +205,19 @@ class CmdThread ( threading.Thread ):
 		# Note to self: need to think whether we don't want to codecs.open this, too...
 		# Also, we may want to move part of this logic to the builder...
 		try:
-			data = open(self.caller.tex_base + ".log", 'rb').read()		
+			if self.caller.output_directory is None:
+				log_file = self.caller.tex_base + ".log"
+			else:
+				log_file = os.path.join(
+					self.caller.output_directory,
+					os.path.basename(self.caller.tex_base) + ".log"
+				)
+
+				if not os.path.exists(log_file):
+					log_file = self.caller.tex_base + ".log"
+			
+			with open(log_file, 'rb') as f:
+				data = f.read()
 		except IOError:
 			self.handle_std_outputs(out, err)
 		else:
@@ -422,6 +439,8 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		if 'options' in tex_directives:
 			options.extend(tex_directives['options'])
 
+		self.output_directory = get_output_directory(self.file_name)
+
 		# Read the env option (platform specific)
 		builder_platform_settings = builder_settings.get(self.plat)
 		if builder_platform_settings:
@@ -431,7 +450,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		# Safety check: if we are using a built-in builder, disregard
 		# builder_path, even if it was specified in the pref file
-		if builder_name in ['simple', 'traditional', 'script', 'default','']:
+		if builder_name in ['simple', 'traditional', 'script', 'basic', 'default','']:
 			builder_path = None
 
 		# Now actually get the builder
@@ -469,6 +488,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			self.output,
 			engine,
 			options,
+			self.output_directory,
 			tex_directives,
 			builder_settings,
 			platform_settings
@@ -539,15 +559,22 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		sublime.set_timeout(functools.partial(self.do_finish, can_switch_to_pdf), 0)
 
 	def do_finish(self, can_switch_to_pdf):
-		# Move to TextCommand for compatibility with ST3
-		# edit = self.output_view.begin_edit()
-		# self.output_view.sel().clear()
-		# reg = sublime.Region(0)
-		# self.output_view.sel().add(reg)
-		# self.output_view.show(reg) # scroll to top
-		# self.output_view.end_edit(edit)
 		self.output_view.run_command("do_finish_edit")
+		# can_switch_to_pdf indicates a pdf should've been created
 		if can_switch_to_pdf:
+			# copy the output pdf (only) to the same directory as the main file
+			if (
+				(get_setting('copy_output_on_build', True) or True) and
+				self.output_directory is not None
+			):
+				shutil.copy2(
+					os.path.join(
+						self.output_directory,
+						os.path.basename(self.tex_base) + u'.pdf'
+					),
+					os.path.dirname(self.file_name)
+				)
+
 			self.view.run_command("jump_to_pdf", {"from_keybinding": False})
 
 
