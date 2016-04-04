@@ -12,11 +12,13 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    from latextools_utils import is_tex_buffer, get_tex_extensions, get_setting
+    from latextools_utils import is_tex_buffer, get_setting
+    from latextools_utils.is_tex_file import get_tex_extensions
 else:
     _ST3 = True
     from . import getTeXRoot
-    from .latextools_utils import is_tex_buffer, get_tex_extensions, get_setting
+    from .latextools_utils import is_tex_buffer, get_setting
+    from .latextools_utils.is_tex_file import get_tex_extensions
 
 # Only work for \include{} and \input{} and \includegraphics
 TEX_INPUT_FILE_REGEX = re.compile(
