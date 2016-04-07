@@ -18,10 +18,24 @@ if sublime.version() > '3000':
 
 # these modules must be specified in the order they depend on one another
 LOAD_ORDER = [
+    # base module
     'latextools_utils',
+
+    # only use Python or Sublime API
     'latextools_utils.settings',
+    'latextools_utils.system',
+    'latextools_utils.utils',
+
+    # use the preceeding
+    'latextools_utils.cache',
     'latextools_utils.is_tex_file',
     'latextools_utils.sublime_utils',
+
+    # use the preceeding
+    'latextools_utils.analysis'
+    'latextools_utils.external_command',
+    'latextools_utils.output_directory',
+    'latextools_utils.subfiles',
     'latextools_utils.tex_directives',
 
     'latextools_plugin_internal',
