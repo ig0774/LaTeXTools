@@ -37,7 +37,7 @@ def get_aux_directory(view_or_root):
         return get_output_directory(root)
     else:
         abs_path = resolve_to_absolute_path(root, aux_directory)
-        if abs_path is None:
+        if abs_path is None or abs_path == '':
             return get_output_directory(root)
         else:
             return abs_path
