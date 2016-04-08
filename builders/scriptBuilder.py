@@ -31,7 +31,7 @@ class ScriptBuilder(PdfBuilder):
 	FILE_VARIABLES = r'file|file_path|file_name|file_ext|file_base_name'
 
 	CONTAINS_VARIABLE = re.compile(
-		r'\$\{?(?:' + FILE_VARIABLES + r'|output_directory)\}?\b',
+		r'\$\{?(?:' + FILE_VARIABLES + r'|output_directory|aux_directory)\}?\b',
 		re.IGNORECASE | re.UNICODE
 	)
 
@@ -91,7 +91,9 @@ class ScriptBuilder(PdfBuilder):
 				self.display("Invoking '{0}'... ".format(cmd))
 			else:
 				if not isinstance(cmd, strbase):
-					self.display("Invoking '{0}'... ".format([quote(s) for s in cmd]))
+					self.display("Invoking '{0}'... ".format(
+						u' '.join([quote(s) for s in cmd])
+					))
 				else:
 					self.display("Invoking '{0}'... ".format(cmd))
 
@@ -137,7 +139,8 @@ class ScriptBuilder(PdfBuilder):
 				file_name=self.tex_name,
 				file_ext=self.tex_ext,
 				file_base_name=self.base_name,
-				output_directory=self.output_directory or self.tex_dir
+				output_directory=self.output_directory or self.tex_dir,
+				aux_directory=self.aux_directory or self.tex_dir
 			)
 
 		return (command, replaced_var)

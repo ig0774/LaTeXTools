@@ -7,11 +7,13 @@ if sublime.version() < '3000':
 	import getTeXRoot
 	from latextools_utils.is_tex_file import is_tex_file
 	from latextools_utils import get_setting
+	from latextools_utils.output_directory import get_output_directory
 else:
 	_ST3 = True
 	from . import getTeXRoot
 	from .latextools_utils.is_tex_file import is_tex_file
 	from .latextools_utils import get_setting
+	from .latextools_utils.output_directory import get_output_directory
 
 import sublime_plugin, os, os.path, platform
 from subprocess import Popen
@@ -34,7 +36,7 @@ class View_pdfCommand(sublime_plugin.WindowCommand):
 		root = getTeXRoot.get_tex_root(view)
 		root_path, _ = os.path.splitext(root)
 
-		output_directory = get_output_directory(self.view)
+		output_directory = get_output_directory(root)
 		if output_directory is None:
 			pdffile = root_path + u'.pdf'
 		else:
@@ -73,8 +75,8 @@ class View_pdfCommand(sublime_plugin.WindowCommand):
 		else:
 			sublime.error_message("Platform as yet unsupported. Sorry!")
 			return	
-		print (viewercmd + [pdfFile])
+		print (viewercmd + [pdffile])
 		try:
-			Popen(viewercmd + [pdfFile], cwd=script_path)
+			Popen(viewercmd + [pdffile], cwd=script_path)
 		except OSError:
 			sublime.error_message("Cannot launch Viewer. Make sure it is on your PATH.")

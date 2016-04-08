@@ -6,12 +6,16 @@ if sublime.version() < '3000':
 	# we are on ST2 and Python 2.X
 	import getTeXRoot
 	from latextools_utils import get_setting
-	from latextools_utils.output_directory import get_output_directory
+	from latextools_utils.output_directory import (
+		get_aux_directory, get_output_directory
+	)
 else:
 	_ST3 = True
 	from . import getTeXRoot
 	from .latextools_utils import get_setting
-	from .latextools_utils.output_directory import get_output_directory
+	from .latextools_utils.output_directory import (
+		get_aux_directory, get_output_directory
+	)
 
 
 import sublime_plugin
@@ -37,40 +41,28 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			print(message)
 			return
 
-		path = get_output_directory(view)
-		if path is not None:
-			if sublime.platform() != 'windows':
-				try:
-					shutil.rmtree(path)
-				except OSError:
-					if os.path.exists(path):
-						# report the exception if the folder didn't end up deleted
-						traceback.print_exc()
-						return
-			# Windows special case
-			# if we delete the *directory*, Sumatra will still hold a lock on the
-			# folder, making it effectively inaccessible; here we just delete
-			# all the files
+		aux_directory = get_aux_directory(root_file)
+		output_directory = get_output_directory(root_file)
+
+		if aux_directory is not None:
+			# we cannot delete the output directory on Windows in case
+			# Sumatra is holding a reference to it
+			if (
+				sublime.platform() != 'windows' or
+				aux_directory != output_directory
+			):
+				self._rmtree(aux_directory)
+
+		if output_directory is not None:
+			# we cannot delete the output directory on Windows in case
+			# Sumatra is holding a reference to it
+			if sublime.platform() == 'windows':
+				self._clear_dir(output_directory)
 			else:
-				for root, directories, file_names in os.walk(path):
-					for directory in directories:
-						try:
-							shutil.rmtree(directory)
-						except OSError:
-							if os.path.exists(path):
-								# report the exception if the folder didn't end up deleted
-								traceback.print_exc()
-					for file_name in file_names:
-						try:
-							os.remove(os.path.join(root, file_name))
-						except OSError:
-							if os.path.exists(path):
-								# basically here for locked files in Windows,
-								# but who knows what we might find?
-								print('Error while trying to delete {0}'.format(file_name))
-								traceback.print_exc()
-		# if get_output_directory isn't used, do the standard thing
+				self._rmtree(aux_directory)
 		else:
+			# if there is no output directory, we may need to clean files
+			# in the main directory, even if aux_directory is used
 			path = os.path.dirname(root_file)
 
 			# Load the files to delete from the settings
@@ -81,6 +73,7 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 
 			ignored_folders = get_setting('temp_files_ignored_folders',
 				['.git', '.svn', '.hg'])
+
 			ignored_folders = set(ignored_folders)
 
 			for dir_path, dir_names, file_names in os.walk(path):
@@ -88,17 +81,35 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 				for file_name in file_names:
 					for ext in temp_files_exts:
 						if file_name.endswith(ext):
-							file_name_to_del = os.path.join(dir_path, file_name)
-							if os.path.exists(file_name_to_del):
-								try:
-									os.remove(file_name_to_del)
-								except OSError:
-									if os.path.exists(path):
-										# basically here for locked files in Windows,
-										# but who knows what we might find?
-										print('Error while trying to delete {0}'.format(file_name_to_del))
-										traceback.print_exc()
+							self._rmfile(os.path.join(dir_path, file_name))
 							# exit extension
 							break
 
 		sublime.status_message("Deleted temp files")
+
+	def _rmtree(self, path):
+		if os.path.exists(path):
+			try:
+				shutil.rmtree(path)
+			except OSError:
+				if os.path.exists(path):
+					# report the exception if the folder didn't end up deleted
+					traceback.print_exc()
+
+	def _rmfile(self, path):
+		if os.path.exists(path):
+			try:
+				os.remove(path)
+			except OSError:
+				if os.path.exists(path):
+					# basically here for locked files in Windows,
+					# but who knows what we might find?
+					print('Error while trying to delete {0}'.format(path))
+					traceback.print_exc()
+
+	def _clear_dir(self, path):
+		for root, directories, file_names in os.walk(path):
+			for directory in directories:
+				self._rmtree(os.path.join(root, directory))
+			for file_name in file_names:
+				self._rmfile(os.path.join(root, file_name))
