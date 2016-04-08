@@ -17,7 +17,9 @@ if sublime.version() < '3000':
 	from latextools_utils.external_command import (
 		execute_command, external_command, get_texpath, update_env
 	)
-	from latextools_utils.output_directory import get_output_directory
+	from latextools_utils.output_directory import (
+		get_aux_directory, get_output_directory
+	)
 
 	strbase = basestring
 else:
@@ -34,7 +36,9 @@ else:
 	from .latextools_utils.external_command import (
 		execute_command, external_command, get_texpath, update_env
 	)
-	from .latextools_utils.output_directory import get_output_directory
+	from .latextools_utils.output_directory import (
+		get_aux_directory, get_output_directory
+	)
 
 	strbase = str
 
@@ -178,17 +182,17 @@ class CmdThread ( threading.Thread ):
 		# Note to self: need to think whether we don't want to codecs.open this, too...
 		# Also, we may want to move part of this logic to the builder...
 		try:
-			if self.caller.output_directory is None:
+			if self.caller.aux_directory is None:
 				log_file = self.caller.tex_base + ".log"
 			else:
 				log_file = os.path.join(
-					self.caller.output_directory,
+					self.caller.aux_directory,
 					os.path.basename(self.caller.tex_base) + ".log"
 				)
 
 				if not os.path.exists(log_file):
 					log_file = self.caller.tex_base + ".log"
-			
+
 			with open(log_file, 'rb') as f:
 				data = f.read()
 		except IOError:
@@ -433,6 +437,14 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		if 'options' in tex_directives:
 			options.extend(tex_directives['options'])
 
+		# filter out --aux-directory and --output-directory options which are
+		# handled separately
+		options = [opt for opt in options if (
+			not opt.startswith('--aux-directory') and
+			not opt.startswith('--output-directory')
+		)]
+
+		self.aux_directory = get_aux_directory(self.file_name)
 		self.output_directory = get_output_directory(self.file_name)
 
 		# Read the env option (platform specific)
@@ -468,6 +480,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			self.output,
 			engine,
 			options,
+			self.aux_directory,
 			self.output_directory,
 			tex_directives,
 			builder_settings,

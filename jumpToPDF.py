@@ -137,7 +137,7 @@ class JumpToPdf(sublime_plugin.TextCommand):
 		print("!TEX root = ", repr(root))  # need something better here, but this works.
 		root_path, _ = os.path.splitext(root)
 
-		output_directory = get_output_directory(self.view)
+		output_directory = get_output_directory(root)
 		if output_directory is None:
 			pdffile = root_path + u'.pdf'
 		else:

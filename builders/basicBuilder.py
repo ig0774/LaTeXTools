@@ -69,11 +69,22 @@ class BasicBuilder(PdfBuilder):
         latex = [engine, u"-interaction=nonstopmode", u"-synctex=1"]
         biber = [u"biber"]
 
-        if self.output_directory is not None:
-            self.makedirectory(self.output_directory)
+        if self.aux_directory is not None:
+            self.make_directory(self.aux_directory)
 
+            if self.aux_directory == self.output_directory:
+                latex.append(u'--output-directory=' + self.aux_directory)
+            else:
+                latex.append(u'--aux-directory=' + self.aux_directory)
+
+            biber.append(u'--output-directory=' + self.aux_directory)
+
+        if (
+            self.output_directory is not None and
+            self.output_directory != self.aux_directory
+        ):
+            self.make_directory(self.aux_directory)
             latex.append(u'--output-directory=' + self.output_directory)
-            biber.append(u'--output-directory=' + self.output_directory)
 
         for option in self.options:
             latex.append(option)
@@ -87,16 +98,16 @@ class BasicBuilder(PdfBuilder):
         # Check if any subfolders need to be created
         # this adds a number of potential runs as LaTeX treats being unable
         # to open output files as fatal errors
-        if self.output_directory is not None:
+        if self.aux_directory is not None:
             while True:
                 start = 0
                 added_directory = False
                 while True:
                     match = FILE_WRITE_ERROR_REGEX.search(self.out, start)
                     if match:
-                        self.makedirectory(
+                        self.make_directory(
                             os.path.join(
-                                self.output_directory,
+                                self.aux_directory,
                                 match.group(1)
                             )
                         )
@@ -160,9 +171,10 @@ class BasicBuilder(PdfBuilder):
             self.display(self.out)
             self.display("\n\n")
 
-    def makedirectory(self, directory):
+    def make_directory(self, directory):
         if not os.path.exists(directory):
             try:
+                print('making directory ' + directory)
                 os.makedirs(directory)
             except OSError:
                 if not os.path.exists(directory):
@@ -180,7 +192,7 @@ class BasicBuilder(PdfBuilder):
         env = dict(os.environ)
         cwd = self.tex_dir
 
-        if self.output_directory is not None:
+        if self.aux_directory is not None:
             # cwd is, at the point, the path to the main tex file
             if _ST3:
                 env['BIBINPUTS'] = cwd + os.pathsep + env.get('BIBINPUTS', '')
@@ -196,7 +208,7 @@ class BasicBuilder(PdfBuilder):
                     )
             # now we modify cwd to be the output directory
             # NOTE this cwd is not reused by any of the other command
-            cwd = self.output_directory
+            cwd = self.aux_directory
 
         startupinfo = None
         preexec_fn = None

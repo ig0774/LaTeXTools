@@ -95,12 +95,27 @@ class TraditionalBuilder(PdfBuilder):
 
 		# handle any options
 		if texify or latexmk:
-			if self.output_directory is not None and latexmk:
-				# DO NOT ADD QUOTES HERE
-				cmd.append(
-					"--output-directory=" +
-					self.output_directory
-				)
+			# we can only handle aux_directory or output_directory with latexmk
+			if latexmk:
+				print(self.aux_directory, self.output_directory)
+				if (
+					self.aux_directory is not None and
+					self.aux_directory != self.output_directory
+				):
+					# DO NOT ADD QUOTES HERE
+					cmd.append(
+						"--aux-directory=" +
+						self.aux_directory
+					)
+
+				if (
+					self.output_directory is not None
+				):
+					# DO NOT ADD QUOTES HERE
+					cmd.append(
+						"--output-directory=" +
+						self.output_directory
+					)
 			for option in self.options:
 				if texify:
 					cmd.append("--tex-option=\"" + option + "\"")

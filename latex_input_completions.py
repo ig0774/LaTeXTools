@@ -14,13 +14,17 @@ if sublime.version() < '3000':
     import getTeXRoot
     from latextools_utils import is_tex_buffer, get_setting
     from latextools_utils.is_tex_file import get_tex_extensions
-    from latextools_utils.output_directory import get_output_directory
+    from latextools_utils.output_directory import (
+        get_aux_directory, get_output_directory
+    )
 else:
     _ST3 = True
     from . import getTeXRoot
     from .latextools_utils import is_tex_buffer, get_setting
     from .latextools_utils.is_tex_file import get_tex_extensions
-    from .latextools_utils.output_directory import get_output_directory
+    from .latextools_utils.output_directory import (
+        get_aux_directory, get_output_directory
+    )
 
 # Only work for \include{} and \input{} and \includegraphics
 TEX_INPUT_FILE_REGEX = re.compile(
@@ -36,7 +40,8 @@ TEX_INPUT_FILE_REGEX = re.compile(
 )
 
 # Get all file by types
-def get_file_list(root, types, filter_exts=[], output_directory=None):
+def get_file_list(root, types, filter_exts=[], output_directory=None,
+                  aux_directory=None):
     path = os.path.dirname(root)
 
     def file_match(f):
@@ -49,7 +54,8 @@ def get_file_list(root, types, filter_exts=[], output_directory=None):
     for dir_name, dirs, files in os.walk(path):
         files = [f for f in files if f[0] != '.' and file_match(f)]
         dirs[:] = [d for d in dirs if d[0] != '.' and
-                   os.path.join(dir_name, d) != output_directory]
+                   os.path.join(dir_name, d) != output_directory and
+                   os.path.join(dir_name, d) != aux_directory]
         for f in files:
             full_path = os.path.join(dir_name, f)
             # Exclude image file have the same name of root file,
@@ -190,9 +196,10 @@ def parse_completions(view, line):
         root = getTeXRoot.get_tex_root(view)
         if root:
             output_directory = get_output_directory(root)
+            aux_directory = get_aux_directory(root)
             completions = get_file_list(
                 root, input_file_types, filter_exts,
-                output_directory
+                output_directory, aux_directory
             )
         else:
             # file is unsaved

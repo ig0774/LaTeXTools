@@ -166,7 +166,7 @@ Note that if you specify a relative path as the `TEXroot` in the project file, t
 
 **Customizing or replacing the compilation command** (`latexmk` or `texify`) is also possible by setting the `command` option under Builder Settings. If you do, the TeX engine selection facility may no longer work because it relies on a specific compilation command. However, if you want to customize or replace `latexmk`/`texify`, you probably know how to select the right TeX engine, so this shouldn't be a concern. Also note that if you are using `latexmk` and you set the `$pdflatex` variable, the TeX options facility will not function, as `latexmk` does not support this. See the Settings option below for details. *Note*: if you change the compilation command, you are responsible for making it work on your setup. Only customize the compilation command if you know what you're doing. 
 
-**Output directory** is supported as far as is possible. If the first few lines of the main file contains the text `%!TEX output_directory = <path>`, the corresponding path is used for the output directory. However, note that this feature is only available when either using latexmk (default on OS X and Linux), using the `basic` builder or using the `script` builder (see below [for documentation on using the script builder](#script-builder)). Alternatively, the output directory can be customized using the corresponding key in the builder setting. There are also three special values that can be used, `<<temp>>` `<<project>>` and `<<cache>>`. Their meaning is the same as that found in the settings section and they are described there.
+**Output directory and Aux directory** are supported as far as is possible. If the first few lines of the main file contains the text `%!TEX output_directory = <path>`, the corresponding path is used for the output directory. Similarly,  `%!TEX aux_directory = <path>` will also be interpreted as the auxiliary directory. In addition, you can specify either `--output-directory` or `--aux-directory` in the TeX options (see above) and it will be interpretted accordingly. Finally, these two can also be controlled by a corresponding setting detailed in the section on settings. There are also three special values that can be used, `<<temp>>` `<<project>>` and `<<cache>>`. Their meaning is the same as that found in the settings section and they are described there. **Note** output directory and aux directory are only available when either using latexmk (default on OS X and Linux), using the `basic` builder or using the `script` builder (see below [for documentation on using the script builder](#script-builder)). If you are using texify (default when using MiKTeX) or the simple builder, setting an aux directory or output directory will likely cause issues.
 
 ### Toggling window focus following a build ###
 
@@ -198,7 +198,7 @@ This deletes all temporary files from a previous build (the PDF file is kept). S
 
 Two settings allow you to fine-tune the behavior of this command. `temp_files_exts` allows you to specify which file extensions should be considered temporary, and hence deleted. `temp_files_ignored_folders` allows you to specify folders that should not be traversed. A good example are `.git` folders, for people who use git for version control.
 
-**NOTE**: If you use the output directory feature, the above is ignored, and the entire `$output_directory` is simply deleted.
+**NOTE**: If you use the output directory feature, the above is ignored, and the entire output_directory is simply deleted. If you are using the auxiliary directory feature *without* using an output directory, the auxiliary directory will be cleared and the normal process will be run.
 
 
 ### Automatically hide build panel after build finished ###
@@ -507,10 +507,11 @@ The following options are currently available (defaults in parentheses):
 - `cwl_list` (`[ "tex.cwl", "latex-209.cwl", "latex-document.cwl", "latex-l2tabu.cwl", "latex-mathsymbols.cwl"]`): list of cwl files to load
 - `keep_focus` (`true`): if `true`, after compiling a tex file, ST retains the focus; if `false`, the PDF viewer gets the focus. Also note that you can *temporarily* toggle this behavior with `C-l,t,f`. **Note**: If you are on either Windows or Linux you may need to adjust the `sublime_executable` setting for this to work properly. See the **Platform settings** below.
 - `forward_sync` (`true`): if `true`, after compiling a tex file, the PDF viewer is asked to sync to the position corresponding to the current cursor location in ST. You can also *temporarily* toggle this behavior with `C-l,t,s`.
-- `output_directory` (`""`): specifies the output directory to store any file generated during a LaTeX build. Path can be specified using either an absolute path or a path relative to the main tex file. In addition, the following special values are honored:
+- `auxiliary_directory` (`""`): specifies the auxiliary directory to store any auxiliary files generated during a LaTeX build. Note that the auxiliary directory option is only useful if you are using MiKTeX. Path can be specified using either an absolute path or a path relative to the main tex file. In addition, the following special values are honored:
   * `<<temp>>`: uses a temporary directory in the system temp directory instead of a specified path; this directory will be unique to each main file, but does not persist across restarts.
   * `<<cache>>`: uses the ST cache directory (or a suitable directory on ST2) to store the output files; unlike the `<<temp>>` option, this directory can persist across restarts.
   * `<<project>>`: uses a sub-directory in the same folder as the main tex file with what should be a unique name; note, this is probably not all that useful and you're better off using one of the other two options or a named relative path
+- `output_directory` (`""`): specifies the output directory to store any file generated during a LaTeX build. Path can be specified using either an absolute path or a path relative to the main tex file. In addition, output_directory honors the same special values as `auxiliary_directory`.
 - `copy_output_on_build` (`true`): if `true` and you are using an `output_directory`, either set via the setting or the `%!TEX` directive, this instructs LaTeXTools to copy to resulting pdf to the same folder as the main tex file. If you are not using `output_directory` or it is set to `false`, it does nothing. If it is a list of extensions, it will copy each file with the same name as your main tex file and the given extension to the same folder as your main tex file. This is useful for copying, e.g., .synctex.gz or .log files.
 - `temp_files_exts`: list of file extensions to be considered temporary, and hence deleted using the `C-l, backspace` command.
 - `temp_files_ignored_folders`: subdirectories to skip when deleting temp files.
@@ -539,7 +540,7 @@ The following options are currently available (defaults in parentheses):
 **Build engine settings**:
 
 NOTE: for the time being, you will need to refer to the `LaTeXTools.sublime-settings` file for detailed explanations. Also, since the new build system is meant to be fully customizable, if you use a third-party builder (which hopefully will become available!), you need to refer to its documentation.
-- `builder`: the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior. Set to `"basic"` for the basic builder that supports output directories on MiKTeX.
+- `builder`: the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior. Set to `"basic"` for the basic builder that supports output and auxiliary directories on MiKTeX.
 - `builder_path`: builders can reside anywhere Sublime Text can access. Specify a path *relative to the Sublime text Packages directory*. In particular, `User` is a good choice. If you use a third-party builder, specify the builder-provided directory.
 - `display_bad_boxes` (`false`): if `true` LaTeXTools will display any bad boxes encountered after a build. Note that this is disabled by default.
 - `builder-settings`: these are builder-specific settings. For the `default`/`traditional` builder, the following settings are useful:
@@ -600,7 +601,7 @@ Let me know if you are interested in writing a custom builder!
 Basic Builder
 -------------
 
-The basic builder is a simple, straight-forward build system. It differs from the `simple` builder in that: 1) whereas the simple builder is intended as an example of how to create a builder, the basic builder is intended to be an operational build system, 2) it supports all of the various builder settings that the `traditional` builder does, with the exception of the `command` setting, 3) it supports biber and biblatex more generally, and 4) it supports the output directory behavior on MiKTeX without installing any additional components, as recent versions of `texify` cannot be coerced into passing the necessary options to pdflatex and friends.
+The basic builder is a simple, straight-forward build system. It differs from the `simple` builder in that: 1) whereas the simple builder is intended as an example of how to create a builder, the basic builder is intended to be an operational build system, 2) it supports all of the various builder settings that the `traditional` builder does, with the exception of the `command` setting, 3) it supports biber and biblatex more generally, and 4) it supports the output and auxiliary directory behavior on MiKTeX without installing any additional components, as recent versions of `texify` cannot be coerced into passing the necessary options to pdflatex and friends.
 
 Script Builder
 --------------
@@ -674,6 +675,7 @@ Each command can use the following variables which will be expanded before it is
 |`$file_ext`| The extension portion of the main file, e.g., _tex_|
 |`$file_base_name`| The name portion of the main file without the, e.g., _document_|
 |`$file_path`| The directory of the main file, e.g., _C:\Files_|
+|`$aux_directory`| The auxiliary directory set via a `%!TEX` directive or the settings|
 |`$output_directory`| The output directory set via a `%!TEX` directive or the settings|
 
 For example:
@@ -690,16 +692,16 @@ Note that if none of these variables occur in the command string, the `$file_bas
 
 Commands are executed in the same path as `$file_path`, i.e. the folder containing the main document.
 
-### Supporting output directory ###
+### Supporting output and auxiliary directories ###
 
-If you are using LaTeXTools output directory behavior there are some caveats to be aware of. First, it is, of course, your responsibility to ensure that `$output_directory` is passed to the appropriate commands in your script. Second, `pdflatex` and friends do not create output directories as needed. Therefore, at the very least, your script must start with either `"mkdir $output_directory"` (Windows) or `"mkdir -p $output_directory"`. Note that if you `\include` (or otherwise attempt anything that will `\@openout` a file in a subfolder), you will need to ensure the subfolder exists. Otherwise, your run of `pdflatex` will fail.
+If you are using LaTeXTools output and auxiliary directory behavior there are some caveats to be aware of. First, it is, of course, your responsibility to ensure that the approrpiate variables are passed to the appropriate commands in your script. Second, `pdflatex` and friends do not create output directories as needed. Therefore, at the very least, your script must start with either `"mkdir $output_directory"` (Windows) or `"mkdir -p $output_directory"` and a corresponding command if using a separate `$aux_directory`. Note that if you `\include` (or otherwise attempt anything that will `\@openout` a file in a subfolder), you will need to ensure the subfolder exists. Otherwise, your run of `pdflatex` will fail.
 
 Finally, unlike Biber, bibtex (and bibtex8) does not support an output directory parameter, which can make it difficult to use if you are using the LaTeXTools output directory behavior. The following work-arounds can be used to get BibTeX to do the right thing.
 
 On Windows, run BibTeX like so:
 
 ```
-cd $output_directory & set BIBINPUTS=\"$file_path:%BIBINPUTS%\" & bibtex $file_base_name
+cd $aux_directory & set BIBINPUTS=\"$file_path:%BIBINPUTS%\" & bibtex $file_base_name
 ```
 
 And on OS X or Linux, use this:
@@ -708,7 +710,7 @@ And on OS X or Linux, use this:
 "cd $output_directory; BIBINPUTS=\"$file_path;$BIBINPUTS\" bibtex $file_base_name"
 ```
 
-In either case, these run bibtex *inside* the output directory while making the directory containing your main file available to the `BIBINPUTS` environment variable. Note if you use a custom style file in the same directory, you will need to apply a similar work-around for the `BSTINPUTS` environment variable.
+In either case, these run bibtex *inside* the output / auxiliary directory while making the directory containing your main file available to the `BIBINPUTS` environment variable. Note if you use a custom style file in the same directory, you will need to apply a similar work-around for the `BSTINPUTS` environment variable.
 
 ### Caveats ###
 
