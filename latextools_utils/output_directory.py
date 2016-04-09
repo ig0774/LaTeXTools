@@ -6,13 +6,13 @@ import sys
 import tempfile
 
 try:
-    from latextools_utils.settings import get_setting
     from latextools_utils.tex_directives import (
         get_tex_root, parse_tex_directives
     )
+    from latextools_utils.sublime_utils import get_project_file_name
 except ImportError:
-    from .settings import get_setting
     from .tex_directives import get_tex_root, parse_tex_directives
+    from .sublime_utils import get_project_file_name
 
 
 __all__ = ['get_aux_directory', 'get_output_directory', 'UnsavedFileException']
@@ -26,36 +26,82 @@ class UnsavedFileException(Exception):
 
 # finds the aux-directory
 # general algorithm:
-#   1. check for an explicit aux_directory setting
+#   1. check for an explicit aux_directory directory
 #   2. check for an --aux-directory flag
-#   3. assume aux_directory is the same as output_directory
+#   3. check for a project setting
+#   4. check for a global setting
+#   5. assume aux_directory is the same as output_directory
 def get_aux_directory(view_or_root):
     root = get_root(view_or_root)
-    aux_directory = get_value_directive_or_setting(root, 'aux_directory')
 
-    if aux_directory is None or aux_directory == '':
-        return get_output_directory(root)
-    else:
-        abs_path = resolve_to_absolute_path(root, aux_directory)
-        if abs_path is None or abs_path == '':
-            return get_output_directory(root)
-        else:
-            return abs_path
+    aux_directory = None
+    if root is not None:
+        aux_directory = get_directive(root, 'aux_directory')
+
+    if aux_directory is not None and aux_directory != '':
+        return resolve_to_absolute_path(
+            root, aux_directory, _get_root_directory(root)
+        )
+
+    view = sublime.active_window().active_view()
+    aux_directory = view.settings().get('aux_directory')
+
+    if aux_directory is not None and aux_directory != '':
+        return resolve_to_absolute_path(
+            root,
+            aux_directory,
+            _get_root_directory(get_project_file_name(view))
+        )
+
+    settings = sublime.load_settings('LaTeXTools.sublime-settings')
+    aux_directory = settings.get('aux_directory')
+
+    if aux_directory is not None and aux_directory != '':
+        return resolve_to_absolute_path(
+            root, aux_directory, _get_root_directory(root)
+        )
+
+    return get_output_directory(root)
 
 
 # finds the output-directory
 # general algorithm:
-#   1. check for an explicit output_directory setting
+#   1. check for an explicit output_directory directive
 #   2. check for an --output-directory flag
-#   3. output_directory is set to None
+#   3. check for a project setting
+#   4. check for a global setting
+#   5. assume output_directory is None
 def get_output_directory(view_or_root):
     root = get_root(view_or_root)
-    output_directory = get_value_directive_or_setting(root, 'output_directory')
 
-    if output_directory is None or output_directory == '':
-        return None
-    else:
-        return resolve_to_absolute_path(root, output_directory)
+    output_directory = None
+    if root is not None:
+        output_directory = get_directive(root, 'output_directory')
+
+    if output_directory is not None and output_directory != '':
+        return resolve_to_absolute_path(
+            root, output_directory, _get_root_directory(root)
+        )
+
+    view = sublime.active_window().active_view()
+    output_directory = view.settings().get('output_directory')
+
+    if output_directory is not None and output_directory != '':
+        return resolve_to_absolute_path(
+            root,
+            output_directory,
+            _get_root_directory(get_project_file_name(view))
+        )
+
+    settings = sublime.load_settings('LaTeXTools.sublime-settings')
+    output_directory = settings.get('output_directory')
+
+    if output_directory is not None and output_directory != '':
+        return resolve_to_absolute_path(
+            root, output_directory, _get_root_directory(root)
+        )
+
+    return None
 
 
 def get_root(view_or_root):
@@ -67,49 +113,26 @@ def get_root(view_or_root):
         return view_or_root
 
 
-def get_value_directive_or_setting(root, key):
-    option = key.replace('_', '-')
-
-    if root is None:
-        result = get_setting(key)
-        if result is None:
-            return _get_value_from_tex_options(root, option)
-        else:
-            return result
-    else:
-        directives = parse_tex_directives(root, only_for=[key])
-        try:
-            return directives[key]
-        except KeyError:
-            result = get_setting(key)
-            if result is None or result == '':
-                return _get_value_from_tex_options(root, option)
-            else:
-                return result
-
-
-def _get_value_from_tex_options(root, option):
-    options = get_setting('builder_settings', {}).get('options', [])
-    options.extend(
-        parse_tex_directives(
-            root,
-            multi_values=['options'],
-            only_for=['options']
-        ).get('options', [])
+def get_directive(root, key):
+    directives = parse_tex_directives(
+        root, multi_values=['options'], only_for=['options', 'key']
     )
 
-    for opt in options:
-        if opt.lstrip('-').startswith(option):
-            try:
-                return opt.split('=')[1].strip()
-            except:
-                # invalid flag
-                return None
+    try:
+        return directives[key]
+    except KeyError:
+        option = key.replace('_', '-')
+        for opt in directives.get('options', []):
+            if opt.lstrip('-').startswith(option):
+                try:
+                    return opt.split('=')[1].strip()
+                except:
+                    # invalid option parameter
+                    return None
+        return None
 
-    return None
 
-
-def resolve_to_absolute_path(root, value):
+def resolve_to_absolute_path(root, value, root_path):
     # special values
     if (
         len(value) > 4 and
@@ -128,7 +151,7 @@ def resolve_to_absolute_path(root, value):
             )
         elif value == '<<project>>':
             result = os.path.join(
-                _get_root_directory(root), root_hash
+                root_path, root_hash
             )
         elif value == '<<cache>>':
             result = os.path.join(
@@ -157,13 +180,9 @@ def resolve_to_absolute_path(root, value):
     if os.path.isabs(result):
         return os.path.normpath(result)
     else:
-        root_dir = _get_root_directory(root)
-        if root_dir is None:
-            raise UnsavedFileException()
-
         return os.path.normpath(
             os.path.join(
-                root_dir,
+                root_path,
                 result
             )
         )
