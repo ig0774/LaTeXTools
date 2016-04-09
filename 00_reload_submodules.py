@@ -34,9 +34,10 @@ LOAD_ORDER = [
     # use the preceeding
     'latextools_utils.analysis'
     'latextools_utils.external_command',
-    'latextools_utils.output_directory',
     'latextools_utils.subfiles',
     'latextools_utils.tex_directives',
+
+    'latextools_utils.output_directory',
 
     'latextools_plugin_internal',
 
