@@ -184,6 +184,9 @@
 	// %!TEX directive if any; also, while it is possible to define
 	// a global value here, it may make more sense to define this
 	// value in your project settings if you use STs project feature
+	// if you do so, however, note that the path will be interpreted
+	// relative to the location of your project file
+
 	"aux_directory": "",
 
 	// OPTION: "output_directory"
@@ -217,6 +220,8 @@
 	// %!TEX directive if any; also, while it is possible to define
 	// a global value here, it may make more sense to define this
 	// value in your project settings if you use STs project feature
+	// if you do so, however, note that the path will be interpreted
+	// relative to the location of your project file
 
 	"output_directory": "",
 
