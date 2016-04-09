@@ -115,7 +115,7 @@ def get_root(view_or_root):
 
 def get_directive(root, key):
     directives = parse_tex_directives(
-        root, multi_values=['options'], only_for=['options', 'key']
+        root, multi_values=['options'], only_for=['options', key]
     )
 
     try:
