@@ -47,9 +47,9 @@ Finally, look at the section on [Platform-Specific Settings](#platform-specific-
 
 ### OS X
 
-On **OSX**, you need to be running the [MacTeX](https://www.tug.org/mactex/) distribution (which is pretty much the only one available on the Mac anyway). Just download and install these in the usual way. I have tested MacTeX versions 2010--2014, both 32 and 64 bits; these work fine. MacTeX 2015 also works. On the other hand, MacTeX 2008 does *not* seem to work out of the box (compilation fails), so please upgrade.
+On **OSX**, you need to be running the [MacTeX](https://www.tug.org/mactex/) distribution (which is pretty much the only one available on the Mac anyway). Just download and install it in the usual way. I have tested MacTeX versions 2010--2014, both 32 and 64 bits; these work fine. MacTeX 2015 also works. On the other hand, MacTeX 2008 does *not* seem to work out of the box (compilation fails), so please upgrade.
 
-We recommend that you install the [Skim PDF viewer](http://skim-app.sourceforge.net/) viewer, as this provides forward and inverse search and is the default viewer that LaTeXTools uses on OS X. If you don't install Skim, please see the section on [Viewers][#viewers] below for details on how to switch this.
+We recommend that you also install the [Skim PDF viewer](http://skim-app.sourceforge.net/), as this provides forward and inverse search and is the default viewer that LaTeXTools uses on OS X. If you don't install Skim, please see the section on [Viewers](#viewers) below for details on how to setup a viewer.
 
 #### Setup Skim.app
 
@@ -72,17 +72,20 @@ If you don't want to install the entire MacTeX distro, which is pretty big, Basi
 
 Sadly, with each OS X release, Apple deviates more and more from established Unix conventions. The latest "innovation" is that, beginning with El Capitan, applications can no longer write to `/usr`. MacTeX 2015 remedies this by creating a link to TeX binaries in `/Library/TeX`. The default LaTeXTools settings file now adds `/Library/TeX/texbin` to the `texpath`. In practice, this means the following.
 
-* If you are running MacTeX 2015 and have *not* customized the `texpath` option in your user settings file, you do not need to take further action.
+#### Setup Skim.app
 
-* If you are running MacTex 2015 and have customized `texpath`, open your user settings file (remember, you can do so from the `Preferences | Package Settings | LaTeXTools` submenu) and add `/Library/TeX/texbin` as the first entry in `texpath`.
+To configure inverse search, open the Preferences dialog of the Skim.app, select the Sync tab, then:
 
-* If you are running earlier MacTeX versions, unfortunately you do *not* have the `/Library/TeX/texbin` link at all, so adding that path to `texpath` would not help. You have two options: create the link yourself, or edit the `texpath` option to point to the appropriate directory. Check Section 8 of [this document](https://tug.org/mactex/UpdatingForElCapitan.pdf) for details.
+* uncheck the "Check for file changes" option
+* choose the Sublime Text 2 or Sublime Text 3 preset (yes, Skim now supports both ST2 and ST3 by default!)
 
-Sorry for the complications. It's not my fault.
+In case you are using an old version of Skim, you can always choose the Custom preset and enter `/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl` (for ST3) in the Command field, and `"%file":%line` in the Arguments field. (This is correct as of 7/18/2013; you may want to double-check that ST3 is indeed in `/Applications/Sublime Text`; just go to the Applications folder in the Finder. Adapt as needed for ST2).
 
 ### Windows
 
-On **Windows**, both [MikTeX](http://www.miktex.org/) and [TeXLive](https://www.tug.org/texlive/) are supported. You must be running a current (>=1.4) version of the [Sumatra PDF viewer](http://www.sumatrapdfreader.org/). Install these as usual; then, add the SumatraPDF directory to your `PATH` or set the `sumatra` command in the `windows` platform settings (see the section on [platform settings](#platform-specific-settings) below).
+On **Windows**, both [MikTeX](http://www.miktex.org/) and [TeXLive](https://www.tug.org/texlive/) are supported. Install either of these as usual.
+
+We recommend that you install a version of [Sumatra PDF viewer](http://www.sumatrapdfreader.org/), as this is the only viewer currently supported on Windows. Its very light-weight and supports both forward and inverse search. Just download and install it in the normal way. You may have to add the SumatraPDF directory to your `PATH` environment variable or else set the `sumatra` command in the `windows` platform settings (see the section on [platform settings](#platform-specific-settings) below). If you choose not to install SumatraPDF, you might be able to use the `command` viewer to support another PDF viewer. See the [Viewers](#viewer) section below for details.
 
 #### Setup Sumatra
 
@@ -102,7 +105,7 @@ TeXlive has one main advantage over MikTeX: it supports file names and paths wit
 
 #### `PATH` Issues
 
-Recent versions of MikTeX add themselves to your path automatically, but in case the build system does not work, that's the first thing to check. TeXlive can also add itself to your path.
+Recent versions of MikTeX add themselves to your path automatically, but in case the build system does not work, that's the first thing to check. TeXLive can also add itself to your path.
 
 ### Linux
 
@@ -130,7 +133,9 @@ Also, to get inverse search working on ST3, make sure you set the `sublime` opti
 
 #### Setup Evince
 
-By default LaTeXTools assumes you are using Evince (Document Viewer) as your PDF viewer. Support is also available for Okular and other viewers that can be run via the command line. See the section on [Viewers](#viewers) below for details on how to setup other viewers. Evince is installed by default on Ubuntu or, more generally, any distro that provides the Gnome desktop. You don't need to configure anything. Backward and forward search Work For Me (TM). Hopefully they will work for you, too, but let me know if this is not the case.
+By default LaTeXTools assumes you are using Evince (Document Viewer) as your PDF viewer. Support is also available for Okular and other viewers that can be run via the command line. See the section on [Viewers](#viewers) below for details on how to setup other viewers. 
+
+If you opt to use Evince, which is installed by default on Ubuntu and any distro that provides the Gnome desktop, you don't need to configure anything. Backward and forward search Work For Me (TM). Hopefully they will work for you, too, but let me know if this is not the case.
 
 ## General Features
 
@@ -176,7 +181,7 @@ You can consult the documentation for any LaTeX package by invoking the `View Pa
 
 LaTeXTools uses a cache to store relevant information about your document and improve the performance of commands. The contents of this cache may become outdated. If a command seems to be returning old data, simply clear the cache using either the command [delete temporary files](#removing-temporary-files-from-build) or the dedicated command to [clear the cache](#clearing-the-cache). For more details on the cache, see the [Cache settings](#cache-settings) section below and the section on the [Cache](#latextools-cache).
 
-## Builders
+## Builder Features
 
 Most of the builder features are controlled through the `LaTeXTools.sublime-settings` file. See, in particular, the [section on builder settings](#builder-settings).
 
@@ -240,6 +245,7 @@ The default ST Build command takes care of the following:
 * It parses the tex log file and lists all errors, warnings and, if enabled, bad boxes in an output panel at the bottom of the ST window: click on any error/warning/bad boxes to jump to the corresponding line in the text, or use the ST-standard Next Error/Previous Error commands.
 * It invokes the PDF viewer for your platform and performs a forward search: that is, it displays the PDF page where the text corresponding to the current cursor position is located.
 
+
 ### Toggling window focus following a build
 
 **Keybinding:** `C-l,t,f` (yes, this means `C-l`, then `t`, then `f`)
@@ -266,7 +272,7 @@ This causes the status message to list the default settings of the focus and syn
 
 **Keybinding:** `C-l,backspace`
 
-This deletes all temporary files from a previous build (the PDF file is kept). Subfolders are traversed recursively.
+This deletes all temporary files from a previous build (the PDF file is kept). Subfolders are traversed recursively. This command also clears the [LaTeXTools cache](#latextools-cache).
 
 Two settings allow you to fine-tune the behavior of this command. `temp_files_exts` allows you to specify which file extensions should be considered temporary, and hence deleted. `temp_files_ignored_folders` allows you to specify folders that should not be traversed. A good example are `.git` folders, for people who use git for version control.
 
@@ -274,7 +280,7 @@ Two settings allow you to fine-tune the behavior of this command. `temp_files_ex
 
 **Keybinding:** `C-l,C-d,C-c`
 
-This deletes the entire cache. It is useful if the LaTeXTools cache information gets too out of date, but you want to maintain the LaTeX build files, such as `.aux`.
+This clears the [LaTeXTools cache](#latextools-cache). It is useful if the LaTeXTools cache information gets too out of date, but you want to maintain the LaTeX build files, such as `.aux`.
 
 ### Forward and Inverse Search
 
@@ -519,8 +525,8 @@ This section refers to setting that can be found in a platform-specific block fo
 
 ### Cache settings
 
-* `hide_local_cache` (`true`): Whether the local cache should be hidden in the sublime cache path (`true`) or in the same directory as the root file (`false`). See the section the [LaTeXTools cache](#latextools-cache).
-* `local_cache_life_span` (`30 m`): The lifespan of the local cache. See the section [LaTeXTools cache](#latextools-cache).
+* `hide_local_cache` (`true`): Whether the local cache should be hidden in the sublime cache path (`true`) or in the same directory as the root file (`false`). See the section [LaTeXTools Cache](#latextools-cache).
+* `local_cache_life_span` (`30 m`): The lifespan of the local cache, specified in the format `" d x h X m X s"` where `X` is a natural number `s` stands for seconds, `m` for minutes, `h` for hours, and `d` for days. Missing fields will be treated as 0 and white-spaces are optional. Hence you can write `"1 h 30 m"` to refresh the cached data every one and a half hours. If you use `"infinite"` the cache will not be invalidated automatically. A lower lifespan will produce results, which are more up to date. However it requires more recalculations and might decrease the performance. See the section [LaTeXTools Cache](#latextools-cache).
 
 ### Project-Specific Settings
 
@@ -632,26 +638,6 @@ For example:
 Note that if none of these variables occur in the command string, the `$file_base_name` will be appended to the end of the command. This may mean that a wrapper script is needed if, for example, using `make`.
 
 Commands are executed in the same path as `$file_path`, i.e. the folder containing the main document.
-
-#### Supporting output and auxiliary directories
-
-If you are using LaTeXTools output and auxiliary directory behavior there are some caveats to be aware of. First, it is, of course, your responsibility to ensure that the approrpiate variables are passed to the appropriate commands in your script. Second, `pdflatex` and friends do not create output directories as needed. Therefore, at the very least, your script must start with either `"mkdir $output_directory"` (Windows) or `"mkdir -p $output_directory"` and a corresponding command if using a separate `$aux_directory`. Note that if you `\include` (or otherwise attempt anything that will `\@openout` a file in a subfolder), you will need to ensure the subfolder exists. Otherwise, your run of `pdflatex` will fail.
-
-Finally, unlike Biber, bibtex (and bibtex8) does not support an output directory parameter, which can make it difficult to use if you are using the LaTeXTools output directory behavior. The following work-arounds can be used to get BibTeX to do the right thing.
-
-On Windows, run BibTeX like so:
-
-```
-cd $aux_directory & set BIBINPUTS=\"$file_path:%BIBINPUTS%\" & bibtex $file_base_name
-```
-
-And on OS X or Linux, use this:
-
-```
-"cd $output_directory; BIBINPUTS=\"$file_path;$BIBINPUTS\" bibtex $file_base_name"
-```
-
-In either case, these run bibtex *inside* the output / auxiliary directory while making the directory containing your main file available to the `BIBINPUTS` environment variable. Note if you use a custom style file in the same directory, you will need to apply a similar work-around for the `BSTINPUTS` environment variable.
 
 #### Caveats
 
@@ -1034,13 +1020,13 @@ To use this builder, save it to a file called `"mikbibBuilder.py"` and change th
 
 #### Interacting with the Sublime API
 
-Sublime Text provides a very rich API that could be of use to builders. However, it is advisable that any interactions with the Sublime Text API happen in the `__init__()` function, if possible. This is because the `__init__()` function is run on the main Sublime thread whereas the `commands()` function is called from a separate thread which cannot safely interact with the Sublime API on ST2. `commands()` is run on a separate thread
+Sublime Text provides a very rich API that could be of use to builders. However, it is advisable that any interactions with the Sublime Text API happen in the `__init__()` function, if possible. This is because the `__init__()` function is run on the main Sublime thread whereas the `commands()` function is called from a separate thread which cannot safely interact with the Sublime API on ST2. `commands()` is run on a separate thread.
 
 ## Alternative Viewers
 
 ### Command Viewer
 
-Some support for other viewers is provided via the `command` viewer, which allows the execution of arbitrary commands to view a pdf or perform a forward search. At the very least this provides a way to use okular.
+Some support for other viewers is provided via the `command` viewer, which allows the execution of arbitrary commands to view a pdf or perform a forward search.
 
 Using the command viewer requires that you configure the command(s) to be run in the platform-specific part of the `viewer_settings` block in your LaTeXTools preferences. There are three commands available:
 
@@ -1094,6 +1080,8 @@ For example, you can use the command viewer to support Okular with the following
 LaTeXTools uses a cache to store relevant information about your document and improve the performance of commands. The cache is made up of a series of files. Where these files are stored depends on your settings. By default, we try to keep them invisible, so they are stored in the Sublime cache path. However, by changing the `hide_local_cache` setting, you can have them stored in a hidden folder in the same directory as your tex root.
 
 The local cache also has a lifespan, after which it will be invalidated. The lifespan starts when the first entry is inserted in the cache and the whole cache will be deleted after the lifespan. This can be set in the `local_cache_life_span` setting. The format is `"X d X h X m X s"`, where `X` is a natural number `s` stands for seconds, `m` for minutes, `h` for hours, and `d` for days. Missing fields will be treated as 0 and white-spaces are optional. Hence you can write `"1 h 30 m"` to refresh the cached data every one and a half hours. If you use `"infinite"` the cache will not be invalidated automatically. A lower lifespan will produce results, which are more up to date. However it requires more recalculations and might decrease the performance.
+
+            self.display("done.\n")
 
 ## Troubleshooting
 
