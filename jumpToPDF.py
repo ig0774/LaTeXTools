@@ -8,23 +8,23 @@ if sublime.version() < '3000':
 	import getTeXRoot
 	from latextools_utils.is_tex_file import is_tex_file
 	from latextools_utils import get_setting
+	from latextools_utils.output_directory import get_output_directory
 	from latextools_utils.sublime_utils import get_sublime_exe
 	from latextools_plugin import (
 		get_plugin, add_plugin_path, NoSuchPluginException,
 		add_whitelist_module
 	)
-	from latextools_utils.output_directory import get_output_directory
 else:
 	_ST3 = True
 	from . import getTeXRoot
 	from .latextools_utils.is_tex_file import is_tex_file
 	from .latextools_utils import get_setting
+	from .latextools_utils.output_directory import get_output_directory
 	from .latextools_utils.sublime_utils import get_sublime_exe
 	from .latextools_plugin import (
 		get_plugin, add_plugin_path, NoSuchPluginException,
 		add_whitelist_module
 	)
-	from .latextools_utils.output_directory import get_output_directory
 
 import sublime_plugin, os.path, subprocess, time
 import traceback

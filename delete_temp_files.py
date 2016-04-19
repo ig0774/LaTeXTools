@@ -53,11 +53,23 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			print(message)
 			return
 
+<<<<<<< HEAD
 		# clear the cache
 		cache.delete_local_cache(root_file)
 
 		aux_directory = get_aux_directory(root_file)
 		output_directory = get_output_directory(root_file)
+=======
+<<<<<<< HEAD
+		aux_directory = get_aux_directory(root_file)
+		output_directory = get_output_directory(root_file)
+=======
+		# clear the cache
+		cache.delete_local_cache(root_file)
+
+		path = os.path.dirname(root_file)
+>>>>>>> master
+>>>>>>> output_directory
 
 		if aux_directory is not None:
 			# we cannot delete the output directory on Windows in case
@@ -127,4 +139,26 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			for directory in directories:
 				self._rmtree(os.path.join(root, directory))
 			for file_name in file_names:
+<<<<<<< HEAD
 				self._rmfile(os.path.join(root, file_name))
+=======
+<<<<<<< HEAD
+				self._rmfile(os.path.join(root, file_name))
+=======
+				for ext in temp_files_exts:
+					if file_name.endswith(ext):
+						file_name_to_del = os.path.join(dir_path, file_name)
+						if os.path.exists(file_name_to_del):
+							try:
+								os.remove(file_name_to_del)
+							except OSError:
+								# basically here for locked files in Windows,
+								# but who knows what we might find?
+								print('Error while trying to delete {0}'.format(file_name_to_del))
+								traceback.print_exc()
+						# exit extension
+						break
+
+		sublime.status_message("Deleted temp files")
+>>>>>>> master
+>>>>>>> output_directory
