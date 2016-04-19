@@ -53,23 +53,11 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			print(message)
 			return
 
-<<<<<<< HEAD
 		# clear the cache
 		cache.delete_local_cache(root_file)
 
 		aux_directory = get_aux_directory(root_file)
 		output_directory = get_output_directory(root_file)
-=======
-<<<<<<< HEAD
-		aux_directory = get_aux_directory(root_file)
-		output_directory = get_output_directory(root_file)
-=======
-		# clear the cache
-		cache.delete_local_cache(root_file)
-
-		path = os.path.dirname(root_file)
->>>>>>> master
->>>>>>> output_directory
 
 		if aux_directory is not None:
 			# we cannot delete the output directory on Windows in case
@@ -139,12 +127,7 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			for directory in directories:
 				self._rmtree(os.path.join(root, directory))
 			for file_name in file_names:
-<<<<<<< HEAD
 				self._rmfile(os.path.join(root, file_name))
-=======
-<<<<<<< HEAD
-				self._rmfile(os.path.join(root, file_name))
-=======
 				for ext in temp_files_exts:
 					if file_name.endswith(ext):
 						file_name_to_del = os.path.join(dir_path, file_name)
@@ -160,5 +143,3 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 						break
 
 		sublime.status_message("Deleted temp files")
->>>>>>> master
->>>>>>> output_directory
