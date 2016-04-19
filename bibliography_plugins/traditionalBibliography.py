@@ -17,8 +17,6 @@ import os
 
 import sublime
 
-import sys
-
 # LaTeX -> Unicode decoder
 latex_chars.register()
 
@@ -105,27 +103,33 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
         rootdir = os.path.dirname(root_file)
 
         for content in walk_subfiles(rootdir, root_file):
-            bibtags =  re.findall(r'\\bibliography\{([^\}]+)\}', content)
-            bibtags += re.findall(r'\\nobibliography\{([^\}]+)\}', content)
-            bibtags += re.findall(r'\\addbibresource(?:\[[^\]]*\])?\{([^\}]+)\.bib\}', content)
-            bibtags += re.findall(r'\\addglobalbib(?:\[[^\]]*\])?\{([^\}]+)\.bib\}', content)
-            bibtags += re.findall(r'\\addsectionbib(?:\[[^\]]*\])?\{([^\}]+)\.bib\}', content)
-            bibtags += re.findall(r'\\begin\{refsection\}\[([^\]]+)\]', content)
+            # While these commands only allow a single resource as their argument...
+            resources = re.findall(r'\\addbibresource(?:\[[^\]]+\])?\{([^\}]+\.bib)\}', content)
+            resources += re.findall(r'\\addglobalbib(?:\[[^\]]+\])?\{([^\}]+\.bib)\}', content)
+            resources += re.findall(r'\\addsectionbib(?:\[[^\]]+\])?\{([^\}]+\.bib)\}', content)
+
+            # ... these can have a comma-separated list of resources as their argument.
+            multi_resources = re.findall(r'\\begin\{refsection\}\[([^\]]+)\]', content)
+            multi_resources += re.findall(r'\\bibliography\{([^\}]+)\}', content)
+            multi_resources += re.findall(r'\\nobibliography\{([^\}]+)\}', content)
+
+            for multi_resource in multi_resources:
+                for res in multi_resource.split(','):
+                    res = res.strip()
+                    if res[-4:].lower() != '.bib':
+                        res = res + '.bib'
+                    resources.append(res)
 
             # extract absolute filepath for each bib file
-            for tag in bibtags:
-                bfiles = tag.split(',')
-                for bf in bfiles:
-                    if bf[-4:].lower() != '.bib':
-                        bf = bf + '.bib'
-                    # We join with rootdir, the dir of the master file
-                    candidate_file = os.path.normpath(os.path.join(rootdir, bf))
-                    # if the file doesn't exist, search the default tex paths
-                    if not os.path.exists(candidate_file):
-                        candidate_file = kpsewhich(bf, 'mlbib')
+            for res in resources:
+                # We join with rootdir, the dir of the master file
+                candidate_file = os.path.normpath(os.path.join(rootdir, res))
+                # if the file doesn't exist, search the default tex paths
+                if not os.path.exists(candidate_file):
+                    candidate_file = kpsewhich(res, 'mlbib')
 
-                    if candidate_file is not None and os.path.exists(candidate_file):
-                        bib_files.append(candidate_file)
+                if candidate_file is not None and os.path.exists(candidate_file):
+                    bib_files.append(candidate_file)
         return bib_files
 
 
@@ -141,8 +145,6 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                 continue
             else:
                 bib_data = parser.parse(bibf.read())
-            finally:
-                bibf.close()
 
                 print ('Loaded %d bibitems' % (len(bib_data)))
 
@@ -151,6 +153,11 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                     if entry.entry_type in ('xdata', 'comment', 'string'):
                         continue
                     entries.append(EntryWrapper(entry))
+            finally:
+                try:
+                    bibf.close()
+                except:
+                    pass
 
             print("Found %d total bib entries" % (len(entries),))
 
