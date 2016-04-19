@@ -32,7 +32,7 @@ LOAD_ORDER = [
     'latextools_utils.sublime_utils',
 
     # use the preceeding
-    'latextools_utils.analysis'
+    'latextools_utils.analysis',
     'latextools_utils.external_command',
     'latextools_utils.subfiles',
     'latextools_utils.tex_directives',
