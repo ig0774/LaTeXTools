@@ -8,14 +8,16 @@ from bibtex.names import Name
 from bibtex.tex import tokenize_list
 
 import latex_chars
+from latextools_utils import cache
 
 import codecs
 from collections import Mapping
 
-import re
+import hashlib
 import os
-
+import re
 import sublime
+import traceback
 
 # LaTeX -> Unicode decoder
 latex_chars.register()
@@ -79,7 +81,22 @@ class EntryWrapper(Mapping):
             return self.entry.cite_key
 
         if key in Name.NAME_FIELDS:
-            people = [Name(x) for x in tokenize_list(self.entry[key])]
+            people = []
+            for x in tokenize_list(self.entry[key]):
+                if x.strip() == '':
+                    continue
+
+                try:
+                    people.append(Name(x))
+                except:
+                    print(u'Error handling field "{0}" with value "{1}"'.format(
+                        key, x
+                    ))
+                    traceback.print_exc()
+
+            if len(people) == 0:
+                return u''
+
             if short:
                 result = _get_people_short(people)
             else:
@@ -137,6 +154,17 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
         entries = []
         parser = Parser()
         for bibfname in bib_files:
+            cache_name = "bib_" + hashlib.md5(bibfname.encode("utf8")).hexdigest()
+            try:
+                modified_time = os.path.getmtime(bibfname)
+
+                (cached_time, cached_entries) = cache.read_global(cache_name)
+                if modified_time < cached_time:
+                    entries.extend(cached_entries)
+                    continue
+            except:
+                pass
+
             try:
                 bibf = codecs.open(bibfname, 'r', 'UTF-8', 'ignore')  # 'ignore' to be safe
             except IOError:
@@ -153,6 +181,14 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                     if entry.entry_type in ('xdata', 'comment', 'string'):
                         continue
                     entries.append(EntryWrapper(entry))
+
+                try:
+                    cache.write_global(cache_name, (modified_time, entries))
+                except:
+                    print('Error occurred while trying to write to cache {0}'.format(
+                        cache_name
+                    ))
+                    traceback.print_exc()
             finally:
                 try:
                     bibf.close()
