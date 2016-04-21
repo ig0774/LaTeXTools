@@ -485,7 +485,7 @@
 	// "new_bibliography"				a newer parser which supports UTF-8 and
 	//									additional fields, but may be slower and
 	//									less well tested.
-	"bibliography": ["new_bibliography", "traditional_bibliography"]
+	"bibliography": ["new_bibliography", "traditional_bibliography"],
 
 	/* This preference sets the format of the quick panel to select citations using wildcards.
 	The setting is a list with one or two string using wildcards for author, title, keyword etc.
