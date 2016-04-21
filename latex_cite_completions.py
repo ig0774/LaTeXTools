@@ -246,7 +246,7 @@ def match(rex, str):
 def run_plugin_command(command, *args, **kwargs):
     '''
     This function is intended to run a command against a user-configurable list
-    of bibliography plugins set using the `bibliography_plugins` setting.
+    of bibliography plugins set using the `bibliography` setting.
 
     Parameters:
         `command`: a string representing the command to invoke, which should
@@ -330,10 +330,10 @@ def run_plugin_command(command, *args, **kwargs):
 
         return result
 
-    plugins = get_setting('bibliography_plugins', ['traditional_bibliography'])
+    plugins = get_setting('bibliography', ['traditional_bibliography'])
     if not plugins:
-        print('bibliography_plugins is blank. Loading traditional plugin.')
-        plugins = ['traditional_bibliography']
+        print('bibliography setting is blank. Loading traditional plugin.')
+        plugins = 'traditional_bibliography'
 
     result = None
     if type(plugins) == strbase:
