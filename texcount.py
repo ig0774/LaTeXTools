@@ -27,16 +27,17 @@ class TexcountCommand(sublime_plugin.TextCommand):
             )
             return
 
-        command = ['texcount', '-total', '-merge', '-utf8']
+        sub_level = args.get('sub_level', 'chapter')
+
+        command = ['texcount', '-merge', '-sub=' + sub_level, '-utf8']
         cwd = os.path.dirname(tex_root)
         command.append(os.path.basename(tex_root))
 
         try:
+            res_split = check_output(command, cwd=cwd).splitlines()
             self.view.window().show_quick_panel(
-                check_output(command, cwd=cwd).splitlines()[1:-4],
-                None
+                res_split[1:4] + res_split[9:], None
             )
-
         except CalledProcessError as e:
             sublime.error_message(
                 'Error while running TeXCount: {0}'.format(
