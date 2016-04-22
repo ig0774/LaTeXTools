@@ -7,15 +7,21 @@ Marciano's blog:
 [http://tekonomist.wordpress.com]
 
 
-Additional contributors (*thank you thank you thank you*): first of all, Wallace Wu and Juerg Rast, who contributed code for multifile support in ref and cite completions, "new-style" ref/cite completion, and project file support. Also, skuroda (Preferences menu), Sam Finn (initial multifile support for the build command); Daniel Fleischhacker (Linux build fixes), Mads Mobaek (universal newline support), Stefan Ollinger (initial Linux support), RoyalTS (aka Tobias Schidt?) (help with bibtex regexes and citation code, various fixes), Juan Falgueras (latexmk option to handle non-ASCII paths), Jeremy Jay (basic biblatex support), Ray Fang (texttt snippet), Ulrich Gabor (tex engine selection and cleaning aux files), Wes Campaigne and 'jlegewie' (ref/cite completion 2.0!). **Huge** thanks to Daniel Shannon (aka phyllisstein) who first ported LaTeXTools to ST3. Also thanks for Charley Peng, who has been assisting users and generating great pull requests; I'll merge them as soon as possible. Also William Ledoux (various Windows fixes, env support), Sean Zhu (find Skim.app in non-standard locations), Maximilian Berger (new center/table snippet), Lucas Nanni (recursively delete temp files), Sergey Slipchenko (`$` auto-pairing with Vintage) Ian Bacher (use `kpsewhich` to find bib files in the `TEXMF` tree; reworked fill-all command; jump to tex files improvements; delete temp files improvements; builder options; improved LaTeX-cwl support), btstream (original fill-all command; LaTeX-cwl support), Richard Stein (auto-hide build panel, jump to included tex files, LaTeX-cwl support config, TEX spellcheck support), Dan Schrage (nobibliography command).
+Additional contributors (*thank you thank you thank you*): first of all, Wallace Wu and Juerg Rast, who contributed code for multifile support in ref and cite completions, "new-style" ref/cite completion, and project file support. Also, skuroda (Preferences menu), Sam Finn (initial multifile support for the build command); Daniel Fleischhacker (Linux build fixes), Mads Mobaek (universal newline support), Stefan Ollinger (initial Linux support), RoyalTS (aka Tobias Schidt?) (help with bibtex regexes and citation code, various fixes), Juan Falgueras (latexmk option to handle non-ASCII paths), Jeremy Jay (basic biblatex support), Ray Fang (texttt snippet), Ulrich Gabor (tex engine selection and cleaning aux files), Wes Campaigne and 'jlegewie' (ref/cite completion 2.0!). **Huge** thanks to Daniel Shannon (aka phyllisstein) who first ported LaTeXTools to ST3. Also thanks for Charley Peng, who has been assisting users and generating great pull requests; I'll merge them as soon as possible. Also William Ledoux (various Windows fixes, env support), Sean Zhu (find Skim.app in non-standard locations), Maximilian Berger (new center/table snippet), Lucas Nanni (recursively delete temp files), Sergey Slipchenko (`$` auto-pairing with Vintage) Ian Bacher (use `kpsewhich` to find bib files in the `TEXMF` tree; reworked fill-all command; jump to tex files improvements; delete temp files improvements; builder options; improved LaTeX-cwl support), btstream (original fill-all command; LaTeX-cwl support), Richard Stein (auto-hide build panel, jump to included tex files, LaTeX-cwl support config, TEX spellcheck support, functions to analyze LaTeX documents, cache functionality), Dan Schrage (nobibliography command), PoByBolek (more biblatex command), Rafael Lerm (support for multiple lines in `\bibliography` commands).
 
 *If you have contributed and I haven't acknowledged you, email me!*
 
-*Latest revision:* v3.6.3 (2016-02-25). 
+*Latest revision:* v3.7.8 (2016-04-21). 
 
-*Headline features*: Finally, a functional [Script Builder](#script-builder)! Integrate your existing workflow in LaTeXTools, and/or customize every step of the build process.
+*Headline features*:
+
+  * New viewers for Preview.app and Okular
+  * New bibliography parser available (see the settings file)
+  * Support for most citation commands, especially using BibLaTeX
 
 *Reminder*: See the [Settings section](#settings) for details on the Settings system, which was updated in v3.6.1 (2016-01-01).
+
+**Note**: If you've been following along with the v3.7.x release, v3.7.7 is a major change. I've restored the previous bibliography parsing from v3.6 and earlier as default. If you want to use the new parsing, you need to change the `bibliography` setting to `"new_bibliography"`. Thanks to everyone who has filed bug reports. At present, all the reported bugs should be resolved, but I'm not certain that some don't remain (BibTeX is a wild world) and the older parsing seems to be substantially faster for those with extremely large bibliographies.
 
 
 
@@ -23,13 +29,13 @@ Introduction
 ------------
 This plugin provides several features that simplify working with LaTeX files:
 
-* The ST build command takes care of compiling your LaTeX source to PDF using `texify` (Windows/MikTeX) or `latexmk` (OSX/MacTeX, Windows/TeXlive, Linux/TeXlive). Then, it parses the log file and lists errors and warning. Finally, it launches (or refreshes) the PDF viewer (SumatraPDF on Windows, Skim on OSX, and Evince on Linux) and jumps to the current cursor position.
+* The ST build command takes care of compiling your LaTeX source to PDF using `texify` (Windows/MikTeX) or `latexmk` (OSX/MacTeX, Windows/TeXlive, Linux/TeXlive). Then, it parses the log file and lists errors and warning. Finally, it launches (or refreshes) the PDF viewer (SumatraPDF on Windows, Skim on OSX, and Evince on Linux by default) and jumps to the current cursor position.
 * Forward and inverse search with the named PDF previewers is fully supported
 * Easy insertion of references and citations (from BibTeX files)
 * Plugs into the "Goto anything" facility to make jumping to any section or label in your LaTeX file(s)
 * Smart command completion for a variety of text and math commands is provided
 * Additional snippets and commands are also provided
-* The build command is fully customizable. In the near future, so will be the PDF previewer.
+* The build command is fully customizable, as is the PDF previewer.
 
 Requirements and Setup
 ----------------------
@@ -46,7 +52,9 @@ Third, follow the OS-specific instructions below.
 
 <br>
 
-On **OSX**, you need to be running the MacTeX distribution (which is pretty much the only one available on the Mac anyway) and the Skim PDF previewer. Just download and install these in the usual way. I have tested MacTeX versions 2010--2014, both 32 and 64 bits; these work fine. MacTeX 2015 also works. On the other hand, MacTeX 2008 does *not* seem to work out of the box (compilation fails), so please upgrade.
+On **OSX**, you need to be running the MacTeX distribution (which is pretty much the only one available on the Mac anyway). Just download and install it in the usual way. I have tested MacTeX versions 2010--2014, both 32 and 64 bits; these work fine. MacTeX 2015 also works. On the other hand, MacTeX 2008 does *not* seem to work out of the box (compilation fails), so please upgrade.
+
+It is recommended that you install the Skim PDF viewer, as this provides support for forward and inverse search. By default, LaTeXTools assumes that you're using Skim. If you're not using Skim, see the section on viewers below.
 
 **El Capitan note**: sadly, with each OS X release, Apple deviates more and more from established Unix conventions. The latest "innovation" is that, beginning with El Capitan, apps can no longer write to `/usr`. MacTeX 2015 remedies this by creating a link to TeX binaries in `/Library/TeX`. The default LaTeXTools settings file now adds `/Library/TeX/texbin` to the `texpath`. In practice, this means the following.
 
@@ -71,9 +79,9 @@ Finally, edit the file `LaTeXTools.sublime-settings` in the `User` directory to 
 
 <br>
 
-On **Windows**, both MikTeX and TeXlive are supported. You must be running a current (>=1.4) version of the Sumatra PDF previewer. Install these as usual; then, add the SumatraPDF directory to your PATH or set the `sumatra` command in the `windows` platform setting.
+On **Windows**, both MikTeX and TeXlive are supported. It is recommded that you use the Sumatra PDF viewer, as using another viewer will require more configuration, but see the section on viewers below. If you do use Sumatra, you must be running a current (>=1.4) version. Install these as usual. If you are using Sumatra, add the SumatraPDF directory to your PATH or configure the `sumatra` setting in the `windows` platform setting of your `LaTeXTools.sublime-settings` in your **User** directory.
 
-You now need to set up inverse search in Sumatra PDF. However, the GUI for doing this is hidden in Sumatra until you open a PDF file that has actual synchronization information (that is, an associated `.synctex.gz` file): see [here](http://forums.fofou.org/sumatrapdf/topic?id=2026321). If you have one such file, then open it, go to Settings|Options, and enter `"C:\Program Files\Sublime Text 2\sublime_text.exe" "%f:%l"` for ST2, and `"C:\Program Files\Sublime Text 3\sublime_text.exe" "%f:%l"` for ST3, as the inverse-search command line (in the text-entry field at the bottom of the options dialog). If you don't already have a file with sync information, you can easily create one: compile any LaTex file you already have (or create a new one) with `pdflatex -synctex=1 <file.tex>`, and then open the resulting PDF file in SumatraPDF. 
+You now need to set up inverse search in Sumatra PDF. However, the GUI for doing this is hidden in Sumatra until you open a PDF file that has actual synchronization information (that is, an associated `.synctex.gz` file): see [here](http://forums.fofou.org/sumatrapdf/topic?id=2026321). If you have one such file, then open it, go to **Settings|Options**, and enter `"C:\Program Files\Sublime Text 2\sublime_text.exe" "%f:%l"` for ST2, and `"C:\Program Files\Sublime Text 3\sublime_text.exe" "%f:%l"` for ST3, as the inverse-search command line (in the text-entry field at the bottom of the options dialog). If you don't already have a file with sync information, you can easily create one: compile any LaTex file you already have (or create a new one) with `pdflatex -synctex=1 <file.tex>`, and then open the resulting PDF file in SumatraPDF. 
 
 As an alternative, you can open a command-line console (run `cmd.exe`), and issue the following command:
 
@@ -105,9 +113,7 @@ If you customize the command to include a custom PDF command, users have reporte
 
 There are several variants to deal with; each distro is a little bit different, so there are basically no universal defaults. There's not much I can do about it. Good luck! 
 
-Only the Evince PDF viewer is supported; it's installed by default on Ubuntu or, more generally, any distro that provides the Gnome desktop, and you don't need to configure anything. Backward and forward search Work For Me (TM). Hopefully they will work for you, too, but let me know if this is not the case.
-
-Note: I already have patches to support Okular. Indeed, Okular is very easy to support, as it provides a sane command-line interface; Evince insists on using DBus, which requires considerable gyrations (luckily, it was relatively easy to adapt solutions already existing for other editors to ST). What is harder is supporting *both* Evince and Okular. This would need a revamp of the building-related facilites of the plugin, basically supporting user settings to select a particular viewer. But the incentive to add such support is very low as far as other platforms are concerned: only SumatraPDF supports forward/inverse search on Windows, and Skim is the easiest-to-control and most powerful/complete PDF viewer on OS X that does. Bottom line: multiple viewer support is probably not coming in the near future. Sorry!
+Only support for the Evince PDF viewer is built-in, but see the section on viewers below for details on how to setup other viewers. Evince is installed by default on Ubuntu or, more generally, any distro that provides the Gnome desktop, and you don't need to configure anything. Backward and forward search Work For Me (TM). Hopefully they will work for you, too, but let me know if this is not the case.
 
 
 Keybindings
@@ -217,7 +223,9 @@ When working in an ST view on a TeX document, `C-l,j` will display the PDF page 
 
 If you are viewing a PDF file, then hitting `CMD+Shift+Click` in Skim (OSX), double-clicking in Sumatra (Windows), or hitting `Ctrl+click` in Evince (Linux) will bring you to the location in the source tex file corresponding to the PDF text you clicked on. This is called "inverse search".
 
-To open a PDF file without performing a forward search, use `C-l,v`. I'm not sure this is very useful, but the facility is there for now.
+To open a PDF file without performing a forward search, use `C-l,v`.
+
+For support of forward and inverse search in other viewers, see the viewer section below.
 
 References and Citations
 ------------------------
@@ -375,6 +383,67 @@ By default, ST provides a number of snippets for LaTeX editing; the LaTeXTools p
 
 In addition, the LaTeXTools plugin provides useful completions for both regular and math text; check out files `LaTeX.sublime-completions` and `LaTeX math.sublime-completions` in the LaTeXTools directory for details. Some of these are semi-intelligent: i.e. `bf` expands to `\textbf{}` if you are typing text, and to `\mathbf{}` if you are in math mode. Others allow you to cycle among different completions: e.g. `f` in math mode expands to `\phi` first, but if you hit Tab again you get `\varphi`; if you hit Tab a third time, you get back `\phi`.
 
+Viewers
+-------
+
+By default, LaTeXTools supports the following viewers, depending on platform:
+ * On OS X, Skim
+ * On Windows, Sumatra
+ * On Linux, Evince
+
+However, there is now support for custom viewers, if not a lot of choice available at the moment (patches welcome). Currently the only non-default viewers supported are Preview on OS X and Okular on Linux. Preview can be selected by changing the `viewer` setting in your LaTeXTools preferences to `"preview"`. Okular can be used by changing the `viewer` setting in your LaTeXTools preferences to `"okular"`.
+
+### Command Viewer ###
+
+Some support for other viewers is provided via the `command` viewer, which allows the execution of arbitrary commands to view a pdf or perform a forward search. At the very least this provides a way to use okular.
+
+Using the command viewer requires that you configure the command(s) to be run in the platform-specific part of the `viewer_settings` block in your LaTeXTools preferences. There are three commands available:
+
+ * `forward_sync_command`: the command to executing a forward search (`ctrl + l, j` or `cmd + l, j`).
+ * `view_command`: the command to simply view the PDF document.
+
+Of these, on `view_command` needs to be specified, though you will not have forward search capabilities unless you specify a `forward_sync_command` as well.
+
+The following variables will be substitued with appropriate values inside your commands:
+
+|Variable|Description|
+|--------|-----------|
+|$pdf_file           | full path of PDF file, e.g. _C:\Files\document.pdf_|
+|$pdf_file_name      | name of the PDF file, e.g. _document.pdf_|
+|$pdf_file_ext       | extension of the PDF file, e.g. _pdf_|
+|$pdf_file_base_name | name of the PDF file without the extension, e.g. _document_|
+|$pdf_file_path      | full path to directory containing PDF file, e.g. _C:\Files_|
+|$sublime_binary     | full path to the Sublime binary|
+
+In addition, the following variables are available for the `forward_sync_command` only:
+
+|Variable|Description|
+|--------|-----------|
+|$src_file           | full path of the tex file, e.g. _C:\Files\document.tex_|
+|$src_file_name      | name of the tex file, e.g., _document.tex_|
+|$src_file_ext       | extension of the tex file, e.g. _tex_|
+|$src_file_base_name | name of the tex file without the extension, e.g. _document_|
+|$src_file_path      | full path to directory containing tex file, e.g. _C:\Files_|
+|$line               | line to sync to|
+|$col                | column to sync to|
+
+If none of these variables occur in the command string, the `$pdf_file` will be appended to the end of the command.
+
+Commands are executed in the `$pdf_file_path`, i.e., the folder containing the `$pdf_file`.
+
+For example, you can use the command viewer to support Okular with the following settings in your `LaTeXTools.sublime-settings` file:
+
+```json
+"viewer": "command",
+
+"viewer_settings": {
+	"linux": {
+		"forward_sync_command": "okular --unique $pdf_file#src:$line$src_file",
+		"view_command": "okular --unique"
+	}
+}
+```
+
 
 Support for non-`.tex` files
 ----------------------------
@@ -436,6 +505,8 @@ The following options are currently available (defaults in parentheses):
 * `tex_file_exts` (`['.tex']`): a list of extensions that should be considered TeX documents. Any extensions in this list will be treated exactly the same as `.tex` files. See the section on [Support for non-`.tex` files](#support-for-non-tex-files).
 * `latextools_set_syntax` (`true`): if `true` LaTeXTools will automatically set the syntax to `LaTeX` when opening or saving any file with an extension in the `tex_file_exts` list.
 * `tex_spellcheck_paths` (`{}`): A mapping from the locales to the paths of the dictionaries. See the section [Spell-checking](#spell-checking)
+* `hide_local_cache` (`true`): Whether the local cache should be hidden in the sublime cache path (`true`) or in the same directory as the root file (`false`). See the section [Caching](#caching).
+* `local_cache_life_span` (`30 m`): The lifespan of the local cache. See the section [Caching](#caching).
 
 **Platform settings**:
 - all platforms:
@@ -465,8 +536,14 @@ NOTE: for the time being, you will need to refer to the `LaTeXTools.sublime-sett
   * In addition, there can be platform-specific settings. An important one for Windows is `distro`, which must be set to either `miktex` or `texlive`.
   * A platform-specific setting that is common to all builders is `env`. This can be used to set environment variables *before* running the actual builder. Setting e.g. `TEXINPUTS` is a possible use case.
 
+**Viewer settings**:
+
+ * `viewer`: the viewer you want to use. Leave blank (`""`) or set to `"default"`for the platform-specific viewer. Can also be set to `"preview"` if you want to use Preview on OS X, `"okular"` if you want to use Okular on Linux or `"command"` to run arbitrary commands. For details on the `"command"` option, see the section of the viewer documentation above.
+ * `viewer_settings`: these are viewer-specific settings. Please see the viewers documentation above.
+
 **Bibliographic references settings**:
 
+- `bibliography` (`"traditional_bibliography"`): specifies the bibliography plugin to use to handle extracting entries from a bibliography.
 - `cite-panel-format` and `cite_autocomplete_format`: see the section on ref/cite completion, and the comments in `LaTeXTools.sublime-settings`
 
 ### Project-Specific Settings ###
@@ -602,6 +679,15 @@ LaTeXTools makes some assumptions that should be adhered to or else things won't
 - if you change the `PATH` in the environment (by using the `env` setting), you need to ensure that the `PATH` is still sane, e.g., that it contains the path for the TeX executables and other command line resources that may be necessary.
 
 In addition, to ensure that forward and backward sync work, you need to ensure that the `-synctex=1` flag is set for your latex command. Again, don't forget the `-interaction=nonstopmode` flag (or whatever is needed for your tex programs not to expect user input in case of error).
+
+
+Caching
+-------
+
+LaTeXTools uses a cache to store relevant information about your document and improve the performance of commands. However the content of the cache might be outdated. Hence you can just clear the local cache by deleting the temp files `C-backspace` or only the cache `C-l,C-d,C-c`.
+The local cache also has a lifespan, after which it will be invalidated. The lifespan starts when the first entry is inserted in the cache and the whole cache will be deleted after the lifespan. This can be set in the `local_cache_life_span` setting. The format is `"X d X h X m X s"`, where `X` is a natural number `s` stands for seconds, `m` for minutes, `h` for hours, and `d` for days. Missing fields will be treated as 0 and white-spaces are optional. Hence you can write `"1 h 30 m"` to refresh the cached data every one and a half hours. If you use `"infinite"` the cache will not be invalidated automatically. A lower lifespan will produce results, which are more up to date. However it requires more recalculations and might decrease the performance.
+The cache uses files to store the entries. These files can either be stored in the same folder as the tex root file or stored "hidden" in the sublime cache path. The setting for this is `hide_local_cache` and can either be `true` or `false`.
+
 
 Troubleshooting
 ---------------
