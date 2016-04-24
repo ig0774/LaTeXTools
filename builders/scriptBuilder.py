@@ -53,7 +53,6 @@ class ScriptBuilder(PdfBuilder):
 		# Loaded here so it is calculated on the main thread
 		self.texpath = get_texpath() or os.environ['PATH']
 
-
 	# Very simple here: we yield a single command
 	# Also add environment variables
 	def commands(self):

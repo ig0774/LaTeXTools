@@ -279,6 +279,8 @@ This deletes all temporary files from a previous build (the PDF file is kept). S
 
 Two settings allow you to fine-tune the behavior of this command. `temp_files_exts` allows you to specify which file extensions should be considered temporary, and hence deleted. `temp_files_ignored_folders` allows you to specify folders that should not be traversed. A good example are `.git` folders, for people who use git for version control.
 
+**NOTE**: If you use the output directory feature, the above is ignored, and the entire output_directory is simply deleted. If you are using the auxiliary directory feature *without* using an output directory, the auxiliary directory will be cleared and the normal process will be run.
+
 ### Clearing the cache
 
 **Keybinding:** `C-l,C-d,C-c`
@@ -505,7 +507,12 @@ This section refers to setting that can be found in a platform-specific block fo
 
 **Note**: for the time being, you will need to refer to the `LaTeXTools.sublime-settings` file for detailed explanations. Also, since the new build system is meant to be fully customizable, if you use a third-party builder (which hopefully will become available!), you need to refer to its documentation.
 
+<<<<<<< HEAD
 - `builder`: the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior.
+=======
+NOTE: for the time being, you will need to refer to the `LaTeXTools.sublime-settings` file for detailed explanations. Also, since the new build system is meant to be fully customizable, if you use a third-party builder (which hopefully will become available!), you need to refer to its documentation.
+- `builder`: the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior. Set to `"basic"` for the basic builder that supports output and auxiliary directories on MiKTeX.
+>>>>>>> output_directory
 - `builder_path`: builders can reside anywhere Sublime Text can access. Specify a path *relative to the Sublime text Packages directory*. In particular, `User` is a good choice. If you use a third-party builder, specify the builder-provided directory.
 - `display_bad_boxes` (`false`): if `true` LaTeXTools will display any bad boxes encountered after a build. Note that this is disabled by default.
 - `builder-settings`: these are builder-specific settings. For the `default`/`traditional` builder, the following settings are useful:
@@ -555,7 +562,34 @@ This sets `main.tex` as the master tex file (assuming a multi-file project), and
 
 ## Alternative Builders
 
+<<<<<<< HEAD
 ### Script Builder
+=======
+Customizing the Build System
+----------------------------
+
+LaTeXTools allows you to fully customize the build process using Python. The default builder (called `traditional`) works like the one in prior releases. 
+
+For minor customizations of the default builder, as noted in the Build and Settings sections above, there are three key options. If you want to use, say, `xelatex` instead of `pdflatex` (the default), set the `program` setting, under `builder-settings`. You can also pass options to the TeX engine, via the `options` setting. Alternatively, both engine and options can be specified using `%!TEX` directives at the top of your master file. If instead you want to change the build command completely, set the `command` option there. 
+
+Some information on the new flexible builder system: to create and use a new builder, you place the code somewhere off the ST `Packages` directory (for instance, in `User`), then set the `builder` and `builder_path` options in your `LaTeXTools.sublime-settings` file accordingly. A builder can define its own options, also in `LaTeXTools.sublime-settings`, which will be passed whenever a build is invoked.
+
+Due to time constraints, I have not yet been able to document how to write a builder. The basic idea is that you subclass the `PdfBuilder` class in the file `LaTeXTools/builders/pdfBuilder.py`. The comments in that file describe how builders interact with the build command (hint: they use Pyton's `yield` command). I provide three builders. The code is in the `LaTeXTools/builders` directory. You can use them as examples:
+- `traditional` is the traditional builder. 
+- `basic` (see below) is a simplified build system that tries to run a simple `pdflatex`, `bibtex` (or `biber`), `pdflatex`, `pdflatex` pattern. However, it supports all of the same options as the traditional builder.
+- `simple` does not use external tools, but invokes `pdflatex` and friends, each time checking the log file to figure out what to do next. It is a very, very simple "make" tool, but it demonstrates the back-and-forth interaction between LaTeXTools and a builder.
+- `script` (see below) allows the user to specify a list of compilation commands in the settings file, and just execute them in sequence. 
+
+Let me know if you are interested in writing a custom builder!
+
+Basic Builder
+-------------
+
+The basic builder is a simple, straight-forward build system. It differs from the `simple` builder in that: 1) whereas the simple builder is intended as an example of how to create a builder, the basic builder is intended to be an operational build system, 2) it supports all of the various builder settings that the `traditional` builder does, with the exception of the `command` setting, 3) it supports biber and biblatex more generally, and 4) it supports the output and auxiliary directory behavior on MiKTeX without installing any additional components, as recent versions of `texify` cannot be coerced into passing the necessary options to pdflatex and friends.
+
+Script Builder
+--------------
+>>>>>>> output_directory
 
 LaTeXTools now supports the long-awaited script builder. It has two primary goals: first, to support customization of simple build workflows and second, to enable LaTeXTools to integrate with external build systems in some fashion.
 
@@ -643,7 +677,31 @@ Note that if none of these variables occur in the command string, the `$file_bas
 
 Commands are executed in the same path as `$file_path`, i.e. the folder containing the main document.
 
+<<<<<<< HEAD
 #### Caveats
+=======
+### Supporting output and auxiliary directories ###
+
+If you are using LaTeXTools output and auxiliary directory behavior there are some caveats to be aware of. First, it is, of course, your responsibility to ensure that the approrpiate variables are passed to the appropriate commands in your script. Second, `pdflatex` and friends do not create output directories as needed. Therefore, at the very least, your script must start with either `"mkdir $output_directory"` (Windows) or `"mkdir -p $output_directory"` and a corresponding command if using a separate `$aux_directory`. Note that if you `\include` (or otherwise attempt anything that will `\@openout` a file in a subfolder), you will need to ensure the subfolder exists. Otherwise, your run of `pdflatex` will fail.
+
+Finally, unlike Biber, bibtex (and bibtex8) does not support an output directory parameter, which can make it difficult to use if you are using the LaTeXTools output directory behavior. The following work-arounds can be used to get BibTeX to do the right thing.
+
+On Windows, run BibTeX like so:
+
+```
+cd $aux_directory & set BIBINPUTS=\"$file_path:%BIBINPUTS%\" & bibtex $file_base_name
+```
+
+And on OS X or Linux, use this:
+
+```
+"cd $output_directory; BIBINPUTS=\"$file_path;$BIBINPUTS\" bibtex $file_base_name"
+```
+
+In either case, these run bibtex *inside* the output / auxiliary directory while making the directory containing your main file available to the `BIBINPUTS` environment variable. Note if you use a custom style file in the same directory, you will need to apply a similar work-around for the `BSTINPUTS` environment variable.
+
+### Caveats ###
+>>>>>>> output_directory
 
 LaTeXTools makes some assumptions that should be adhered to or else things won't work as expected:
 - the final product is a PDF which will be written to the output directory or the same directory as the main file and named `$file_base_name.pdf`

@@ -26,6 +26,8 @@ import sublime_plugin
 import os
 import shutil
 
+import traceback
+
 
 class ClearLocalLatexCacheCommand(sublime_plugin.WindowCommand):
 	def run(self):
@@ -136,18 +138,3 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 				self._rmtree(os.path.join(root, directory))
 			for file_name in file_names:
 				self._rmfile(os.path.join(root, file_name))
-				for ext in temp_files_exts:
-					if file_name.endswith(ext):
-						file_name_to_del = os.path.join(dir_path, file_name)
-						if os.path.exists(file_name_to_del):
-							try:
-								os.remove(file_name_to_del)
-							except OSError:
-								# basically here for locked files in Windows,
-								# but who knows what we might find?
-								print('Error while trying to delete {0}'.format(file_name_to_del))
-								traceback.print_exc()
-						# exit extension
-						break
-
-		sublime.status_message("Deleted temp files")
