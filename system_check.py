@@ -20,16 +20,26 @@ except ImportError:
     from StringIO import StringIO
 
 try:
+    from latextools_plugin import (
+        add_plugin_path, get_plugin, NoSuchPluginException,
+        _classname_to_internal_name
+    )
     from latextools_utils import get_setting
     from latextools_utils.system import which
-    from latextools_utils.sublime_utils import get_sublime_exe
     from latextools_utils.tex_directives import parse_tex_directives
+    from latextools_utils.sublime_utils import get_sublime_exe
+    from jumpToPDF import DEFAULT_VIEWERS
     from getTeXRoot import get_tex_root
 except ImportError:
+    from .latextools_plugin import (
+        add_plugin_path, get_plugin, NoSuchPluginException,
+        _classname_to_internal_name
+    )
     from .latextools_utils import get_setting
     from .latextools_utils.system import which
-    from .latextools_utils.sublime_utils import get_sublime_exe
     from .latextools_utils.tex_directives import parse_tex_directives
+    from .latextools_utils.sublime_utils import get_sublime_exe
+    from .jumpToPDF import DEFAULT_VIEWERS
     from .getTeXRoot import get_tex_root
 
 if sys.version_info >= (3,):
@@ -278,7 +288,7 @@ class SystemCheckThread(threading.Thread):
 
         for program in ['latexmk' if not self.uses_miktex else 'texify',
                         'pdflatex', 'xelatex', 'lualatex', 'biber',
-                        'bibtex', 'kpsewhich']:
+                        'bibtex', 'bibtex8', 'kpsewhich']:
             location = which(program, path=texpath)
             available = location is not None
 
@@ -327,26 +337,26 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                 tabulate(item, output=buf)
 
             builder_name = get_setting('builder', 'traditional', view=self.view)
+            if builder_name in ['', 'default']:
+                builder_name = 'traditional'
+
             builder_settings = get_setting('builder_settings', view=self.view)
             builder_path = get_setting('builder_path', view=self.view)
-            builder_file_name = builder_name + 'Builder.py'
 
-            if builder_name in ['simple', 'traditional', 'script', 'default', '']:
+            if builder_name in ['simple', 'traditional', 'script']:
                 builder_path = None
             else:
-                builder_path = os.path.join(sublime.packages_path(), builder_path)
-
-            # get the actual builder
-            ltt_path = os.path.join(sublime.packages_path(),
-                                    'LaTeXTools', 'builders')
-
-            if builder_path:
                 bld_path = os.path.join(sublime.packages_path(), builder_path)
-            else:
-                bld_path = ltt_path
-            bld_file = os.path.join(bld_path, builder_file_name)
+                add_plugin_path(bld_path)
 
-            builder_available = os.path.isfile(bld_file)
+            builder_name = _classname_to_internal_name(builder_name)
+
+            try:
+                get_plugin('{0}_builder'.format(builder_name))
+                builder_available = True
+            except NoSuchPluginException:
+                traceback.print_exc()
+                builder_available = False
 
             tabulate([
                 [u'Builder', u'Status'],
@@ -393,7 +403,6 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                     ]
                 ], output=buf)
 
-
                 options = get_setting('builder_settings', {}, self.view).\
                     get('options', [])
                 options.extend(tex_directives.get('options', []))
@@ -404,6 +413,26 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                         table.append([option])
 
                     tabulate(table, output=buf)
+
+            default_viewer = DEFAULT_VIEWERS.get(sublime.platform(), None)
+            viewer_name = get_setting('viewer', default_viewer)
+            if viewer_name in ['', 'default']:
+                viewer_name = default_viewer
+
+            try:
+                get_plugin(viewer_name + '_viewer')
+                viewer_available = True
+            except NoSuchPluginException:
+                viewer_available = False
+
+            tabulate([
+                [u'Viewer', u'Status'],
+                [
+                    viewer_name,
+                    u'available' if viewer_available else u'missing'
+                ]
+            ],
+                output=buf)
 
             new_view = sublime.active_window().new_file()
             new_view.set_scratch(True)

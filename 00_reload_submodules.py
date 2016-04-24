@@ -21,7 +21,7 @@ LOAD_ORDER = [
     # base module
     'latextools_utils',
 
-    # only use Python or Sublime API
+    # no internal dependencies
     'latextools_utils.settings',
     'latextools_utils.system',
     'latextools_utils.utils',
