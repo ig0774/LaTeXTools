@@ -222,7 +222,7 @@ def parse_completions(view, line):
             aux_directory = get_aux_directory(root)
             completions = get_file_list(
                 root, entry["extensions"],
-                entry.get("strip_extensions", [])
+                entry.get("strip_extensions", []),
                 output_directory, aux_directory
             )
         else:
