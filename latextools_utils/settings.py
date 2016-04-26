@@ -26,9 +26,12 @@ class SettingsWrapper(Mapping):
             if view_settings is None:
                 view_settings = {}
 
+
+            advanced_settings = sublime.load_settings('LaTeXTools (Advanced).sublime-settings')
             global_settings = sublime.load_settings('LaTeXTools.sublime-settings')
 
             for s in (
+                advanced_settings.get(self.key, {}),
                 global_settings.get(self.key, {}),
                 view_settings.get(self.key, {}),
                 values
@@ -66,6 +69,7 @@ class SettingsWrapper(Mapping):
 
 
 def get_setting(setting, default=None, view=None):
+    advanced_settings = sublime.load_settings('LaTeXTools (Advanced).sublime-settings')
     global_settings = sublime.load_settings('LaTeXTools.sublime-settings')
     try:
         if view is None:
@@ -81,9 +85,12 @@ def get_setting(setting, default=None, view=None):
     result = view_settings.get(setting)
 
     if result is None:
-        result = global_settings.get(setting, default)
+        result = global_settings.get(setting)
 
     if result is None:
+        result = advanced_settings.get(setting, default)
+
+    if result is None or '':
         result = default
 
     if isinstance(result, sublime.Settings) or isinstance(result, dict):
