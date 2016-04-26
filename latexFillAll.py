@@ -9,14 +9,14 @@ if sublime.version() < '3000':
     _ST3 = False
     from latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
-    from latex_input_completions import TEX_INPUT_FILE_REGEX
+    from latex_input_completions import TEX_INPUT_FILE_REGEX, _get_dyn_entries
     from latex_cwl_completions import BEGIN_END_BEFORE_REGEX
     from getRegion import get_Region
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
-    from .latex_input_completions import TEX_INPUT_FILE_REGEX
+    from .latex_input_completions import TEX_INPUT_FILE_REGEX, _get_dyn_entries
     from .latex_cwl_completions import BEGIN_END_BEFORE_REGEX
     from .getRegion import get_Region
 
@@ -62,27 +62,29 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
                             'replacement': ''
                         })
                 view.run_command('latex_ref_cite')
-
-        # if \input, \include or \includegraphics
-        if TEX_INPUT_FILE_REGEX.match(line):
-            prefix, suffix = get_current_word(view, point)
-            current_word = prefix + suffix
-            if current_word != '':
+        # if \begin or \end
+        elif BEGIN_END_BEFORE_REGEX.match(line):
+            view.run_command("latex_fill_env")
+        # input completions
+        else:
+            _, dyn_regex = _get_dyn_entries()
+            if (
+                TEX_INPUT_FILE_REGEX.match(line) or
+                (dyn_regex and dyn_regex.match(line))
+            ):
+                prefix, suffix, nc_current_word = get_current_word(view, point)
                 current_word = prefix + suffix
                 if current_word != '':
-                    start_point = point - len(prefix)
-                    end_point   = point - len(suffix)
+                    startpoint = point - len(prefix)
+                    endpoint = point + len(suffix)
                     view.run_command(
                         'latex_tools_replace',
-                        {
-                            'a': start_point,
-                            'b': end_point,
-                            'replacement': ''
-                        })
-            view.run_command("latex_fill_input")
+                        {'a': startpoint, 'b': endpoint, 'replacement': ''}
+                    )
+                    view.run_command('latex_fill_input')
+                else:
+                    view.run_command("latex_fill_input")
 
-        if BEGIN_END_BEFORE_REGEX.match(line):
-            view.run_command("latex_fill_env")
 
 class OnLatexFillAllReplacement(sublime_plugin.EventListener):
     # This trigger is used to delete the last "}"
