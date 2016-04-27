@@ -12,7 +12,7 @@ if sublime.version() < '3000':
     _ST3 = False
     from latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
-    from latex_input_completions import TEX_INPUT_FILE_REGEX
+    from latex_input_completions import get_input_completion_matcher
     from getRegion import get_Region
     from getTeXRoot import get_tex_root
     from latextools_utils import get_setting
@@ -21,7 +21,7 @@ else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
-    from .latex_input_completions import TEX_INPUT_FILE_REGEX
+    from .latex_input_completions import get_input_completion_matcher
     from .getRegion import get_Region
     from .getTeXRoot import get_tex_root
     from .latextools_utils import get_setting
@@ -32,8 +32,7 @@ ENV_DONOT_AUTO_COM = [
     OLD_STYLE_CITE_REGEX,
     NEW_STYLE_CITE_REGEX,
     OLD_STYLE_REF_REGEX,
-    NEW_STYLE_REF_REGEX,
-    TEX_INPUT_FILE_REGEX
+    NEW_STYLE_REF_REGEX
 ]
 # whether the leading backslash is escaped
 ESCAPE_REGEX = re.compile(r"\w*(\\\\)+([^\\]|$)")
@@ -241,6 +240,10 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         for rex in ENV_DONOT_AUTO_COM:
             if match(rex, line) is not None:
                 return []
+
+        matcher = get_input_completion_matcher()
+        if matcher(line):
+            return []
 
         # get the current documents package list
         packages = get_setting('cwl_list', [

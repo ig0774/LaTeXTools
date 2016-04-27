@@ -26,6 +26,17 @@ else:
         get_aux_directory, get_output_directory
     )
 
+def get_input_completion_matcher():
+    _, dyn_regex = _get_dyn_entries()
+
+    def _input_completion_matcher(line):
+        return (
+            TEX_INPUT_FILE_REGEX.match(line) or
+            dyn_regex and dyn_regex.match(line)
+        )
+
+    return _input_completion_matcher
+
 def _filter_invalid_entries(entries):
     """Remove entries without a regex or sufficient fields."""
     remove_entries = []
@@ -290,13 +301,12 @@ class LatexFillInputCompletions(sublime_plugin.EventListener):
         if key not in ["lt_fill_input.open", "lt_fill_input.inside"]:
             return False
         fill_char = "{" if key == "lt_fill_input.open" else ","
-        _, dyn_regex = _get_dyn_entries()
+        matcher = get_input_completion_matcher()
         for sel in view.sel():
             line_reg = view.line(sel)
             before = sublime.Region(line_reg.begin(), sel.b)
             line = fill_char + view.substr(before)[::-1]
-            search = (TEX_INPUT_FILE_REGEX.match(line) or
-                      dyn_regex and dyn_regex.match(line))
+            search = matcher(line)
             if match_all and not search:
                 result = False
                 break

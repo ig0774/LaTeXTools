@@ -9,14 +9,14 @@ if sublime.version() < '3000':
     _ST3 = False
     from latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
-    from latex_input_completions import TEX_INPUT_FILE_REGEX, _get_dyn_entries
+    from latex_input_completions import get_input_completion_matcher
     from latex_cwl_completions import BEGIN_END_BEFORE_REGEX
     from getRegion import get_Region
 else:
     _ST3 = True
     from .latex_cite_completions import OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
-    from .latex_input_completions import TEX_INPUT_FILE_REGEX, _get_dyn_entries
+    from .latex_input_completions import get_input_completion_matcher
     from .latex_cwl_completions import BEGIN_END_BEFORE_REGEX
     from .getRegion import get_Region
 
@@ -67,11 +67,8 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
             view.run_command("latex_fill_env")
         # input completions
         else:
-            _, dyn_regex = _get_dyn_entries()
-            if (
-                TEX_INPUT_FILE_REGEX.match(line) or
-                (dyn_regex and dyn_regex.match(line))
-            ):
+            matcher = get_input_completion_matcher()
+            if matcher(line):
                 prefix, suffix, nc_current_word = get_current_word(view, point)
                 current_word = prefix + suffix
                 if current_word != '':
