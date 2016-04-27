@@ -69,7 +69,7 @@ class LatexFillAllCommand(sublime_plugin.TextCommand):
         else:
             matcher = get_input_completion_matcher()
             if matcher(line):
-                prefix, suffix, nc_current_word = get_current_word(view, point)
+                prefix, suffix = get_current_word(view, point)
                 current_word = prefix + suffix
                 if current_word != '':
                     startpoint = point - len(prefix)
