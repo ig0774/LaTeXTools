@@ -13,12 +13,12 @@ import sublime_plugin
 try:
     _ST3 = True
     from .getTeXRoot import get_tex_root
-    from .latextools_utils import get_setting
+    from .latextools_utils import get_setting, is_tex_buffer
     from .latextools_utils.external_command import external_command
 except:
     _ST3 = False
     from getTeXRoot import get_tex_root
-    from latextools_utils import get_setting
+    from latextools_utils import get_setting, is_tex_buffer
     from latextools_utils.external_command import external_command
 
 if sys.version_info < (3, 0):
