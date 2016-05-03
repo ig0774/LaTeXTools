@@ -10,7 +10,7 @@ Additional contributors (*thank you thank you thank you*): first of all, Wallace
 
 *If you have contributed and I haven't acknowledged you, email me!*
 
-*Latest revision:* v3.7.8 (2016-04-21). 
+*Latest revision:* v3.7.9 (2016-04-26).
 
 *Headline features*:
 
@@ -61,7 +61,13 @@ To configure inverse search, open the Preferences dialog of the Skim.app, select
 * uncheck the "Check for file changes" option
 * choose the Sublime Text 2 or Sublime Text 3 preset (yes, Skim now supports both ST2 and ST3 by default!)
 
-In case you are using an old version of Skim, you can always choose the Custom preset and enter `/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl` (for ST3) in the Command field, and `"%file":%line` in the Arguments field. (This is correct as of 7/18/2013; you may want to double-check that ST3 is indeed in `/Applications/Sublime Text`; just go to the Applications folder in the Finder. Adapt as needed for ST2).
+In case you are using an old version of Skim, you can always choose the Custom preset and enter (for ST3):
+
+```
+/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl
+```
+
+in the Command field, and `"%file":%line` in the Arguments field. (This is correct as of 7/18/2013; you may want to double-check that ST3 is indeed in `/Applications/Sublime Text.app`; just go to the Applications folder in the Finder. Adapt as needed for ST2).
 
 #### Setup LaTeXTools
 
@@ -75,14 +81,13 @@ If you don't want to install the entire MacTeX distro, which is pretty big, Basi
 
 Sadly, with each OS X release, Apple deviates more and more from established Unix conventions. The latest "innovation" is that, beginning with El Capitan, applications can no longer write to `/usr`. MacTeX 2015 remedies this by creating a link to TeX binaries in `/Library/TeX`. The default LaTeXTools settings file now adds `/Library/TeX/texbin` to the `texpath`. In practice, this means the following.
 
-#### Setup Skim.app
+#### Support for BasicTeX
 
-To configure inverse search, open the Preferences dialog of the Skim.app, select the Sync tab, then:
+If you don't want to install the entire MacTeX distro, which is pretty big, BasicTeX will also work (of course, as long as the LaTeX packages you need are included). **However**, you need to explicitly add the `latexmk` utility, which is not included by default: from the Terminal, type `sudo tlmgr install latexmk` (you will need to provide your password, assuming you are Administrator on your machine).
 
-* uncheck the "Check for file changes" option
-* choose the Sublime Text 2 or Sublime Text 3 preset (yes, Skim now supports both ST2 and ST3 by default!)
+#### El Capitan
 
-In case you are using an old version of Skim, you can always choose the Custom preset and enter `/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl` (for ST3) in the Command field, and `"%file":%line` in the Arguments field. (This is correct as of 7/18/2013; you may want to double-check that ST3 is indeed in `/Applications/Sublime Text`; just go to the Applications folder in the Finder. Adapt as needed for ST2).
+Sadly, with each OS X release, Apple deviates more and more from established Unix conventions. The latest "innovation" is that, beginning with El Capitan, applications can no longer write to `/usr`. MacTeX 2015 remedies this by creating a link to TeX binaries in `/Library/TeX`. The default LaTeXTools settings file now adds `/Library/TeX/texbin` to the `texpath`. In practice, this means the following.
 
 ### Windows
 
@@ -94,11 +99,13 @@ We recommend that you install a version of [Sumatra PDF viewer](http://www.sumat
 
 You now need to set up inverse search in Sumatra PDF. However, the GUI for doing this is hidden in Sumatra until you open a PDF file that has actual synchronization information (that is, an associated `.synctex.gz` file): see [here](http://forums.fofou.org/sumatrapdf/topic?id=2026321). If you have one such file, then open it, go to **Settings|Options**, and enter `"C:\Program Files\Sublime Text 2\sublime_text.exe" "%f:%l"` for ST2, and `"C:\Program Files\Sublime Text 3\sublime_text.exe" "%f:%l"` for ST3, as the inverse-search command line (in the text-entry field at the bottom of the options dialog). If you don't already have a file with sync information, you can easily create one: compile any LaTex file you already have (or create a new one) with `pdflatex -synctex=1 <file.tex>`, and then open the resulting PDF file in SumatraPDF. 
 
-As an alternative, you can open a command-line console (run `cmd.exe`), and issue the following command:
+As an alternative, you can open a command-line console (run `cmd.exe`), and issue the following command (this assumes that SumatraPDF.exe is in your path; replace 3 with 2 for ST2 of course):
 
-	sumatrapdf.exe -inverse-search "\"C:\Program Files\Sublime Text 2\sublime_text.exe\" \"%f:%l\""
+```
+sumatrapdf.exe -inverse-search "\"C:\Program Files\Sublime Text 3\sublime_text.exe\" \"%f:%l\""
+```
 
-(this assumes that sumatraPDF is in your path; replace 2 with 3 for ST3 of course). I'm sorry this is not straightforward---it's not my fault :-)
+I'm sorry this is not straightforward---it's not my fault :-)
 
 #### Setup LaTeXTools
 
@@ -424,9 +431,11 @@ You can also *change the current environment* using the `C-l,C-Shift-n` shortcut
 
 ## Completions
 
+## Completions
+
 ### Command completion, snippets, etc.
 
-By default, ST provides a number of snippets for LaTeX editing; the LaTeXTools plugin adds a few more. You can see what they are, and experiment, by selecting Tools|Snippets|LaTeX and Tools|Snippets|LaTeXTools from the menu.
+By default, ST provides a number of snippets for LaTeX editing; the LaTeXTools plugin adds a few more. You can see what they are, and experiment, by selecting **Tools|Snippets|LaTeX** and **Tools|Snippets|LaTeXTools** from the menu.
 
 In addition, the LaTeXTools plugin provides useful completions for both regular and math text; check out files `LaTeX.sublime-completions` and `LaTeX math.sublime-completions` in the LaTeXTools directory for details. Some of these are semi-intelligent: i.e. `bf` expands to `\textbf{}` if you are typing text, and to `\mathbf{}` if you are in math mode. Others allow you to cycle among different completions: e.g. `f` in math mode expands to `\phi` first, but if you hit Tab again you get `\varphi`; if you hit Tab a third time, you get back `\phi`.
 
@@ -507,7 +516,6 @@ This section refers to setting that can be found in a platform-specific block fo
 
 **Note**: for the time being, you will need to refer to the `LaTeXTools.sublime-settings` file for detailed explanations. Also, since the new build system is meant to be fully customizable, if you use a third-party builder (which hopefully will become available!), you need to refer to its documentation.
 
-<<<<<<< HEAD
 - `builder`: the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior.
 =======
 NOTE: for the time being, you will need to refer to the `LaTeXTools.sublime-settings` file for detailed explanations. Also, since the new build system is meant to be fully customizable, if you use a third-party builder (which hopefully will become available!), you need to refer to its documentation.
@@ -543,18 +551,20 @@ NOTE: for the time being, you will need to refer to the `LaTeXTools.sublime-sett
 
 The above settings can be overridden on a project-specific basis if you are using Sublime Text's project system. To override these settings, simply create a [`"settings"` section in your project file](http://docs.sublimetext.info/en/latest/file_management/file_management.html#the-sublime-project-format). The structure and format is the same as for the `LaTeXTools.sublime-settings` file. Here is an example:
 
-	{
-		...<folder-related options here>...
+```json
+{
+	...<folder-related options here>...
 
-		"settings" : {
-			"TEXroot": "main.tex",
-			"tex_file_exts": [".tex", ".tikz"],
-			"builder_settings": {
-				"program": "xelatex",
-				"options": "--shell-escape"
-			}
+	"settings" : {
+		"TEXroot": "main.tex",
+		"tex_file_exts": [".tex", ".tikz"],
+		"builder_settings": {
+			"program": "xelatex",
+			"options": "--shell-escape"
 		}
 	}
+}
+```
 
 This sets `main.tex` as the master tex file (assuming a multi-file project), and allows `.tikz` files to be recognized as tex files, but only for the current project. Furthermore (using the default, i.e., traditional builder), it forces the use of `xelatex` instead of the default `pdflatex`, and also adds the `--shell-escape` option---again, for the current project only.
 
@@ -562,34 +572,11 @@ This sets `main.tex` as the master tex file (assuming a multi-file project), and
 
 ## Alternative Builders
 
-<<<<<<< HEAD
-### Script Builder
-=======
-Customizing the Build System
-----------------------------
-
-LaTeXTools allows you to fully customize the build process using Python. The default builder (called `traditional`) works like the one in prior releases. 
-
-For minor customizations of the default builder, as noted in the Build and Settings sections above, there are three key options. If you want to use, say, `xelatex` instead of `pdflatex` (the default), set the `program` setting, under `builder-settings`. You can also pass options to the TeX engine, via the `options` setting. Alternatively, both engine and options can be specified using `%!TEX` directives at the top of your master file. If instead you want to change the build command completely, set the `command` option there. 
-
-Some information on the new flexible builder system: to create and use a new builder, you place the code somewhere off the ST `Packages` directory (for instance, in `User`), then set the `builder` and `builder_path` options in your `LaTeXTools.sublime-settings` file accordingly. A builder can define its own options, also in `LaTeXTools.sublime-settings`, which will be passed whenever a build is invoked.
-
-Due to time constraints, I have not yet been able to document how to write a builder. The basic idea is that you subclass the `PdfBuilder` class in the file `LaTeXTools/builders/pdfBuilder.py`. The comments in that file describe how builders interact with the build command (hint: they use Pyton's `yield` command). I provide three builders. The code is in the `LaTeXTools/builders` directory. You can use them as examples:
-- `traditional` is the traditional builder. 
-- `basic` (see below) is a simplified build system that tries to run a simple `pdflatex`, `bibtex` (or `biber`), `pdflatex`, `pdflatex` pattern. However, it supports all of the same options as the traditional builder.
-- `simple` does not use external tools, but invokes `pdflatex` and friends, each time checking the log file to figure out what to do next. It is a very, very simple "make" tool, but it demonstrates the back-and-forth interaction between LaTeXTools and a builder.
-- `script` (see below) allows the user to specify a list of compilation commands in the settings file, and just execute them in sequence. 
-
-Let me know if you are interested in writing a custom builder!
-
-Basic Builder
--------------
+### Basic Builder
 
 The basic builder is a simple, straight-forward build system. It differs from the `simple` builder in that: 1) whereas the simple builder is intended as an example of how to create a builder, the basic builder is intended to be an operational build system, 2) it supports all of the various builder settings that the `traditional` builder does, with the exception of the `command` setting, 3) it supports biber and biblatex more generally, and 4) it supports the output and auxiliary directory behavior on MiKTeX without installing any additional components, as recent versions of `texify` cannot be coerced into passing the necessary options to pdflatex and friends.
 
-Script Builder
---------------
->>>>>>> output_directory
+### Script Builder
 
 LaTeXTools now supports the long-awaited script builder. It has two primary goals: first, to support customization of simple build workflows and second, to enable LaTeXTools to integrate with external build systems in some fashion.
 
@@ -607,7 +594,8 @@ The `script_commands` setting should be either a string or a list. If it is a st
 ```json
 "builder_settings": {
 	"osx": {
-		"script_commands": "pdflatex -synctex=1 -interaction=nonstopmode"
+		"script_commands":
+			"pdflatex -synctex=1 -interaction=nonstopmode"
 	}
 }
 ```
@@ -617,7 +605,8 @@ Will simply run `pdflatex` against the master document, as will:
 ```json
 "builder_settings": {
 	"osx": {
-		"script_commands": ["pdflatex -synctex=1 -interaction=nonstopmode"]
+		"script_commands":
+			["pdflatex -synctex=1 -interaction=nonstopmode"]
 	}
 }
 ```
@@ -627,7 +616,8 @@ Or:
 ```json
 "builder_settings": {
 	"osx": {
-		"script_commands": [["pdflatex", "-synctex=1 -interaction=nonstopmode"]]
+		"script_commands": 
+			[["pdflatex", "-synctex=1 -interaction=nonstopmode"]]
 	}
 }
 ```
@@ -654,8 +644,8 @@ It is especially important to ensure that, in case of errors, TeX and friends do
 Each command can use the following variables which will be expanded before it is executed:
 
 |Variable|Description|
-|--------|--------|
-|`$file`   | The full path to the main file, e.g., _C:\Files\document.tex_|
+|-----------------|------------------------------------------------------------|
+|`$file`   | The full path to the main file, e.g., _C:\\Files\\document.tex_|
 |`$file_name`| The name of the main file, e.g., _document.tex_|
 |`$file_ext`| The extension portion of the main file, e.g., _tex_|
 |`$file_base_name`| The name portion of the main file without the, e.g., _document_|
@@ -668,7 +658,12 @@ For example:
 ```json
 "builder_settings": {
 	"osx": {
-		"script_commands": ["pdflatex -synctex=1 -interaction=nonstopmode $file_base_name"]
+		"script_commands": [[
+			"pdflatex", 
+			"-synctex=1"
+			"-interaction=nonstopmode",
+			"$file_base_name"
+		]]
 	}
 }
 ```
@@ -677,10 +672,7 @@ Note that if none of these variables occur in the command string, the `$file_bas
 
 Commands are executed in the same path as `$file_path`, i.e. the folder containing the main document.
 
-<<<<<<< HEAD
-#### Caveats
-=======
-### Supporting output and auxiliary directories ###
+#### Supporting output and auxiliary directories
 
 If you are using LaTeXTools output and auxiliary directory behavior there are some caveats to be aware of. First, it is, of course, your responsibility to ensure that the approrpiate variables are passed to the appropriate commands in your script. Second, `pdflatex` and friends do not create output directories as needed. Therefore, at the very least, your script must start with either `"mkdir $output_directory"` (Windows) or `"mkdir -p $output_directory"` and a corresponding command if using a separate `$aux_directory`. Note that if you `\include` (or otherwise attempt anything that will `\@openout` a file in a subfolder), you will need to ensure the subfolder exists. Otherwise, your run of `pdflatex` will fail.
 
@@ -700,8 +692,7 @@ And on OS X or Linux, use this:
 
 In either case, these run bibtex *inside* the output / auxiliary directory while making the directory containing your main file available to the `BIBINPUTS` environment variable. Note if you use a custom style file in the same directory, you will need to apply a similar work-around for the `BSTINPUTS` environment variable.
 
-### Caveats ###
->>>>>>> output_directory
+#### Caveats
 
 LaTeXTools makes some assumptions that should be adhered to or else things won't work as expected:
 - the final product is a PDF which will be written to the output directory or the same directory as the main file and named `$file_base_name.pdf`
@@ -733,29 +724,33 @@ Below is a really simple builder that does nothing to demonstrate the basic stru
 from pdfBuilder import PdfBuilder
 
 class ReallySimpleBuilder(PdfBuilder):
-    # for now, we are ignoring all of the arguments passed to the builder
+    # for now, we are ignoring all of the arguments passed to the
+    # builder
     def __init__(self, *args):
         # call the __init__ method of PdfBuilder
-        # this does some basic initialization, which we'll discuss in more detail later
+        # this does some basic initialization, which we'll discuss
+        # in more detail later
         super(ReallySimpleBuilder, self).__init__(*args)
         
         # now we do the initialization for this builder
         # the only thing that must be set here is the builder name
         self.name = "Really Simple Builder"
     
-    # commands is a generator function that yields the commands to be run
+    # commands is a generator function that yields the commands to
+    # be run
     def commands(self):
         # display a message in the build output console
         self.display("\n\nReallySimpleBuilder")
         
-        # yield is how we pass the command to be run back to LaTeXTools
+        # yield is how we pass the command to be run back to
+        # LaTeXTools
         #
-        # each yield should yield a tuple consisting of the command to be run
-        # and a message to be displayed, if any
+        # each yield should yield a tuple consisting of the command
+        # to be run and a message to be displayed, if any
         #
-        # for the ReallySimpleBuilder, we yield ("", None) which tells
-        # LaTeXTools there is no command to be run and no message to be
-        # displayed
+        # for the ReallySimpleBuilder, we yield ("", None) which
+        # tells LaTeXTools there is no command to be run and no
+        # message to be displayed
         yield ("", None)
 ```
 
@@ -774,9 +769,9 @@ Also notice how the _name_ of the Python file matches the name of the builder (e
 The `PdfBuilder` base class provides access to some very basic information about the tex document being compiled, which can be gathered from the following variables:
 
 |Variable|Description|
-|--------|-----------|
-|`self.tex_root`|the full path of the main tex document, e.g. _C:\path\to\tex_root.tex_|
-|`self.tex_dir`|the full path to the directory containing the main tex document, e.g. _C:\path\to_|
+|-----------------|------------------------------------------------------------|
+|`self.tex_root`|the full path of the main tex document, e.g. _C:\\path\\to\\tex\_root.tex_|
+|`self.tex_dir`|the full path to the directory containing the main tex document, e.g. _C:\\path\\to_|
 |`self.tex_name`|the name of the main tex document, e.g. _tex_root.tex_|
 |`self.base_name`|the name of the main tex document without the extension, e.g. _tex_root_|
 |`self.tex_ext`|the extension of the main tex document, e.g. _tex_|
@@ -807,12 +802,14 @@ class BasicBuilder(PdfBuilder):
         # first run of pdflatex
         # this tells LaTeXTools to run:
         #  pdflatex -interaction=nonstopmode -synctex=1 tex_root
-        # note that we append the base_name of the file to the command here
+        # note that we append the base_name of the file to the
+        # command here
         yield(PDFLATEX + [self.base_name], "Running pdflatex...")
 
-        # LaTeXTools has run pdflatex and returned control to the builder
-        # here we just add text saying the step is done, to give some
-        # feedback
+        # LaTeXTools has run pdflatex and returned control to the
+        # builder
+        # here we just add text saying the step is done, to give
+        # some feedback
         self.display("done.\n")
 
         # now run bibtex
@@ -821,12 +818,18 @@ class BasicBuilder(PdfBuilder):
         self.display("done.\n")
 
         # second run of pdflatex
-        yield(PDFLATEX + [self.base_name], "Running pdflatex again...")
+        yield(
+            PDFLATEX + [self.base_name],
+            "Running pdflatex again..."
+        )
 
         self.display("done.\n")
 
         # third run of pdflatex
-        yield(PDFLATEX + [self.base_name], "Running pdflatex for the last time...")
+        yield(
+            PDFLATEX + [self.base_name],
+            "Running pdflatex for the last time..."
+        )
 
         self.display("done.\n")
 ```
@@ -864,7 +867,9 @@ BIBTEX = ["bibtex"]
 # if we need to run bibtex
 # this matches any lines like:
 #  Warning: Citation: `aristotle:ethics' on page 2 undefined
-CITATIONS_REGEX = re.compile(r"Warning: Citation `.+' on page \d+ undefined")
+CITATIONS_REGEX = re.compile(
+    r"Warning: Citation `.+' on page \d+ undefined"
+)
 
 class BibTeXBuilder(PdfBuilder):
     def __init__(self, *args):
@@ -883,27 +888,35 @@ class BibTeXBuilder(PdfBuilder):
         # we display the same message as last time...
         self.display("done.\n")
 
-        # and now we check the output to see if bibtex needs to be run
+        # and now we check the output to see if bibtex needs to be
+        # run
         # search will scan the entire output for any match of the
         # pattern we defined above
         if CITATIONS_REGEX.search(self.out):
-            # if a matching bit of text is found, we need to run bibtex
+            # if a matching bit of text is found, we need to run
+            # bibtex
             # now run bibtex
             yield(BIBTEX + [self.base_name], "Running bibtex...")
 
             self.display("done.\n")
 
-            # we only need to run the second and third runs of pdflatex if we
-            # actually ran bibtex, so these remain inside the same `if` block
-            # code to run bibtex
+            # we only need to run the second and third runs of
+            # pdflatex if we actually ran bibtex, so these remain
+            # inside the same `if` block code to run bibtex
 
             # second run of pdflatex
-            yield(PDFLATEX + [self.base_name], "Running pdflatex again...")
+            yield(
+                PDFLATEX + [self.base_name],
+                "Running pdflatex again..."
+            )
 
             self.display("done.\n")
 
             # third run of pdflatex
-            yield(PDFLATEX + [self.base_name], "Running pdflatex for the last time...")
+            yield(
+                PDFLATEX + [self.base_name],
+                "Running pdflatex for the last time..."
+            )
 
             self.display("done.\n")
 ```
@@ -927,12 +940,18 @@ import re
 import sublime
 
 PDFLATEX = ["pdflatex", "-interaction=nonstopmode", "-synctex=1"]
-# notice that we do not define the bibliography command here, since it will
-# depend on settings that can only be known when our builder is initialized
+# notice that we do not define the bibliography command here, since
+# it will depend on settings that can only be known when our builder
+# is initialized
 
-CITATIONS_REGEX = re.compile(r"Warning: Citation `.+' on page \d+ undefined")
-# BibLaTeX outputs a different message from BibTeX, so we must catch that too
-BIBLATEX_REGEX = re.compile(r"Package biblatex Warning: Please \(re\)run \S*")
+CITATIONS_REGEX = re.compile(
+    r"Warning: Citation `.+' on page \d+ undefined"
+)
+# BibLaTeX outputs a different message from BibTeX, so we must catch
+# that too
+BIBLATEX_REGEX = re.compile(
+    r"Package biblatex Warning: Please \(re\)run \S*"
+)
 
 class BibBuilder(PdfBuilder):
     def __init__(self, *args):
@@ -943,13 +962,14 @@ class BibBuilder(PdfBuilder):
 
         # here we get which bibliography command to use from the
         # builder_settings
-        # notice that we draw this setting from the platform-specific portion
-        # of the builder_settings block. this allows the setting to be changed
-        # for each platform
+        # notice that we draw this setting from the
+        # platform-specific portion of the builder_settings block
+        # this allows the setting to be changed for each platform
         self.bibtex = self.builder_settings.get(
             sublime.platform(), {}).get('bibtex') or 'bibtex'
-        # notice that or clause here ensures that self.bibtex will be set to
-        # 'bibtex' if the 'bibtex' setting is unset or blank.
+        # notice that or clause here ensures that self.bibtex will
+        # be set to 'bibtex' if the 'bibtex' setting is unset or
+        # blank.
 
     def commands(self):
         self.display("\n\nBibBuilder: ")
@@ -960,23 +980,36 @@ class BibBuilder(PdfBuilder):
         # here control has returned to the builder from LaTeXTools
         self.display("done.\n")
 
-        # and now we check the output to see if bibtex / biber needs to be run
-        if CITATIONS_REGEX.search(self.out) or BIBLATEX_REGEX.search(self.out):
-            # if a matching bit of text is found, we need to run the configured
-            # bibtex command
-            # note that we wrap this value in a list to ensure that a list is
-            # yielded to LaTeXTools
-            yield([self.bibtex] + [self.base_name], "Running " + self.bibtex + "...")
+        # and now we check the output to see if bibtex / biber needs
+        # to be run
+        if (
+            CITATIONS_REGEX.search(self.out) or 
+            BIBLATEX_REGEX.search(self.out)
+        ):
+            # if a matching bit of text is found, we need to run the
+            # configured bibtex command
+            # note that we wrap this value in a list to ensure that
+            # a list is yielded to LaTeXTools
+            yield(
+                [self.bibtex] + [self.base_name],
+                "Running " + self.bibtex + "..."
+            )
 
             self.display("done.\n")
 
             # second run of pdflatex
-            yield(PDFLATEX + [self.base_name], "Running pdflatex again...")
+            yield(
+                PDFLATEX + [self.base_name],
+                "Running pdflatex again..."
+            )
 
             self.display("done.\n")
 
             # third run of pdflatex
-            yield(PDFLATEX + [self.base_name], "Running pdflatex for the last time...")
+            yield(
+                PDFLATEX + [self.base_name],
+                "Running pdflatex for the last time..."
+            )
 
             self.display("done.\n")
 ```
@@ -1036,24 +1069,29 @@ class MikbibBuilder(PdfBuilder):
     def commands(self):
         self.display("\n\nMiKTeX BibliographyBuilder: ")
 
-        # MiKTeX is Windows-specific, so it doesn't make sense to try to run it
-        # on a non-Windows PC
+        # MiKTeX is Windows-specific, so it doesn't make sense to
+        # try to run it on a non-Windows machine
         if sublime.platform() != 'windows':
-            yield("", "The MiKTeX Bibliography Builder can only be used on Windows")
+            yield(
+                "",
+                "The MiKTeX Bibliography Builder can only be used"
+                " on Windows"
+            )
             return
 
-        # we create this startupinfo object to ensure that the Windows
-        # console does not come up
+        # we create this startupinfo object to ensure that the
+        # Windows console does not appear
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         # now we construct the environment
         # first creating a copy of the current environment
         env = copy.copy(os.environ)
-        # then setting the %BIBTEX% variable to the user-configured setting
+        # then setting the %BIBTEX% variable to the user-configured
+        # setting
         env['BIBTEX'] = self.bibtex
-        # note that LaTeXTools ensures that the %PATH% contains the texpath
-        # by default
+        # note that LaTeXTools ensures that the %PATH% variable
+        # contains the `texpath` setting by default
 
         # here we construct our Popen object
         p = subprocess.Popen(
@@ -1062,10 +1100,11 @@ class MikbibBuilder(PdfBuilder):
             startupinfo=startupinfo,
             # we redirect any output to stderr to stdout
             stderr=subprocess.STDOUT,
-            # ensure that the output to stdout is available to LaTeXTools
+            # ensure that the output to stdout is available to
+            # LaTeXTools
             stdout=subprocess.PIPE,
-            # finally, we pass in the environment that should be used
-            # including our modified %BIBTEX% value
+            # finally, we pass in the environment that should be
+            # used including our modified %BIBTEX% value
             env=env
         )
 
@@ -1074,8 +1113,8 @@ class MikbibBuilder(PdfBuilder):
 
         # here control has returned to the builder from LaTeXTools
         self.display("done.\n")
-        # because texify runs the whole pdflatex, bibtex, pdflatex, pdflatex
-        # cycle, we don't need to do anything else.
+        # because texify runs the whole pdflatex, bibtex, pdflatex,
+        # pdflatex cycle, we don't need to do anything else.
 ```
 
 To use this builder, save it to a file called `"mikbibBuilder.py"` and change the `"builder"` setting to `"mikbib"`. You should be able to change what command gets run when a bibliography is needed by changing the `"bibtex"` setting in `"builder_settings"` as with the previous builder.
@@ -1100,25 +1139,25 @@ Of these, on `view_command` needs to be specified, though you will not have forw
 The following variables will be substitued with appropriate values inside your commands:
 
 |Variable|Description|
-|--------|-----------|
-|$pdf_file           | full path of PDF file, e.g. _C:\Files\document.pdf_|
-|$pdf_file_name      | name of the PDF file, e.g. _document.pdf_|
-|$pdf_file_ext       | extension of the PDF file, e.g. _pdf_|
-|$pdf_file_base_name | name of the PDF file without the extension, e.g. _document_|
-|$pdf_file_path      | full path to directory containing PDF file, e.g. _C:\Files_|
-|$sublime_binary     | full path to the Sublime binary|
+|---------------------|--------------------------------------------------------|
+|`$pdf_file`          | full path of PDF file, e.g. _C:\\Files\\document.pdf_|
+|`$pdf_file_name`     | name of the PDF file, e.g. _document.pdf_|
+|`$pdf_file_ext`      | extension of the PDF file, e.g. _pdf_|
+|`$pdf_file_base_name`| name of the PDF file without the extension, e.g. _document_|
+|`$pdf_file_path`     | full path to directory containing PDF file, e.g. _C:\\Files_|
+|`$sublime_binary`    | full path to the Sublime binary|
 
 In addition, the following variables are available for the `forward_sync_command` only:
 
 |Variable|Description|
-|--------|-----------|
-|$src_file           | full path of the tex file, e.g. _C:\Files\document.tex_|
-|$src_file_name      | name of the tex file, e.g., _document.tex_|
-|$src_file_ext       | extension of the tex file, e.g. _tex_|
-|$src_file_base_name | name of the tex file without the extension, e.g. _document_|
-|$src_file_path      | full path to directory containing tex file, e.g. _C:\Files_|
-|$line               | line to sync to|
-|$col                | column to sync to|
+|---------------------|--------------------------------------------------------|
+|`$src_file`          | full path of the tex file, e.g. _C:\\Files\\document.tex_|
+|`$src_file_name`     | name of the tex file, e.g., _document.tex_|
+|`$src_file_ext`      | extension of the tex file, e.g. _tex_|
+|`$src_file_base_name`| name of the tex file without the extension, e.g. _document_|
+|`$src_file_path`     | full path to directory containing tex file, e.g. _C:\\Files_|
+|`$line`              | line to sync to|
+|`$col`               | column to sync to|
 
 If none of these variables occur in the command string, the `$pdf_file` will be appended to the end of the command.
 
