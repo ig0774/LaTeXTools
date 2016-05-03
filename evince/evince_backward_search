@@ -28,7 +28,7 @@ import sys
 import traceback
 
 if sys.version_info < (3,):
-    from urllib import urllib_unquote
+    from urllib import unquote as urllib_unquote
     from urllib import quote
 
     def unquote(s):
