@@ -220,7 +220,7 @@ class CmdThread ( threading.Thread ):
 					content.append("")
 					content.extend(warnings)
 				else:
-					content.append("")
+					content.append("No warnings.")
 
 
 				if badboxes and self.caller.display_bad_boxes:
