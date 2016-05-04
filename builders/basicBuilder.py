@@ -66,6 +66,9 @@ class BasicBuilder(PdfBuilder):
                 "luatex": u"lualatex"
             }.get(engine, u'pdflatex')
 
+        if engine not in ['pdflatex', 'xelatex', 'lualatex']:
+            engine = 'pdflatex'
+
         latex = [engine, u"-interaction=nonstopmode", u"-synctex=1"]
         biber = [u"biber"]
 
@@ -106,9 +109,11 @@ class BasicBuilder(PdfBuilder):
                     match = FILE_WRITE_ERROR_REGEX.search(self.out, start)
                     if match:
                         self.make_directory(
-                            os.path.join(
-                                self.aux_directory,
-                                match.group(1)
+                            os.path.normpath(
+                                os.path.join(
+                                    self.aux_directory,
+                                    match.group(1)
+                                )
                             )
                         )
                         start = match.end(1)
@@ -200,12 +205,10 @@ class BasicBuilder(PdfBuilder):
             else:
                 env['BIBINPUTS'] = \
                     (cwd + os.pathsep + env.get('BIBINPUTS', '')).encode(
-                        sys.getfilesystemencoding()
-                    )
+                        sys.getfilesystemencoding())
                 env['BSTINPUTS'] = \
                     (cwd + os.pathsep + env.get('BSTINPUTS', '')).encode(
-                        sys.getfilesystemencoding()
-                    )
+                        sys.getfilesystemencoding())
             # now we modify cwd to be the output directory
             # NOTE this cwd is not reused by any of the other command
             cwd = self.aux_directory
