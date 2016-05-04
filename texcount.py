@@ -6,12 +6,13 @@ import os
 from subprocess import CalledProcessError
 
 if sublime.version() < '3000':
+    from latextools_utils import get_setting
     from latextools_utils.external_command import check_output
     from getTeXRoot import get_tex_root
 else:
+    from .latextools_utils import get_setting
     from .latextools_utils.external_command import check_output
     from .getTeXRoot import get_tex_root
-
 
 class TexcountCommand(sublime_plugin.TextCommand):
     """
@@ -27,9 +28,21 @@ class TexcountCommand(sublime_plugin.TextCommand):
             )
             return
 
-        sub_level = args.get('sub_level', 'chapter')
+        sub_level = args.get(
+            'sub_level',
+            get_setting(
+                'word_count_sub_level',
+                'none'
+            )
+        )
 
-        command = ['texcount', '-merge', '-sub=' + sub_level, '-utf8']
+        if sub_level not in ['none', 'part', 'chapter', 'section']:
+            sub_level = 'none'
+
+        if sub_level == 'none':
+            command = ['texcount', '-total', '-merge', '-utf8']
+        else:
+            command = ['texcount', '-merge', '-sub=' + sub_level, '-utf8']
         cwd = os.path.dirname(tex_root)
         command.append(os.path.basename(tex_root))
 
