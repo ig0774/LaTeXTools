@@ -220,6 +220,8 @@ class CmdThread ( threading.Thread ):
 					content.append("")
 					content.extend(warnings)
 				else:
+					if errors:
+						content.append("")
 					content.append("No warnings.")
 
 				if badboxes and self.caller.display_bad_boxes:
@@ -231,6 +233,8 @@ class CmdThread ( threading.Thread ):
 					content.extend(badboxes)
 				else:
 					if self.caller.display_bad_boxes:
+						if errors or warnings:
+							content.append("")
 						content.append("No bad boxes.")
 
 				hide_panel = {
