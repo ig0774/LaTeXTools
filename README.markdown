@@ -331,9 +331,9 @@ In either case, you then select the label you want, hit Return, and LaTeXTools i
 
 One often needs to enter **multiple citations**, as e.g. in `\cite{paper1,paper2}`. This is easy to do: either cite the first paper, e.g. `\cite{paper1}` and then, *with your cursor immediately before the right brace*, type a comma (`,`). Again, the default auto-trigger behavior is that the quick panel with appear, and you can select the second paper. If auto-trigger is off, then you enter the comma, then use the shortcut `C-l,x` to bring up the quick panel (note: you *must* add the comma before invoking the shortcut, or you won't get the intended result). Of course, you can enter as many citations as you want.
 
-The display of bibliographic entries is *customizable*. There is a setting, `cite-panel-format`, that controls exactly what to display in each of the two lines each entry gets in the citation quick panel. Options include author, title, short title, year, bibtex key, and journal. This is useful because people may prefer to use different strategies to refer to papers---author-year, short title-year, bibtex key (!), etc. Since only the first line in each quick panel entry is searchable, how you present the information matters. The default should be useful for most people; if you wish to change the format, check the `LaTeXTools.sublime-settings` file for detailed information. (As usual, copy that file to the `User` directory and edit your copy, not the original). s
+The display of bibliographic entries is *customizable*. There is a setting, `cite-panel-format`, that controls exactly what to display in each of the two lines each entry gets in the citation quick panel. Options include author, title, short title, year, bibtex key, and journal. This is useful because people may prefer to use different strategies to refer to papers---author-year, short title-year, bibtex key (!), etc. Since only the first line in each quick panel entry is searchable, how you present the information matters. The default should be useful for most people; if you wish to change the format, check the `LaTeXTools.sublime-settings` file for detailed information. (As usual, copy that file to the `User` directory and edit your copy, not the original).
 
-Thanks to recent contributed code, **multi-file documents** are *fully supported*. LaTeXTools looks for references, as well as `\bibliography{}` commands, in the root file and in all recursively included files. Please see the information on **multi-file documents** in the section on [**Compiling LaTeX Files**](#compiling-latex-files) for details on how to setup multi-file documents
+Thanks to recent contributed code, **multi-file documents** are *fully supported*. LaTeXTools looks for references, as well as `\bibliography{}` commands, in the root file and in all recursively included files. Please see the information on [**Multi-file documents**](#multi-file-documents) in the section on [**General Features**](#general-features) for details on how to setup multi-file documents.
 
 LaTeXTools now also looks `\addbibresource{}` commands, which provides basic compatibility with biblatex.
 
@@ -457,15 +457,15 @@ The following settings are provided:
 
 LaTeXTools supports user-defined settings. The settings file is called `LaTeXTools.sublime-settings`. A default version resides in the LaTeXTools plugin directory and **must not be edited**. This contains default settings that will work in many cases, for standard configurations of TeX distros and PDF viewers. You can however create another settings file in your `User` directory; again, the file must be named `LaTeXTools.sublime-settings`.
 
-You can create and edit such a file manually. It is a standard Sublime Text JSON file; the settings currently honored by LaTeXTools are listed below. However, the *simplest way to create a settings file* is to open the `Preferences | Package Settings | LaTeXTools` submenu and select the `Settings - User` option. If you do not currently have a `LaTeXTools.sublime-settings` settings file in your `User` directory (e.g., if you are installing LaTeXTools for the first time), you will be given the option to create one. The newly created settings file will be an exact copy of the default one, and will open in a tab for you to customize. 
+You can create and edit such a file manually. It is a standard Sublime Text JSON file; the settings currently honored by LaTeXTools are listed below. However, the *simplest way to create a settings file* is to open the **Preferences | Package Settings | LaTeXTools** submenu and select the **Settings - User** option. If you do not currently have a `LaTeXTools.sublime-settings` settings file in your `User` directory (e.g., if you are installing LaTeXTools for the first time), you will be given the option to create one. The newly created settings file will be an exact copy of the default one, and will open in a tab for you to customize. 
 
 If you *do* already have an existing `LaTeXTools.sublime-settings` file in your `User` directory, the `Settings - User` option will open that file in a tab for you to further customize. Similarly, the `Settings - Default` option will open the default settings file in a tab, in *read-only mode*. This may be useful for you to copy from, or if you want to see what other options may be available without consulting this README file.
 
-If at any time you wish to erase your customizations and start afresh, you can simply delete the `LaTeXTools.sublime-settings` file in your `User` directory. (Again, *warning*: do *not* touch the settings file in the LaTeXTools plugin directory!) Alternatively, from the `Preferences | Package Settings | LaTeXTools` submenu, or from the Command Palette, you can choose `Reset user settings to default`. This will delete any existing settings file in `User` and create a copy of the default one. This will  *remove all your customizations*. 
+If at any time you wish to erase your customizations and start afresh, you can simply delete the `LaTeXTools.sublime-settings` file in your `User` directory. (Again, *warning*: do *not* touch the settings file in the LaTeXTools plugin directory!) Alternatively, from the **Preferences | Package Settings | LaTeXTools** submenu, or from the Command Palette, you can choose **Reset user settings to default**. This will delete any existing settings file in `User` and create a copy of the default one. This will  *remove all your customizations*. 
 
 (Historical note: This is no longer relevant in 2016, but just for the record, if you have a pre-2014, old-style settings file, this option will import it).
 
-**Warning**:  in general, tweaking options can cause breakage. For instance, if on Linux you change the default `python2` setting (empty by default) to a non-existent binary, forward and inverse search will stop working. With great power comes great responsibility! If you think you have found a bug, *delete your settings file in the `User` directory, or use the `Reset user settings to default` command before reporting it!* Thanks :-)
+**Warning**:  in general, tweaking options can cause breakage. For instance, if on Linux you change the default `python2` setting (empty by default) to a non-existent binary, forward and inverse search will stop working. With great power comes great responsibility! If you think you have found a bug, *delete your settings file in the `User` directory, or use the **Reset user settings to default** command before reporting it!* Thanks :-)
 
 The following options are currently available (defaults in parentheses):
 
@@ -489,7 +489,7 @@ The following options are currently available (defaults in parentheses):
 - `temp_files_ignored_folders`: subdirectories to skip when deleting temp files.
 * `tex_file_exts` (`['.tex']`): a list of extensions that should be considered TeX documents. Any extensions in this list will be treated exactly the same as `.tex` files. See the section on [Support for non-`.tex` files](#support-for-non-tex-files).
 * `latextools_set_syntax` (`true`): if `true` LaTeXTools will automatically set the syntax to `LaTeX` when opening or saving any file with an extension in the `tex_file_exts` list.
-* `tex_spellcheck_paths` (`{}`): A mapping from the locales to the paths of the dictionaries. See the section [Spell-checking](#spell-checking)
+* `tex_spellcheck_paths` (`{}`): A mapping from the locales to the paths of the dictionaries. See the section [Spell-checking](#spell-checking).
 
 ### Platform-Specific Settings
 
@@ -497,47 +497,47 @@ This section refers to setting that can be found in a platform-specific block fo
 
 #### All Platforms
 
-  * `texpath`: the path to TeX & friends
+  * `texpath` (varies): the path to TeX & friends
 
 #### Windows
 
-  * `distro`: either `miktex` or `texlive`, depending on your TeX distribution
-  * `sumatra`: leave blank or omit if the SumatraPDF executable is in your `PATH` and is called `SumatraPDF.exe`, as in a default installation; otherwise, specify the *full path and file name* of the SumatraPDF executable.
-  * `sublime_executable`: this is used if `keep_focus` is set to true and the path to your sublime_text executable cannot be discovered automatically. It should point to the full path to your executable `sublime_text.exe`.
-  * `keep_focus_delay`: this is used if `keep_focus` is set to true. It controls how long (in seconds) the delay is between the completion of the `jump_to_pdf` command and the attempt to refocus on Sublime Text. This may need to be adjusted depending on your machine or configuration.
+  * `distro` (`miktex`): either `miktex` or `texlive`, depending on your TeX distribution
+  * `sumatra` (`""`): leave blank or omit if the SumatraPDF executable is in your `PATH` and is called `SumatraPDF.exe`, as in a default installation; otherwise, specify the *full path and file name* of the SumatraPDF executable.
+  * `sublime_executable` (`""`): this is used if `keep_focus` is set to true and the path to your sublime_text executable cannot be discovered automatically. It should point to the full path to your executable `sublime_text.exe`.
+  * `keep_focus_delay` (`0.5`): this is used if `keep_focus` is set to true. It controls how long (in seconds) the delay is between the completion of the `jump_to_pdf` command and the attempt to refocus on Sublime Text. This may need to be adjusted depending on your machine or configuration.
 
 #### Linux
-  * `python2` (`""`, i.e. empty string): name of the Python 2 executable. This is useful for systems that ship with both Python 2 and Python 3. The forward/backward search used with Evince require Python 2.
+  * `python2` (`""`): name of the Python 2 executable. This is useful for systems that ship with both Python 2 and Python 3. The forward/backward search used with Evince require Python 2.
   * `sublime` (`sublime-text`): name of the ST executable. Ubuntu supports both `sublime-text` and `subl`; other distros may vary.
   * `sync_wait` (1.5): when you ask LaTeXTools to do a forward search, and the PDF file is not yet open (for example, right after compiling a tex file for the first time), LaTeXTools first launches evince, then waits a bit for it to come up, and then it performs the forward search. This parameter controls how long LaTeXTools should wait. If you notice that your machine opens the PDF, then sits there doing nothing, and finally performs the search, you can decrease this value to 1.0 or 0.5; if instead the PDF file comes up but the forward search does not seem to happen, increase it to 2.0.
-  * `sublime_executable`: this is used if `keep_focus` is set to true and the path to your sublime_text executable cannot be discovered automatically. It should point to the full path to your executable `sublime_text`.
-  * `keep_focus_delay`: this is used if `keep_focus` is set to true. It controls how long (in seconds) the delay is between the completion of the `jump_to_pdf` command and the attempt to refocus on Sublime Text. This may need to be adjusted depending on your machine or configuration.
+  * `sublime_executable` (`""`): this is used if `keep_focus` is set to true and the path to your sublime_text executable cannot be discovered automatically. It should point to the full path to your executable `sublime_text`.
+  * `keep_focus_delay` (`0.5`): this is used if `keep_focus` is set to true. It controls how long (in seconds) the delay is between the completion of the `jump_to_pdf` command and the attempt to refocus on Sublime Text. This may need to be adjusted depending on your machine or configuration.
 
 ### Builder Settings
 
 **Note**: for the time being, you will need to refer to the `LaTeXTools.sublime-settings` file for detailed explanations. Also, since the new build system is meant to be fully customizable, if you use a third-party builder (which hopefully will become available!), you need to refer to its documentation.
 
-- `builder`: the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior.
-- `builder_path`: builders can reside anywhere Sublime Text can access. Specify a path *relative to the Sublime text Packages directory*. In particular, `User` is a good choice. If you use a third-party builder, specify the builder-provided directory.
+- `builder` (`"traditional"`): the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior.
+- `builder_path` (`""`): builders can reside anywhere Sublime Text can access. Specify a path *relative to the Sublime text Packages directory*. In particular, `User` is a good choice. If you use a third-party builder, specify the builder-provided directory.
 - `display_bad_boxes` (`false`): if `true` LaTeXTools will display any bad boxes encountered after a build. Note that this is disabled by default.
 - `builder-settings`: these are builder-specific settings. For the `default`/`traditional` builder, the following settings are useful:
-	* `program`: one of `pdflatex` (the default), `xelatex` or `lualatex`. This selects the TeX engine.
-	* `command`: the precise `latexmk` or `texify` command to be invoked. This  must be a list of strings. The defaults (hardcoded, not shown in the settings file) are:
+	* `program` (unset): one of `pdflatex` (the default), `xelatex` or `lualatex`. This selects the TeX engine.
+	* `command` (unset): the precise `latexmk` or `texify` command to be invoked. This  must be a list of strings. The defaults (hardcoded, not shown in the settings file) are:
 		* (TeXLive): `["latexmk", "-cd", "-e", "-f", "-%E", "-interaction=nonstopmode", "-synctex=1"]`
 		* (MiKTeX): `["texify", "-b", "-p", "--engine=%E", "--tex-option=\"--synctex=1\""]`
-	* `options`: allows you to specify a TeX option, such as `--shell-escape`. This must be a tuple: that is, use `options: ["--shell-escape"]`
+	* `options` (unset): allows you to specify a TeX option, such as `--shell-escape`. This must be a tuple: that is, use `options: ["--shell-escape"]`
+	* `env` (unset): a dictionary of key-values corresponding to environment variables that should be set for the environment the build is run in. Note that `env`, if it is set, must be set at the platform-specific level, e.g., under the `osx`, `windows`, or `linux` keys. This is useful for setting, e.g., `TEXINPUTS`.
 	* In addition, there can be platform-specific settings. An important one for Windows is `distro`, which must be set to either `miktex` or `texlive`.
-	* A platform-specific setting that is common to all builders is `env`. This can be used to set environment variables *before* running the actual builder. Setting e.g. `TEXINPUTS` is a possible use case.
 
 ### Viewer settings
 
- * `viewer`: the viewer you want to use. Leave blank (`""`) or set to `"default"`for the platform-specific viewer. Can also be set to `"preview"` if you want to use Preview on OS X, `"okular"` if you want to use Okular on Linux or `"command"` to run arbitrary commands. For details on the `"command"` option, see the section of the viewer documentation above.
- * `viewer_settings`: these are viewer-specific settings. Please see the viewers documentation above.
+ * `viewer` (`""`): the viewer you want to use. Leave blank (`""`) or set to `"default"`for the platform-specific viewer. Can also be set to `"preview"` if you want to use Preview on OS X, `"okular"` if you want to use Okular on Linux or `"command"` to run arbitrary commands. For details on the `"command"` option, see the section of the viewer documentation above.
+ * `viewer_settings`: these are viewer-specific settings. Please see the section on [Viewers](#viewers) or the documentation on [Alternate Viewers](#alternate-viewers) for details of what should be set here.
 
 ### Bibliographic references settings
 
-- `bibliography` (`"traditional_bibliography"`): specifies the bibliography plugin to use to handle extracting entries from a bibliography.
-- `cite-panel-format` and `cite_autocomplete_format`: see the section on ref/cite completion, and the comments in `LaTeXTools.sublime-settings`
+* `bibliography` (`"traditional_bibliography"`): specifies the bibliography plugin to use to handle extracting entries from a bibliography.
+* `cite-panel-format` and `cite_autocomplete_format`: see the section on ref/cite completion, and the comments in `LaTeXTools.sublime-settings`
 
 ### Cache settings
 
@@ -550,7 +550,7 @@ The above settings can be overridden on a project-specific basis if you are usin
 
 ```json
 {
-	...<folder-related options here>...
+	... <folder-related options here> ...
 
 	"settings" : {
 		"TEXroot": "main.tex",
@@ -589,10 +589,12 @@ The script builder is controlled through two settings in the *platform-specific*
 The `script_commands` setting should be either a string or a list. If it is a string, it represents a single command to be executed. If it is a list, it should be either a list of strings representing single commands or a list of lists, though the two may be mixed. For example:
 
 ```json
-"builder_settings": {
-	"osx": {
-		"script_commands":
-			"pdflatex -synctex=1 -interaction=nonstopmode"
+{
+	"builder_settings": {
+		"osx": {
+			"script_commands":
+				"pdflatex -synctex=1 -interaction=nonstopmode"
+		}
 	}
 }
 ```
@@ -600,10 +602,12 @@ The `script_commands` setting should be either a string or a list. If it is a st
 Will simply run `pdflatex` against the master document, as will:
 
 ```json
-"builder_settings": {
-	"osx": {
-		"script_commands":
-			["pdflatex -synctex=1 -interaction=nonstopmode"]
+{
+	"builder_settings": {
+		"osx": {
+			"script_commands":
+				["pdflatex -synctex=1 -interaction=nonstopmode"]
+		}
 	}
 }
 ```
@@ -611,10 +615,12 @@ Will simply run `pdflatex` against the master document, as will:
 Or:
 
 ```json
-"builder_settings": {
-	"osx": {
-		"script_commands": 
-			[["pdflatex", "-synctex=1 -interaction=nonstopmode"]]
+{
+	"builder_settings": {
+		"osx": {
+			"script_commands": 
+				[["pdflatex", "-synctex=1 -interaction=nonstopmode"]]
+		}
 	}
 }
 ```
@@ -622,14 +628,16 @@ Or:
 More interestingly, the main list can be used to supply a series of commands. For example, to use the simple pdflatex -> bibtex -> pdflatex -> pdflatex series, you can use the following settings:
 
 ```json
-"builder_settings": {
-	"osx": {
-		"script_commands": [
-			"pdflatex -synctex=1 -interaction=nonstopmode",
-			"bibtex",
-			"pdflatex -synctex=1 -interaction=nonstopmode",
-			"pdflatex -synctex=1 -interaction=nonstopmode"
-		]
+{
+	"builder_settings": {
+		"osx": {
+			"script_commands": [
+				"pdflatex -synctex=1 -interaction=nonstopmode",
+				"bibtex",
+				"pdflatex -synctex=1 -interaction=nonstopmode",
+				"pdflatex -synctex=1 -interaction=nonstopmode"
+			]
+		}
 	}
 }
 ```
@@ -653,14 +661,16 @@ Each command can use the following variables which will be expanded before it is
 For example:
 
 ```json
-"builder_settings": {
-	"osx": {
-		"script_commands": [[
-			"pdflatex", 
-			"-synctex=1"
-			"-interaction=nonstopmode",
-			"$file_base_name"
-		]]
+{
+	"builder_settings": {
+		"osx": {
+			"script_commands": [[
+				"pdflatex", 
+				"-synctex=1"
+				"-interaction=nonstopmode",
+				"$file_base_name"
+			]]
+		}
 	}
 }
 ```
@@ -832,6 +842,7 @@ class BasicBuilder(PdfBuilder):
 ```
 
 To use this, save it to a file called `"basicBuilder.py"` then change your `"builder"` setting to `"basic"`. When you compile a document, you should see the following output:
+
 ```
 [Compiling ...]
 
@@ -842,6 +853,7 @@ Running pdflatex for the last time...done.
 
 ...
 ```
+
 Since this builder actually does a build, there may be additional messages displayed after the last message from our builder. These usually come from LaTeXTools log-parsing code which is run after the build completes.
 
 ##### Interacting with Output
@@ -1016,9 +1028,11 @@ To use this builder, save it to a file called `"bibBuilder.py"` and change the `
 Assuming you are on OS X, you might use something like this to run biber instead of bibtex with this builder:
 
 ```json
-"builder_settings": {
-	"osx": {
-		"bibtex": "biber"
+{
+	"builder_settings": {
+		"osx": {
+			"bibtex": "biber"
+		}
 	}
 }
 ```
@@ -1160,15 +1174,17 @@ If none of these variables occur in the command string, the `$pdf_file` will be 
 
 Commands are executed in the `$pdf_file_path`, i.e., the folder containing the `$pdf_file`.
 
-For example, you can use the command viewer to support Okular with the following settings in your `LaTeXTools.sublime-settings` file:
+For example, you can use the command viewer to support Okular with the following settings:
 
 ```json
-"viewer": "command",
+{
+	"viewer": "command",
 
-"viewer_settings": {
-	"linux": {
-		"forward_sync_command": "okular --unique $pdf_file#src:$line$src_file",
-		"view_command": "okular --unique"
+	"viewer_settings": {
+		"linux": {
+			"forward_sync_command": "okular --unique $pdf_file#src:$line$src_file",
+			"view_command": "okular --unique"
+		}
 	}
 }
 ```
