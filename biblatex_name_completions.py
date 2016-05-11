@@ -39,7 +39,7 @@ NAME_FIELDS = set((
 # I've tried to simply the comprehensibility of the backwards regexes used by
 # constructing them here
 #
-# VALUE_REGEX is a common suffix to hand the `= {<value> and <value>}` part
+# VALUE_REGEX is a common suffix to handle the `= {<value> and <value>}` part
 VALUE_REGEX = r'[\s~]*(?P<ENTRIES>(?:dna[\s~]+.+)+)?[\s~]*(?P<OPEN>\{)?(?P<EQUALS>\s*=\s*)?'
 
 ON_NAME_FIELD_REGEX = re.compile(
