@@ -164,7 +164,10 @@ def external_command(command, cwd=None, shell=False, env=None,
     if stderr is __sentinel__:
         stderr = STDOUT
 
-    print(u'Running "%s"' % (u' '.join([quote(s) for s in command])))
+    try:
+        print(u'Running "{0}"'.format(u' '.join([quote(s) for s in command])))
+    except UnicodeError:
+        print(u'Running "{0}"'.format(command))
     p = Popen(
         command,
         stdin=stdin,
