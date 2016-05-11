@@ -84,7 +84,7 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			if sublime.platform() == 'windows':
 				self._clear_dir(output_directory)
 			else:
-				self._rmtree(aux_directory)
+				self._rmtree(output_directory)
 		else:
 			# if there is no output directory, we may need to clean files
 			# in the main directory, even if aux_directory is used
