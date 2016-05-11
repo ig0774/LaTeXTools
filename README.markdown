@@ -212,6 +212,11 @@ If the first line of the current file consists of the text `%!TEX program = <pro
 #### TeX Options
 You can pass command-line options to your engine in two ways (thanks Ian Bacher!). One is to use a `%!TEX options = ...` line at the top of your file. The other is to use the `options` builder setting in your settings file. This can be useful, for instance, if you need to allow shell escape. Finally, if you use project files, the `options` builder setting can also be customized there (again, under `settings`).
 
+#### Output and Aux Directories
+It is possible to set the `--output-directory` or `--aux-directory` arguments in several ways. If the first few lines of the main file contains the text `%!TEX output_directory = <path>`, the corresponding path is used for the output directory. Similarly,  `%!TEX aux_directory = <path>` will also be interpreted as the auxiliary directory. In addition, you can specify either `--output-directory` or `--aux-directory` in the TeX options (see above) and it will be interpretted accordingly. Finally, these two can also be controlled by a corresponding setting detailed in the section on settings. There are also three special values that can be used, `<<temp>>` `<<project>>` and `<<cache>>`. Their meaning is the same as that found in the [Settings](#settings) section and they are described there.
+
+**Note** output directory and aux directory are only available when either using `latexmk` (default on OS X and Linux), using the `basic` builder or using the `script` builder (see below [for documentation on using the script builder](#script-builder)). If you are using texify (default when using MiKTeX) or the simple builder, setting an aux directory or output directory will be ignored.
+
 #### Customizing the compilation command
 It is possible to customize the command run by setting the `command` option under Builder Settings. See the section on [Builder Settings](#builder-settings) for details.
 

@@ -6,11 +6,15 @@ import sys
 import tempfile
 
 try:
+    from latextools_utils import get_setting
+    from latextools_utils.distro_utils import using_miktex
     from latextools_utils.tex_directives import (
         get_tex_root, parse_tex_directives
     )
     from latextools_utils.sublime_utils import get_project_file_name
 except ImportError:
+    from .latextools_utils import get_setting
+    from .latextools_utils.distro_utils import using_miktex
     from .tex_directives import get_tex_root, parse_tex_directives
     from .sublime_utils import get_project_file_name
 
@@ -32,6 +36,16 @@ class UnsavedFileException(Exception):
 #   4. check for a global setting
 #   5. assume aux_directory is the same as output_directory
 def get_aux_directory(view_or_root):
+    # not supported using texify or the simple builder
+    if using_miktex():
+        builder = get_setting('builder', 'traditional')
+        if builder in ['', 'default', 'traditional', 'simple']:
+            return None
+    else:
+        builder = get_setting('builder', 'traditional')
+        if builder == 'simple':
+            return None
+
     root = get_root(view_or_root)
 
     aux_directory = None
@@ -72,6 +86,16 @@ def get_aux_directory(view_or_root):
 #   4. check for a global setting
 #   5. assume output_directory is None
 def get_output_directory(view_or_root):
+    # not supported using texify or the simple builder
+    if using_miktex():
+        builder = get_setting('builder', 'traditional')
+        if builder in ['', 'default', 'traditional', 'simple']:
+            return None
+    else:
+        builder = get_setting('builder', 'traditional')
+        if builder == 'simple':
+            return None
+
     root = get_root(view_or_root)
 
     output_directory = None
