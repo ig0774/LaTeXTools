@@ -28,6 +28,7 @@ LOAD_ORDER = [
 
     # use the preceeding
     'latextools_utils.cache',
+    'latextools_utils.distro_utils',
     'latextools_utils.is_tex_file',
     'latextools_utils.sublime_utils',
 
