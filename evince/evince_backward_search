@@ -188,7 +188,11 @@ E.g.:
 
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     EvinceWindowProxy(
-        'file://' + quote(pdf_file, "%/:=&?~#+!$,;'@()*[]"),
+        # The PDF file name MUST be URI-encoded
+        # RFC 1738: unreserved = alpha | digit | safe | extra
+        #           safe       = "$" | "-" | "_" | "." | "+"
+        #           extra      = "!" | "*" | "'" | "(" | ")" | ","
+        'file://' + quote(pdf_file, "/$+!*'(),"),
         sys.argv[2],
         True
     )

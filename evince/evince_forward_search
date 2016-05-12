@@ -54,7 +54,11 @@ if __name__ == '__main__':
             'org.gnome.evince.Daemon', '/org/gnome/evince/Daemon'
         )
         dbus_name = daemon.FindDocument(
-            'file://' + quote(pdf_file, "%/:=&?~#+!$,;'@()*[]"),
+            # The PDF file name MUST be URI-encoded
+            # RFC 1738: unreserved = alpha | digit | safe | extra
+            #           safe       = "$" | "-" | "_" | "." | "+"
+            #           extra      = "!" | "*" | "'" | "(" | ")" | ","
+            'file://' + quote(pdf_file, "/$+!*'(),"),
             True,
             dbus_interface="org.gnome.evince.Daemon"
         )
