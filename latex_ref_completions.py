@@ -279,5 +279,22 @@ class LatexRefCommand(sublime_plugin.TextCommand):
             caret = view.sel()[0].b
             view.sel().subtract(view.sel()[0])
             view.sel().add(sublime.Region(caret, caret))
-        
-        view.window().show_quick_panel(completions, on_done)
+
+        completions_length = len(completions)
+        if completions_length == 0:
+            sublime.error_message("No label matches %s !" % (prefix,))
+        elif completions_length == 1:
+            view.run_command(
+                "latex_tools_replace",
+                {
+                    "a": new_point_a,
+                    "b": new_point_b,
+                    "replacement": completions[0] + post_snippet
+                }
+            )
+            # Unselect the replaced region and leave the caret at the end
+            caret = view.sel()[0].b
+            view.sel().subtract(view.sel()[0])
+            view.sel().add(sublime.Region(caret, caret))
+        else:
+            view.window().show_quick_panel(completions, on_done)
