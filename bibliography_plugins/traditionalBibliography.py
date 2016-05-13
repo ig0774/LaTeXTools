@@ -2,7 +2,7 @@ from latextools_plugin import LaTeXToolsPlugin
 
 from latextools_utils import cache
 
-import kpsewhich
+from kpsewhich import kpsewhich
 from latextools_utils.subfiles import walk_subfiles
 
 import codecs
