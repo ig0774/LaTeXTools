@@ -13,8 +13,8 @@ try:
     )
     from latextools_utils.sublime_utils import get_project_file_name
 except ImportError:
-    from .latextools_utils import get_setting
-    from .latextools_utils.distro_utils import using_miktex
+    from . import get_setting
+    from .distro_utils import using_miktex
     from .tex_directives import get_tex_root, parse_tex_directives
     from .sublime_utils import get_project_file_name
 
