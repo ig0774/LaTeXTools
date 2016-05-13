@@ -47,7 +47,7 @@ LaTeX Package keymap for Windows
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
 			{"key": "preceding_text", "operator": "regex_contains",
-				"operand": "\\\\(?:(?:(?:eq|page|v|V|auto|name|c|C|cpage)?ref)|(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)cquote\\*?\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2}|(?:text|block)cquote\\*?(?:\\[[^\\]]*\\]){0,2}|(?:p|P|f|ft|s|S|t|T|a|A)?volcite(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?|(?:p|P|f|ft|s|S|t|T|a|A)?volcites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)(?:\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcites)(?:[A-Z]?[a-z]*c)|C)ites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\]){0,2}\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2})*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcite|mcite)(?:[A-Z]?[a-z]*c)|C)ite(?!reset\\*?|style)([a-zX*]*?)([.*?]){0,2}(?:\\[[^\\]]*\\]){0,2})|cite(?:(?:mask)?(?:full|short)?(?:author|year)(?:NP)?|NP|A)?(?:<[^>]*>)?(?:\\[[^\\]]*\\])?)$", "match_all": true}],
+				"operand": "\\\\(?:(?:(?:(?:eq|page|v|V|auto|name|c|C|cpage)?ref)|subref\\*?)|(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)cquote\\*?\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2}|(?:text|block)cquote\\*?(?:\\[[^\\]]*\\]){0,2}|(?:p|P|f|ft|s|S|t|T|a|A)?volcite(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?|(?:p|P|f|ft|s|S|t|T|a|A)?volcites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)(?:\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcites)(?:[A-Z]?[a-z]*c)|C)ites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\]){0,2}\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2})*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcite|mcite)(?:[A-Z]?[a-z]*c)|C)ite(?!reset|style)([a-zX*]*?)([.*?]){0,2}(?:\\[[^\\]]*\\]){0,2})|cite(?:(?:author|year)(?:NP)?|NP|A)?(?:<[^>]*>)?(?:\\[[^\\]]*\\])?)$", "match_all": true}],
 		"command": "latex_ref_cite", "args": {"insert_char": "{"}},
 
 	{	"keys": [","],
@@ -56,7 +56,7 @@ LaTeX Package keymap for Windows
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
 			{"key": "preceding_text", "operator": "regex_contains",
-				"operand": "\\\\(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)quote\\*?\\{[^}]*\\}\\[(?:(?:[^[\\],]*,)*)?[^[\\],]*|(?:text|block)quote\\*?\\[(?:(?:[^[\\],]*,)*)?[^[\\],]*|(?:foreign|hyphen|hybrid(?=block))(?:text|block)cquote\\*?\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:text|block)cquote\\*?(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:p|P|f|ft|s|S|t|T|a|A)?volcite(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:p|P|f|ft|s|S|t|T|a|A)?volcites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?(?:\\}(?=.*?\\{))?){1,}|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcites)(?:[A-Z]?[a-z]*c)|C)ites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?(?:\\}(?=.*?\\{))?){1,}|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcite|mcite)(?:[A-Z]?[a-z]*c)|C)ite(?!reset\\*?|style)([a-zX*]*?)([.*?]){0,2}(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|cite(?:(?:mask)?(?:full|short)?(?:author|year)(?:NP)?|NP|A)?(?:<[^>]*>)?(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?[^{},]*)$", "match_all": true}],
+				"operand": "\\\\(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)quote\\*?\\{[^}]*\\}\\[(?:(?:[^[\\],]*,)*)?[^[\\],]*|(?:text|block)quote\\*?\\[(?:(?:[^[\\],]*,)*)?[^[\\],]*|(?:foreign|hyphen|hybrid(?=block))(?:text|block)cquote\\*?\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:text|block)cquote\\*?(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:p|P|f|ft|s|S|t|T|a|A)?volcite(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:p|P|f|ft|s|S|t|T|a|A)?volcites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?(?:\\}(?=.*?\\{))?){1,}|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcites)(?:[A-Z]?[a-z]*c)|C)ites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?(?:\\}(?=.*?\\{))?){1,}|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcite|mcite)(?:[A-Z]?[a-z]*c)|C)ite(?!reset|style)([a-zX*]*?)([.*?]){0,2}(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|cite(?:(?:author|year)(?:NP)?|NP|A)?(?:<[^>]*>)?(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?[^{},]*)$", "match_all": true}],
 		"command": "latex_ref_cite", "args": {"insert_char": ","}},
 	{	"keys": ["["],
 		"context":  [
@@ -72,15 +72,9 @@ LaTeX Package keymap for Windows
 			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "lt_fill_input.open", "operator": "equal", "operand": true, "match_all": true}],
+			{"key": "preceding_text", "operator": "regex_contains",
+				"operand": "(?:\\\\include)|(?:\\\\input)|(?:\\\\includegraphics(?:\\[[^{}\\[\\]]\\])?)|(?:\\\\addbibresource(?:\\[[^{}\\[\\]]\\])?)|(?:\\\\bibliography)|(?:\\\\documentclass(?:\\[[^{}\\[\\]]\\])?)|(?:\\\\usepackage(?:\\[[^{}\\[\\]]\\])?)|(?:\\\\bibliographystyle)", "match_all": true}],
 		"command": "latex_fill_input", "args": {"insert_char": "{"}},
-	{	"keys": [","],
-		"context":  [
-			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
-			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "lt_fill_input.inside", "operator": "equal", "operand": true, "match_all": true}],
-		"command": "latex_fill_input", "args": {"insert_char": ","}},
 
 	{	"keys": ["{"],
 		"context":  [
@@ -336,11 +330,6 @@ LaTeX Package keymap for Windows
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
 		"command": "clear_local_latex_cache"},
 
-	// ctrl+l,w to display word count
-	{	"keys": ["ctrl+l", "w"],
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
-		"command": "texcount" },
 
 	// Avoid weird brace-matching behavior with indented text
 	{ "keys": ["{"], "command": "insert_snippet", "args": {"contents": "{$0}"}, "context":
@@ -356,70 +345,6 @@ LaTeX Package keymap for Windows
 	// Fill helper command
 	{	"keys": ["ctrl+l", "ctrl+f"], "command": "latex_fill_all", "context":
 		[
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-
-
-	// Redefine Fold Command shortcuts
-	{ "keys": ["ctrl+k", "ctrl+1"], "command": "latex_fold_level", "args": {"fold_level": 1},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-	{ "keys": ["ctrl+k", "ctrl+2"], "command": "latex_fold_level", "args": {"fold_level": 2},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-	{ "keys": ["ctrl+k", "ctrl+3"], "command": "latex_fold_level", "args": {"fold_level": 3},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-	{ "keys": ["ctrl+k", "ctrl+4"], "command": "latex_fold_level", "args": {"fold_level": 4},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-	{ "keys": ["ctrl+k", "ctrl+5"], "command": "latex_fold_level", "args": {"fold_level": 5},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-	{ "keys": ["ctrl+k", "ctrl+6"], "command": "latex_fold_level", "args": {"fold_level": 6},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-	{ "keys": ["ctrl+k", "ctrl+7"], "command": "latex_fold_level", "args": {"fold_level": 7},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-
-	// Fold to toc
-	{ "keys": ["ctrl+k", "ctrl+9"], "command": "latex_fold_toc", "args": {"focus_current": false},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-
-	//Fold to toc except current focus
-	{ "keys": ["ctrl+k", "ctrl+0"], "command": "latex_fold_toc", "args": {"focus_current": true},
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},   
-
-	//Fold current
-	{ "keys": ["ctrl+shift+["], "command": "latex_fold_current",
-		"context":  [
-			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
-		]
-	},
-	{ "keys": ["ctrl+shift+]"], "command": "latex_unfold_current",
-		"context":  [
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}
 		]
 	}

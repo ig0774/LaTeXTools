@@ -5,13 +5,13 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    from latextools_utils import is_tex_buffer, get_setting
-    from latextools_utils.subfiles import walk_subfiles
+    from latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
+    from latextools_utils import get_setting
 else:
     _ST3 = True
     from . import getTeXRoot
-    from .latextools_utils import is_tex_buffer, get_setting
-    from .latextools_utils.subfiles import walk_subfiles
+    from .latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
+    from .latextools_utils import get_setting
 
 import sublime_plugin
 import os, os.path
@@ -22,11 +22,11 @@ import codecs
 class UnrecognizedRefFormatError(Exception): pass
 
 _ref_special_commands = "|".join([
-    "", "eq", "page", "v", "V", "auto", "name", "c", "C", "cpage", "sub"
+    "", "eq", "page", "v", "V", "auto", "name", "c", "C", "cpage"
 ])[::-1]
 
-OLD_STYLE_REF_REGEX = re.compile(r"([^_]*_)?(p)?fer(" + _ref_special_commands + r")?(?:\\|\b)")
-NEW_STYLE_REF_REGEX = re.compile(r"([^{}]*)\{fer(" + _ref_special_commands + r")?\\(\()?")
+OLD_STYLE_REF_REGEX = re.compile(r"([^_]*_)?(p)?(?:fer(" + _ref_special_commands + r")?|\*?ferbus)(?:\\|\b)")
+NEW_STYLE_REF_REGEX = re.compile(r"([^{}]*)\{(?:fer(" + _ref_special_commands + r")?|\*?ferbus)\\(\()?")
 
 
 def match(rex, str):
@@ -36,14 +36,65 @@ def match(rex, str):
     else:
         return None
 
+
 # recursively search all linked tex files to find all
 # included \label{} tags in the document and extract
-def find_labels_in_files(rootdir, src):
-    completions = []
-    for content in walk_subfiles(rootdir, src):
-        for label in re.findall(r'\\label\{([^{}]+)\}', content):
-            completions.append(label)
-    return completions
+def find_labels_in_files(rootdir, src, labels):
+    if not is_tex_file(src):
+        src_tex_file = None
+        for ext in get_tex_extensions():
+            src_tex_file = ''.join((src, ext))
+            if os.path.exists(os.path.join(rootdir, src_tex_file)):
+                src = src_tex_file
+                break
+        if src != src_tex_file:
+            print("Could not find file {0}".format(src))
+            return
+
+    file_path = os.path.normpath(os.path.join(rootdir, src))
+    print ("Searching file: " + repr(file_path))
+    # The following was a mistake:
+    #dir_name = os.path.dirname(file_path)
+    # THe reason is that \input and \include reference files **from the directory
+    # of the master file**. So we must keep passing that (in rootdir).
+
+    # read src file and extract all label tags
+
+    # We open with utf-8 by default. If you use a different encoding, too bad.
+    # If we really wanted to be safe, we would read until \begin{document},
+    # then stop. Hopefully we wouldn't encounter any non-ASCII chars there. 
+    # But for now do the dumb thing.
+    try:
+        src_file = codecs.open(file_path, "r", "UTF-8")
+    except IOError:
+        sublime.status_message("LaTeXTools WARNING: cannot find included file " + file_path)
+        print ("WARNING! I can't find it! Check your \\include's and \\input's." )
+        return
+
+    src_content = re.sub("%.*", "", src_file.read())
+    src_file.close()
+
+    # If the file uses inputenc with a DIFFERENT encoding, try re-opening
+    # This is still not ideal because we may still fail to decode properly, but still... 
+    m = re.search(r"\\usepackage\[(.*?)\]\{inputenc\}", src_content)
+    if m and (m.group(1) not in ["utf8", "UTF-8", "utf-8"]):
+        print("reopening with encoding " + m.group(1))
+        f = None
+        try:
+            f = codecs.open(file_path, "r", m.group(1))
+            src_content = re.sub("%.*", "", f.read())
+        except:
+            print("Uh-oh, could not read file " + file_path + " with encoding " + m.group(1))
+        finally:
+            if f and not f.closed:
+                f.close()
+
+    labels += re.findall(r'\\label\{([^{}]+)\}', src_content)
+
+    # search through input tex files recursively
+    for f in re.findall(r'\\(?:input|include)\{([^\{\}]+)\}', src_content):
+        find_labels_in_files(rootdir, f, labels)
+
 
 # get_ref_completions forms the guts of the parsing shared by both the
 # autocomplete plugin and the quick panel command
@@ -130,18 +181,17 @@ def get_ref_completions(view, point, autocompleting=False):
     #    1) in case there are unsaved changes
     #    2) if this file is unnamed and unsaved, get_tex_root will fail
     view.find_all(r'\\label\{([^\{\}]+)\}', 0, '\\1', completions)
-    print(completions)
 
     root = getTeXRoot.get_tex_root(view)
     if root:
         print ("TEX root: " + repr(root))
-        completions.extend(find_labels_in_files(os.path.dirname(root), root))
+        find_labels_in_files(os.path.dirname(root), root, completions)
 
     # remove duplicates
-    print(completions)
     completions = list(set(completions))
 
     return completions, prefix, post_snippet, new_point_a, new_point_b
+
 
 # Based on html_completions.py
 #
@@ -165,7 +215,8 @@ class LatexRefCompletions(sublime_plugin.EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         # Only trigger within LaTeX
-        if not is_tex_buffer(view):
+        if not view.match_selector(locations[0],
+                "text.tex.latex"):
             return []
 
         point = locations[0]
@@ -190,9 +241,11 @@ class LatexRefCommand(sublime_plugin.TextCommand):
         # get view and location of first selection, which we expect to be just the cursor position
         view = self.view
         point = view.sel()[0].b
-        print(point)
+        print (point)
         # Only trigger within LaTeX
-        if not is_tex_buffer(view, point):
+        # Note using score_selector rather than match_selector
+        if not view.score_selector(point,
+                "text.tex.latex"):
             return
 
         try:
@@ -204,47 +257,27 @@ class LatexRefCommand(sublime_plugin.TextCommand):
         # filter! Note matching is "less fuzzy" than ST2. Room for improvement...
         completions = [c for c in completions if prefix in c]
 
+        if not completions:
+            sublime.error_message("No label matches %s !" % (prefix,))
+            return
+
         # Note we now generate refs on the fly. Less copying of vectors! Win!
         def on_done(i):
-            print("latex_ref_completion called with index %d" % (i,))
-
+            print ("latex_ref_completion called with index %d" % (i,))
+            
             # Allow user to cancel
-            if i < 0:
+            if i<0:
                 return
 
             ref = completions[i] + post_snippet
+            
 
             # Replace ref expression with reference and possibly post_snippet
-            # The "latex_tools_replace" command is defined in
-            # latex_ref_cite_completions.py
-            view.run_command(
-                "latex_tools_replace",
-                {
-                    "a": new_point_a,
-                    "b": new_point_b,
-                    "replacement": ref
-                }
-            )
+            # The "latex_tools_replace" command is defined in latex_ref_cite_completions.py
+            view.run_command("latex_tools_replace", {"a": new_point_a, "b": new_point_b, "replacement": ref})
             # Unselect the replaced region and leave the caret at the end
             caret = view.sel()[0].b
             view.sel().subtract(view.sel()[0])
             view.sel().add(sublime.Region(caret, caret))
-
-        completions_length = len(completions)
-        if completions_length == 0:
-            sublime.error_message("No label matches %s !" % (prefix,))
-        elif completions_length == 1:
-            view.run_command(
-                "latex_tools_replace",
-                {
-                    "a": new_point_a,
-                    "b": new_point_b,
-                    "replacement": completions[0] + post_snippet
-                }
-            )
-            # Unselect the replaced region and leave the caret at the end
-            caret = view.sel()[0].b
-            view.sel().subtract(view.sel()[0])
-            view.sel().add(sublime.Region(caret, caret))
-        else:
-            view.window().show_quick_panel(completions, on_done)
+        
+        view.window().show_quick_panel(completions, on_done)
