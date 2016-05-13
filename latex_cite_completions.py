@@ -190,7 +190,7 @@ NEW_STYLE_CITE_REGEX = re.compile(
                 eti(?:C|c(?!lov|m\\)[a-z]*[A-Z]?))|
             (?:(?P<prefix9>[^{},]*)(?:,[^{},]*)*\{(?:\][^\[]*\[)?
                 (?:>[^<]*<)?(?:(?:PN)?(?:raey|rohtua)|PN|A)?etic
-                (?:lluf|trohs)?(?:ksam)?))
+                (?:lluf|trohs)?(?:ksam)?)
         )\\""", re.X)
 
 def match(rex, str):
