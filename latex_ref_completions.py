@@ -22,11 +22,18 @@ import codecs
 class UnrecognizedRefFormatError(Exception): pass
 
 _ref_special_commands = "|".join([
-    "", "eq", "page", "v", "V", "auto", "name", "c", "C", "cpage"
+    "", "eq", "page", "v", "V", "auto", "name", "c", "C", "cpage", "sub"
 ])[::-1]
 
-OLD_STYLE_REF_REGEX = re.compile(r"([^_]*_)?(p)?(?:fer(" + _ref_special_commands + r")?|\*?ferbus)(?:\\|\b)")
-NEW_STYLE_REF_REGEX = re.compile(r"([^{}]*)\{(?:fer(" + _ref_special_commands + r")?|\*?ferbus)\\(\()?")
+OLD_STYLE_REF_REGEX = re.compile(
+    r"([^_]*_)?(p)?(?:\*?(?=ferbus)fer(" +
+    _ref_special_commands +
+    r")?)(?:\\|\b)"
+)
+NEW_STYLE_REF_REGEX = re.compile(
+    r"([^{}]*)\{(?:\*?(?=ferbus)fer(" +
+    _ref_special_commands +
+    r")?|)\\(\()?")
 
 
 def match(rex, str):
