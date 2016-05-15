@@ -325,6 +325,12 @@ Two settings allow you to fine-tune the behavior of this command. `temp_files_ex
 
 This clears the [LaTeXTools cache](#latextools-cache). It is useful if the LaTeXTools cache information gets too out of date, but you want to maintain the LaTeX build files, such as `.aux`.
 
+### Show the build panel
+
+**Keybinding:** `shift+escape`
+
+This will show the LaTeXTools build panel, including any messages from the previous build.
+
 ### Forward and Inverse Search
 
 **Keybinding:** `C-l,j` (for forward search; inverse search depends on the previewer)
@@ -565,7 +571,9 @@ This section refers to setting that can be found in a platform-specific block fo
 NOTE: for the time being, you will need to refer to the `LaTeXTools.sublime-settings` file for detailed explanations. Also, since the new build system is meant to be fully customizable, if you use a third-party builder (which hopefully will become available!), you need to refer to its documentation.
 - `builder`: the builder you want to use. Leave blank (`""`) or set to `"default"` or `"traditional"` for the traditional (`latexmk`/`texify`) behavior. Set to `"basic"` for the basic builder that supports output and auxiliary directories on MiKTeX.
 - `builder_path`: builders can reside anywhere Sublime Text can access. Specify a path *relative to the Sublime text Packages directory*. In particular, `User` is a good choice. If you use a third-party builder, specify the builder-provided directory.
-- `display_bad_boxes` (`false`): if `true` LaTeXTools will display any bad boxes encountered after a build. Note that this is disabled by default.
+- `hide_build_panel` (`"no_badboxes"`): controls whether or not the build panel is show after a build. See [the feature description](#automatically-hide-build-panel-after-build-finished) or the default settings for an explanation of possible values.
+- `display_bad_boxes` (`false`): toggles whether or not to display messages about bad boxes (overfull and underfull hboxes or vboxes) in the output panel. If this is set to `false` (the default), the `"no_badboxes"` setting of `hide_build_panel` is equivalen to the `"no_warnings"` setting, i.e., the panel will only be displayed if there are warnings.
+- `build_finished_message_length` (`2.0`): the number of seconds to display the notification about the completion of the build in the status bar.
 - `builder-settings`: these are builder-specific settings. For the `default`/`traditional` builder, the following settings are useful:
 	* `program` (unset): one of `pdflatex` (the default), `xelatex` or `lualatex`. This selects the TeX engine.
 	* `command` (unset): the precise `latexmk` or `texify` command to be invoked. This  must be a list of strings. The defaults (hardcoded, not shown in the settings file) are:
