@@ -199,7 +199,6 @@ This deletes all temporary files from a previous build (the PDF file is kept). S
 
 Two settings allow you to fine-tune the behavior of this command. `temp_files_exts` allows you to specify which file extensions should be considered temporary, and hence deleted. `temp_files_ignored_folders` allows you to specify folders that should not be traversed. A good example are `.git` folders, for people who use git for version control.
 
-
 ### Automatically hide build panel after build finished ###
 
 To automatically hide the build panel set the option `hide_build_panel` in the settings file. Possible values are:
@@ -209,6 +208,12 @@ To automatically hide the build panel set the option `hide_build_panel` in the s
 - __no_warnings__: only hide the build panel if neither errors nor warnings occur
 - __no_badboxes__: only hide the build panel if there are no errors, warnings, or bad boxes
 - __never__: never hide the build panel
+
+### Show the build panel ###
+
+**Keybinding:** `shift+escape`
+
+This will show the LaTeXTools build panel, including any messages from the previous build.
 
 Forward and Inverse Search
 ---------------------------
@@ -496,6 +501,9 @@ The following options are currently available (defaults in parentheses):
 - `cwl_list` (empty): list of paths to cwl files
 - `keep_focus` (`true`): if `true`, after compiling a tex file, ST retains the focus; if `false`, the PDF viewer gets the focus. Also note that you can *temporarily* toggle this behavior with `C-l,t,f`. **Note**: If you are on either Windows or Linux you may need to adjust the `sublime_executable` setting for this to work properly. See the **Platform settings** below. This can also be overridden via a key-binding by passing a `keep_focus` argument to `jump_to_pdf`.
 - `forward_sync` (`true`): if `true`, after compiling a tex file, the PDF viewer is asked to sync to the position corresponding to the current cursor location in ST. You can also *temporarily* toggle this behavior with `C-l,t,s`. This can also be overridden via a key-binding by passing a `forward_sync` argument to `jump_to_pdf`.
+- `hide_build_panel` (`"no_badboxes"`): controls whether or not the build panel is show after a build. See [the feature description](#automatically-hide-build-panel-after-build-finished) or the default settings for an explanation of possible values.
+- `display_bad_boxes` (`false`): toggles whether or not to display messages about bad boxes (overfull and underfull hboxes or vboxes) in the output panel. If this is set to `false` (the default), the `"no_badboxes"` setting of `hide_build_panel` is equivalen to the `"no_warnings"` setting, i.e., the panel will only be displayed if there are warnings.
+- `build_finished_message_length` (`2.0`): the number of seconds to display the notification about the completion of the build in the status bar.
 - `temp_files_exts`: list of file extensions to be considered temporary, and hence deleted using the `C-l, backspace` command.
 - `temp_files_ignored_folders`: subdirectories to skip when deleting temp files.
 * `tex_file_exts` (`['.tex']`): a list of extensions that should be considered TeX documents. Any extensions in this list will be treated exactly the same as `.tex` files. See the section on [Support for non-`.tex` files](#support-for-non-tex-files).
