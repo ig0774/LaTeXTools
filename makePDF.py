@@ -189,16 +189,27 @@ class CmdThread ( threading.Thread ):
 		# Note to self: need to think whether we don't want to codecs.open this, too...
 		# Also, we may want to move part of this logic to the builder...
 		try:
+			log_file_base = self.caller.tex_base + ".log"
+			# NB aux_directory is never None if output_directory is set
 			if self.caller.aux_directory is None:
-				log_file = self.caller.tex_base + ".log"
+				log_file = log_file_base
 			else:
 				log_file = os.path.join(
 					self.caller.aux_directory,
-					os.path.basename(self.caller.tex_base) + ".log"
+					log_file_base
 				)
 
 				if not os.path.exists(log_file):
-					log_file = self.caller.tex_base + ".log"
+					if self.caller.output_directory != self.caller.aux_directory:
+						log_file = os.path.join(
+							self.caller.aux_directory,
+							log_file_base
+						)
+
+						if not os.path.exists(log_file):
+							log_file = log_file_base
+					else:
+						log_file = log_file_base
 
 			with open(log_file, 'rb') as f:
 				data = f.read()
