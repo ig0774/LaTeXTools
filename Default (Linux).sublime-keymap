@@ -2,6 +2,18 @@
 LaTeX Package keymap for Linux
 */
 [
+	// create a keybinding to select variant builds on ST2
+	// this also overrides on ST3, but we simply run the same commands
+	{	"keys": ["ctrl+b"],
+		"context": [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
+		"command": "latextools_build_selector"},
+
+	{	"keys": ["ctrl+shift+b"],
+		"context": [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
+		"command": "latextools_build_selector",
+			"args": {"select": true}},
 
 	// New-style keybindings use "ctrl+l" as a prefix
 	// This overrides "extend selection to line", which is remapped to
