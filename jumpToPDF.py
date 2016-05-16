@@ -213,9 +213,27 @@ class ViewPdf(sublime_plugin.WindowCommand):
 			pdffile = args.pop('file', None)
 		else:
 			view = self.window.active_view()
-			root = getTeXRoot.get_tex_root(view)
-			print("!TEX root = ", repr(root))
-			pdffile = os.path.splitext(root)[0] + '.pdf'
+
+			file_name = get_jobname(view)
+
+			output_directory = get_output_directory(self.view)
+			if output_directory is None:
+				root = getTeXRoot.get_tex_root(self.view)
+				pdffile = os.path.join(
+					os.path.dirname(root),
+					file_name + u'.pdf'
+				)
+			else:
+				pdffile = os.path.join(
+					output_directory,
+					file_name + u'.pdf'
+				)
+
+				if not os.path.exists(pdffile):
+					pdffile = os.path.join(
+						os.path.dirname(root),
+						file_name + u'.pdf'
+					)
 
 		# since we potentially accept an argument, add some extra
 		# safety checks
@@ -223,9 +241,9 @@ class ViewPdf(sublime_plugin.WindowCommand):
 			print('No PDF file found.')
 			return
 		elif not os.path.exists(pdffile):
-			print('PDF file "' + pdffile + '" does not exist.')
+			print(u'PDF file "{0}" does not exist.'.format(pdffile))
 			sublime.error_message(
-				'PDF file "' + pdffile + '" does not exist.'
+				u'PDF file "{0}" does not exist.'.format(pdffile)
 			)
 			return
 
