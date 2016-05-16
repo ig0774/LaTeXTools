@@ -25,5 +25,25 @@
 	"linux":
 		{
 			"file_regex": "^(...*?):([0-9]+): ([0-9]*)([^\\.]+)"
+		},
+
+	"variants":
+	[
+		{
+			"name": "PdfLaTeX",
+			"engine": "pdflatex"
+		},
+		{
+			"name": "XeLaTeX",
+			"engine": "xelatex"
+		},
+		{
+			"name": "LuaLaTeX",
+			"engine": "lualatex"
+		},
+		{
+			"name": "Script",
+			"builder_name": "script"
 		}
+	]
 }

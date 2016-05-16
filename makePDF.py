@@ -312,7 +312,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.proc = None
 		self.proc_lock = threading.Lock()
 
-	def run(self, cmd="", file_regex="", path=""):
+	def run(self, cmd="", file_regex="", path="", engine=None, builder_name=None):
 		
 		# Try to handle killing
 		with self.proc_lock:
@@ -383,19 +383,18 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			return
 
 		# Get platform settings, builder, and builder settings
-		platform_settings  = get_setting(self.plat, {})
-		builder_name = get_setting("builder", "traditional")
+		platform_settings = get_setting(self.plat, {})
 		self.hide_panel_level = get_setting("hide_build_panel", "never")
 		self.display_bad_boxes = get_setting("display_bad_boxes", False)
-		# This *must* exist, so if it doesn't, the user didn't migrate
-		if builder_name is None:
-			sublime.error_message("LaTeXTools: you need to migrate your preferences. See the README file for instructions.")
-			self.window.run_command('hide_panel', {"panel": "output.exec"})
-			return
+
+		if builder_name is not None:
+			builder_name_ = builder_name
+		else:
+			builder_name_ = get_setting("builder", "traditional")
 
 		# Default to 'traditional' builder
-		if builder_name in ['', 'default']:
-			builder_name = 'traditional'
+		if builder_name_ in ['', 'default']:
+			builder_name_ = 'traditional'
 
 		# this is to convert old-style names (e.g. AReallyLongName)
 		# to new style plugin names (a_really_long_name)
@@ -411,16 +410,21 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		)
 
 		# determine the engine
-		engine = tex_directives.get('program',
-			builder_settings.get("program", "pdflatex"))
+		if engine is not None:
+			engine_ = engine
+		else:
+			engine_ = tex_directives.get(
+				'program',
+				builder_settings.get("program", "pdflatex")
+			)
 
-		engine = engine.lower()
+		engine_ = engine_.lower()
 
 		# Sanity check: if "strange" engine, default to pdflatex (silently...)
-		if engine not in [
+		if engine_ not in [
 			'pdflatex', "pdftex", 'xelatex', 'xetex', 'lualatex', 'luatex'
 		]:
-			engine = 'pdflatex'
+			engine_ = 'pdflatex'
 
 		options = builder_settings.get("options", [])
 		if isinstance(options, strbase):
@@ -434,25 +438,27 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		if builder_platform_settings:
 			self.env = builder_platform_settings.get("env", None)
 		else:
-			self.env = None
-
-		# Now actually get the builder
-		builder_path = get_setting("builder_path", "")  # relative to ST packages dir!
+			self.env = None   
 
 		# Safety check: if we are using a built-in builder, disregard
 		# builder_path, even if it was specified in the pref file
-		if builder_name in ['simple', 'traditional', 'script']:
+		if builder_name_ in ['simple', 'traditional', 'script']:
 			builder_path = None
+		else:
+			# relative to ST packages dir!
+			builder_path = get_setting("builder_path", "")
 
 		if builder_path:
 			bld_path = os.path.join(sublime.packages_path(), builder_path)
 			add_plugin_path(bld_path)
 
 		try:
-			builder = get_plugin('{0}_builder'.format(builder_name))
+			builder = get_plugin('{0}_builder'.format(builder_name_))
 		except NoSuchPluginException:
-			sublime.error_message("Cannot find builder " + builder_name + ".\n" \
-							      "Check your LaTeXTools Preferences")
+			sublime.error_message(
+				"Cannot find builder {0}.\n"
+				"Check your LaTeXTools Preferences".format(builder_name_)
+			)
 			self.window.run_command('hide_panel', {"panel": "output.exec"})
 			return
 
@@ -460,7 +466,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.builder = builder(
 			self.file_name,
 			self.output,
-			engine,
+			engine_,
 			options,
 			tex_directives,
 			builder_settings,
