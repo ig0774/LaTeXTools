@@ -168,6 +168,13 @@ Note that if you specify a relative path as the `TEXroot` in the project file, t
 
 **Customizing or replacing the compilation command** (`latexmk` or `texify`) is also possible by setting the `command` option under Builder Settings. If you do, the TeX engine selection facility may no longer work because it relies on a specific compilation command. However, if you want to customize or replace `latexmk`/`texify`, you probably know how to select the right TeX engine, so this shouldn't be a concern. Also note that if you are using `latexmk` and you set the `$pdflatex` variable, the TeX options facility will not function, as `latexmk` does not support this. See the Settings option below for details. *Note*: if you change the compilation command, you are responsible for making it work on your setup. Only customize the compilation command if you know what you're doing. 
 
+### Selecting Build Variant
+
+**Keybinding:** `C-shift-b` (standard ST3 keybinding) or `C-shift-alt-b` or via the Command Palette (`C-shift-p`)
+
+LaTeXTools offers a range of build variants to select standard build options. These can be selected in the usual way using `C-shift-b` (on ST3) or using the Command Palette on either version of Sublime. The `C-shift-alt-b` keybinding displays the Command Palette focused on the build variants. This is primarily intended for ST2 users.
+
+**Note**: There is a serious difference between how recent versions of ST3 (from v3080 on) and ST2 handle build variants. In particular, ST3 remembers the last used variant so that subsequent builds (using `C-b`) will continue to use the same variant as before. On ST2, it is necessary to use the Command Palette to launch the specified build each time.
 
 ### Toggling window focus following a build ###
 

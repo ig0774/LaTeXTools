@@ -4,10 +4,13 @@ import sublime
 if sublime.version() < '3000':
 	# we are on ST2 and Python 2.X
 	_ST3 = False
+	strbase = basestring
 else:
 	_ST3 = True
+	strbase = str
 
 from pdfBuilder import PdfBuilder
+import shlex
 
 DEBUG = False
 
@@ -29,27 +32,26 @@ class TraditionalBuilder(PdfBuilder):
 	def __init__(self, tex_root, output, engine, options,
 				 tex_directives, builder_settings, platform_settings):
 		# Sets the file name parts, plus internal stuff
-		super(TraditionalBuilder, self).__init__(tex_root, output, engine,
-			options, tex_directives, builder_settings, platform_settings)
-		#Now do our own initialization: set our name
+		super(TraditionalBuilder, self).__init__(*args)
+		# Now do our own initialization: set our name
 		self.name = "Traditional Builder"
 		# Display output?
 		self.display_log = builder_settings.get("display_log", False)
 		# Build command, with reasonable defaults
 		plat = sublime.platform()
 		# Figure out which distro we are using
-		try:
-			distro = platform_settings["distro"]
-		except KeyError: # default to miktex on windows and texlive elsewhere
-			if plat == 'windows':
-				distro = "miktex"
-			else:
-				distro = "texlive"
+		distro = self.platform_settings.get(
+			"distro",
+			"miktex" if plat == "windows" else "texlive"
+		)
 		if distro in ["miktex", ""]:
 			default_command = DEFAULT_COMMAND_WINDOWS_MIKTEX
-		else: # osx, linux, windows/texlive, everything else really!
+		else:  # osx, linux, windows/texlive, everything else really!
 			default_command = DEFAULT_COMMAND_LATEXMK
-		self.cmd = builder_settings.get("command", default_command)
+
+		self.cmd = self.builder_settings.get("command", default_command)
+		if isinstance(self.cmd, strbase):
+			self.cmd = shlex.split(self.cmd)
 
 	#
 	# Very simple here: we yield a single command
@@ -61,7 +63,7 @@ class TraditionalBuilder(PdfBuilder):
 
 		# See if the root file specifies a custom engine
 		engine = self.engine
-		cmd = self.cmd[:] # Warning! If I omit the [:], cmd points to self.cmd!
+		cmd = self.cmd[:]  # Warning! If I omit the [:], cmd points to self.cmd!
 
 		# check if the command even wants the engine selected
 		engine_used = False

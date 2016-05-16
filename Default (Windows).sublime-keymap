@@ -2,6 +2,12 @@
 LaTeX Package keymap for Windows
 */
 [
+	// create a keybinding to select variant builds on ST2
+	{	"keys": ["ctrl+shift+alt+b"],
+		"context": [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
+		"command": "show_overlay",
+			"args": {"overlay": "command_palette", "text": "Build: "}},
 
 	// New-style keybindings use "ctrl+l" as a prefix
 	// This overrides "extend selection to line", which is remapped to

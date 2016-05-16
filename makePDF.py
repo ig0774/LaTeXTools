@@ -312,8 +312,12 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.proc = None
 		self.proc_lock = threading.Lock()
 
-	def run(self, cmd="", file_regex="", path=""):
-		
+	# **kwargs is unused but there so run can safely ignore any unknown
+	# parameters
+	def run(
+		self, file_regex="", program=None, builder=None, command=None,
+		env=None, path=None, **kwargs
+	):
 		# Try to handle killing
 		with self.proc_lock:
 			if self.proc: # if we are running, try to kill running process
@@ -383,15 +387,14 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			return
 
 		# Get platform settings, builder, and builder settings
-		platform_settings  = get_setting(self.plat, {})
-		builder_name = get_setting("builder", "traditional")
+		platform_settings = get_setting(self.plat, {})
 		self.hide_panel_level = get_setting("hide_build_panel", "never")
 		self.display_bad_boxes = get_setting("display_bad_boxes", False)
-		# This *must* exist, so if it doesn't, the user didn't migrate
-		if builder_name is None:
-			sublime.error_message("LaTeXTools: you need to migrate your preferences. See the README file for instructions.")
-			self.window.run_command('hide_panel', {"panel": "output.exec"})
-			return
+
+		if builder is not None:
+			builder_name = builder
+		else:
+			builder_name = get_setting("builder", "traditional")
 
 		# Default to 'traditional' builder
 		if builder_name in ['', 'default']:
@@ -403,6 +406,10 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		builder_settings = get_setting("builder_settings", {})
 
+		# override the command
+		if command is not None:
+			builder_settings.set("command", command)
+
 		# parse root for any %!TEX directives
 		tex_directives = parse_tex_directives(
 			self.file_name,
@@ -411,8 +418,13 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		)
 
 		# determine the engine
-		engine = tex_directives.get('program',
-			builder_settings.get("program", "pdflatex"))
+		if program is not None:
+			engine = program
+		else:
+			engine = tex_directives.get(
+				'program',
+				builder_settings.get("program", "pdflatex")
+			)
 
 		engine = engine.lower()
 
@@ -431,18 +443,21 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		# Read the env option (platform specific)
 		builder_platform_settings = builder_settings.get(self.plat)
-		if builder_platform_settings:
+
+		if env is not None:
+			self.env = env
+		elif builder_platform_settings:
 			self.env = builder_platform_settings.get("env", None)
 		else:
 			self.env = None
 
-		# Now actually get the builder
-		builder_path = get_setting("builder_path", "")  # relative to ST packages dir!
-
 		# Safety check: if we are using a built-in builder, disregard
 		# builder_path, even if it was specified in the pref file
-		if builder_name in ['simple', 'traditional', 'script']:
+		if builder_name_ in ['simple', 'traditional', 'script']:
 			builder_path = None
+		else:
+			# relative to ST packages dir!
+			builder_path = get_setting("builder_path", "")
 
 		if builder_path:
 			bld_path = os.path.join(sublime.packages_path(), builder_path)
@@ -451,8 +466,10 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		try:
 			builder = get_plugin('{0}_builder'.format(builder_name))
 		except NoSuchPluginException:
-			sublime.error_message("Cannot find builder " + builder_name + ".\n" \
-							      "Check your LaTeXTools Preferences")
+			sublime.error_message(
+				"Cannot find builder {0}.\n"
+				"Check your LaTeXTools Preferences".format(builder_name)
+			)
 			self.window.run_command('hide_panel', {"panel": "output.exec"})
 			return
 
@@ -469,7 +486,10 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		# Now get the tex binary path from prefs, change directory to
 		# that of the tex root file, and run!
-		self.path = platform_settings['texpath']
+		if path is not None:
+			self.path = path
+		else:
+			self.path = platform_settings.get('texpath', None)
 		os.chdir(tex_dir)
 		CmdThread(self).start()
 		print(threading.active_count())
