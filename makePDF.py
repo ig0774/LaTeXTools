@@ -20,6 +20,7 @@ if sublime.version() < '3000':
 	from latextools_utils.output_directory import (
 		get_aux_directory, get_output_directory
 	)
+	from latextools_utils.progress_indicator import ProgressIndicator
 
 	strbase = basestring
 else:
@@ -39,8 +40,10 @@ else:
 	from .latextools_utils.output_directory import (
 		get_aux_directory, get_output_directory
 	)
+	from .latextools_utils.progress_indicator import ProgressIndicator
 
 	strbase = str
+	long = int
 
 import sublime_plugin
 import sys
@@ -120,12 +123,14 @@ class CmdThread ( threading.Thread ):
 							preexec_fn=os.setsid if self.caller.plat != 'windows' else None
 						)
 					except:
+						if self.caller.hide_panel_level != 'always':
+							self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
 						self.caller.output("\n\nCOULD NOT COMPILE!\n\n")
 						self.caller.output("Attempted command:")
 						self.caller.output(" ".join(cmd))
 						self.caller.output("\nBuild engine: " + self.caller.builder.name)
 						self.caller.proc = None
-						print(traceback.format_exc())
+						traceback.print_exc()
 						return
 				# Abundance of caution / for possible future extensions:
 				elif isinstance(cmd, subprocess.Popen):
@@ -160,10 +165,12 @@ class CmdThread ( threading.Thread ):
 				# At this point, out contains the output from the current command;
 				# we pass it to the cmd_iterator and get the next command, until completion
 		except:
+			if self.caller.hide_panel_level != 'always':
+				self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
 			self.caller.output("\n\nCOULD NOT COMPILE!\n\n")
 			self.caller.output("\nBuild engine: " + self.caller.builder.name)
 			self.caller.proc = None
-			print(traceback.format_exc())
+			traceback.print_exc()
 			return
 
 		# Clean up
@@ -196,7 +203,20 @@ class CmdThread ( threading.Thread ):
 			with open(log_file, 'rb') as f:
 				data = f.read()
 		except IOError:
-			self.handle_std_outputs(out, err)
+			traceback.print_exc()
+
+			if self.caller.hide_panel_level != 'always':
+				self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
+			content = ['', 'Could not read log file {0}.log'.format(
+				self.caller.tex_base
+			), '']
+			if out is not None:
+				content.extend(['Output from compilation:', '', out.decode('utf-8')])
+			if err is not None:
+				content.extend(['Errors from compilation:', '', err.decode('utf-8')])
+			self.caller.output(content)
+			# if we got here, there shouldn't be a PDF at all
+			self.caller.finish(False)
 		else:
 			errors = []
 			warnings = []
@@ -222,13 +242,15 @@ class CmdThread ( threading.Thread ):
 				else:
 					if errors:
 						content.append("")
-					content.append("No warnings.")
+						content.append("No warnings.")
+					else:
+						content[-1] = content[-1] + " No warnings."
 
 				if badboxes and self.caller.display_bad_boxes:
 					if warnings or errors:
 						content.extend(["", "Bad Boxes:"])
 					else:
-						content[-2] = content[-2] + " Bad Boxes:"
+						content[-1] = content[-1] + " Bad Boxes:"
 					content.append("")
 					content.extend(badboxes)
 				else:
@@ -237,21 +259,25 @@ class CmdThread ( threading.Thread ):
 							content.append("")
 						content.append("No bad boxes.")
 
-				hide_panel = {
-					"always": True,
-					"no_errors": not errors,
-					"no_warnings": not errors and not warnings,
-					"no_badboxes": not errors and not warnings and \
-						(not self.caller.display_bad_boxes or not badboxes),
-					"never": False
-				}.get(self.caller.hide_panel_level, False)
+				show_panel = {
+					"always": False,
+					"no_errors": bool(errors),
+					"no_warnings": bool(errors or warnings),
+					"no_badboxes": bool(
+						errors or warnings or
+						(self.caller.display_bad_boxes and badboxes)),
+					"never": True
+				}.get(self.caller.hide_panel_level, bool(errors or warnings))
 
-				if hide_panel:
-					# hide the build panel (ST2 api is not thread save)
+				if show_panel:
+					self.caller.progress_indicator.success_message = "build completed"
+					# show the build panel (ST2 api is not thread save)
 					if _ST3:
-						self.caller.window.run_command("hide_panel", {"panel": "output.latextools"})
+						self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
 					else:
-						sublime.set_timeout(lambda: self.caller.window.run_command("hide_panel", {"panel": "output.latextools"}), 10)
+						sublime.set_timeout(
+							lambda: self.caller.window.run_command("show_panel", {"panel": "output.latextools"}), 0)
+				else:
 					message = "build completed"
 					if errors:
 						message += " with errors"
@@ -270,13 +296,12 @@ class CmdThread ( threading.Thread ):
 							message += " and"
 						else:
 							message += " with"
-						message += "bad boxes"
+						message += " bad boxes"
 
-					if _ST3:
-						sublime.status_message(message)
-					else:
-						sublime.set_timeout(lambda: sublime.status_message(message), 10)
+					self.caller.progress_indicator.success_message = message
 			except Exception as e:
+				if self.caller.hide_panel_level != 'always':
+					self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
 				content=["",""]
 				content.append("LaTeXtools could not parse the TeX log file")
 				content.append("(actually, we never should have gotten here)")
@@ -285,20 +310,11 @@ class CmdThread ( threading.Thread ):
 				content.append("Python exception: " + repr(e))
 				content.append("")
 				content.append("Please let me know on GitHub. Thanks!")
+				traceback.print_exc()
 
 			self.caller.output(content)
 			self.caller.output("\n\n[Done!]\n")
 			self.caller.finish(len(errors) == 0)
-
-	def handle_std_outputs(self, out, err):
-		content = ['']
-		if out is not None:
-			content.extend(['Output from compilation:', '', out.decode('utf-8')])
-		if err is not None:
-			content.extend(['Errors from compilation:', '', err.decode('utf-8')])
-		self.caller.output(content)
-		# if we got here, there shouldn't be a PDF at all
-		self.caller.finish(False)
 
 # Actual Command
 
@@ -379,8 +395,8 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
         # up as the result buffer
 		self.window.get_output_panel("latextools")
 
-		self.hide_panel_level = get_setting("hide_build_panel", "never")
-		if self.hide_panel_level != "always":
+		self.hide_panel_level = get_setting("hide_build_panel", "no_warnings")
+		if self.hide_panel_level == "never":
 			self.window.run_command("show_panel", {"panel": "output.latextools"})
 
 		self.plat = sublime.platform()
@@ -401,7 +417,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		# This *must* exist, so if it doesn't, the user didn't migrate
 		if builder_name is None:
 			sublime.error_message("LaTeXTools: you need to migrate your preferences. See the README file for instructions.")
-			self.window.run_command('hide_panel', {"panel": "output.exec"})
+			self.window.run_command('hide_panel', {"panel": "output.latextools"})
 			return
 
 		# Default to 'traditional' builder
@@ -474,7 +490,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		except NoSuchPluginException:
 			sublime.error_message("Cannot find builder " + builder_name + ".\n" \
 							      "Check your LaTeXTools Preferences")
-			self.window.run_command('hide_panel', {"panel": "output.exec"})
+			self.window.run_command('hide_panel', {"panel": "output.latextools"})
 			return
 
 		print(repr(builder))
@@ -494,8 +510,19 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		# that of the tex root file, and run!
 		self.path = get_texpath() or os.environ['PATH']
 		os.chdir(tex_dir)
-		CmdThread(self).start()
+		thread = CmdThread(self)
+		thread.start()
 		print(threading.active_count())
+
+		# setup the progress indicator
+		display_message_length = long(
+			get_setting('build_finished_message_length', 2.0) * 1000
+		)
+		# NB CmdThread will change the success message
+		self.progress_indicator = ProgressIndicator(
+			thread, 'building', 'build failed',
+			display_message_length=display_message_length
+		)
 
 
 	# Threading headaches :-)

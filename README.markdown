@@ -304,6 +304,12 @@ Two settings allow you to fine-tune the behavior of this command. `temp_files_ex
 
 This clears the [LaTeXTools cache](#latextools-cache). It is useful if the LaTeXTools cache information gets too out of date, but you want to maintain the LaTeX build files, such as `.aux`.
 
+### Show the build panel
+
+**Keybinding:** `shift+escape`
+
+This will show the LaTeXTools build panel, including any messages from the previous build.
+
 ### Forward and Inverse Search
 
 **Keybinding:** `C-l,j` (for forward search; inverse search depends on the previewer)
@@ -488,6 +494,14 @@ The following options are currently available (defaults in parentheses):
 - `cwl_list` (`[ "tex.cwl", "latex-209.cwl", "latex-document.cwl", "latex-l2tabu.cwl", "latex-mathsymbols.cwl"]`): list of cwl files to load
 - `keep_focus` (`true`): if `true`, after compiling a tex file, ST retains the focus; if `false`, the PDF viewer gets the focus. Also note that you can *temporarily* toggle this behavior with `C-l,t,f`. **Note**: If you are on either Windows or Linux you may need to adjust the `sublime_executable` setting for this to work properly. See the **Platform settings** below.
 - `forward_sync` (`true`): if `true`, after compiling a tex file, the PDF viewer is asked to sync to the position corresponding to the current cursor location in ST. You can also *temporarily* toggle this behavior with `C-l,t,s`.
+- `hide_build_panel` (`"no_badboxes"`): controls whether or not the build panel is show after a build. Possible values:
+  * `always`: the build output panel will never be displayed unless explicitly requested
+  * `no_errors`: the build output panel will only be displayed if an error occurs
+  * `no_warnings`: the build output panel will only be displayed if an error or warning occurs
+  * `no_badboxes`: if `display_bad_boxes` is true, the build output panel will be shown if any errors, warnings or badbox messages are found; if `display_bad_boxes` is false, this setting is the same as `no_warnings`.
+  * `never`: the build output panel will always be shown.
+- `display_bad_boxes` (`false`): toggles whether or not to display messages about bad boxes (overfull and underfull hboxes or vboxes) in the output panel. If this is set to `false` (the default), the `"no_badboxes"` setting of `hide_build_panel` is equivalen to the `"no_warnings"` setting, i.e., the panel will only be displayed if there are warnings.
+- `build_finished_message_length` (`2.0`): the number of seconds to display the notification about the completion of the build in the status bar.
 - `aux_directory` (`""`): specifies the auxiliary directory to store any auxiliary files generated during a LaTeX build. Note that the auxiliary directory option is only useful if you are using MiKTeX. Path can be specified using either an absolute path or a relative path. If `aux_directory` is set from the project file, a relative path will be interpreted as relative to the project file. If it is set in the settings file, it will be interpreted relative to the main tex file. In addition, the following special values are honored:
   * `<<temp>>`: uses a temporary directory in the system temp directory instead of a specified path; this directory will be unique to each main file, but does not persist across restarts.
   * `<<cache>>`: uses the ST cache directory (or a suitable directory on ST2) to store the output files; unlike the `<<temp>>` option, this directory can persist across restarts.
