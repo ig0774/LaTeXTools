@@ -26,11 +26,11 @@ LOAD_ORDER = [
     'latextools_utils.system',
     'latextools_utils.utils',
 
-    # use the preceeding
-    'latextools_utils.cache',
+    # depend on previous only
     'latextools_utils.distro_utils',
     'latextools_utils.is_tex_file',
     'latextools_utils.sublime_utils',
+    'latextools_utils.cache',
 
     # use the preceeding
     'latextools_utils.analysis',

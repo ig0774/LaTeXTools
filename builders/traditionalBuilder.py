@@ -95,7 +95,8 @@ class TraditionalBuilder(PdfBuilder):
 
 		# handle any options
 		if texify or latexmk:
-			# we can only handle aux_directory or output_directory with latexmk
+			# we can only handle aux_directory, output_directory, or jobname
+			# with latexmk
 			if latexmk:
 				print(self.aux_directory, self.output_directory)
 				if (
@@ -104,7 +105,7 @@ class TraditionalBuilder(PdfBuilder):
 				):
 					# DO NOT ADD QUOTES HERE
 					cmd.append(
-						"--aux-directory=" +
+						u"--aux-directory=" +
 						self.aux_directory
 					)
 
@@ -113,14 +114,19 @@ class TraditionalBuilder(PdfBuilder):
 				):
 					# DO NOT ADD QUOTES HERE
 					cmd.append(
-						"--output-directory=" +
+						u"--output-directory=" +
 						self.output_directory
+					)
+
+				if self.job_name != self.base_name:
+					cmd.append(
+						u"--jobname=" + self.job_name
 					)
 			for option in self.options:
 				if texify:
-					cmd.append("--tex-option=\"" + option + "\"")
+					cmd.append(u"--tex-option=\"" + option + "\"")
 				else:
-					cmd.append("-latexoption=\"" + option + "\"")
+					cmd.append(u"-latexoption=\"" + option + "\"")
 
 		# texify wants the .tex extension; latexmk doesn't care either way
 		yield (cmd + [self.tex_name], "Invoking " + cmd[0] + "... ")

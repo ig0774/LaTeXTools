@@ -214,6 +214,12 @@ It is possible to set the `--output-directory` or `--aux-directory` arguments in
 
 **Note** output directory and aux directory are only available when either using `latexmk` (default on OS X and Linux), using the `basic` builder or using the `script` builder (see below [for documentation on using the script builder](#script-builder)). If you are using texify (default when using MiKTeX) or the simple builder, setting an aux directory or output directory will be ignored.
 
+#### Jobname
+It is possible to set the `--jobname` argument in several ways. If the first few lines of the main file contains the text `%!TEX jobname = <jobname>`, the corresponding name is used as the `\jobname` for the build. In addition, you can specify `--jobname` in the TeX options (see above), and it will be interpretted accordingly. Finally, jobname can be set by a setting detailed below.
+
+**Note** jobname is only availabe either using latexmk (default on OS X and Linux), the `basic` builder or the `script` builder (see below [for documentation on using the script builder](#script-builder)). If you are using texify (default when using MiKTeX) or the simple builder, setting a jobname will be ignored.
+
+
 #### Customizing the compilation command
 It is possible to customize the command run by setting the `command` option under Builder Settings. See the section on [Builder Settings](#builder-settings) for details.
 
@@ -507,6 +513,7 @@ The following options are currently available (defaults in parentheses):
   * `<<cache>>`: uses the ST cache directory (or a suitable directory on ST2) to store the output files; unlike the `<<temp>>` option, this directory can persist across restarts.
   * `<<project>>`: uses a sub-directory in the same folder as the main tex file with what should be a unique name; note, this is probably not all that useful and you're better off using one of the other two options or a named relative path
 - `output_directory` (`""`): specifies the output directory to store any file generated during a LaTeX build. Path can be specified using either an absolute path or a relative path. If `output_directory` is set from the project file, a relative path will be interpreted as relative to the project file. If it is set in the settings file, it will be interpreted relative to the main tex file. In addition, output_directory honors the same special values as `auxiliary_directory`.
+- `jobname` (`""`): specifies the jobname to use for the build, corresponding to the pdflatex `--jobname` argument.
 - `copy_output_on_build` (`true`): if `true` and you are using an `output_directory`, either set via the setting or the `%!TEX` directive, this instructs LaTeXTools to copy to resulting pdf to the same folder as the main tex file. If you are not using `output_directory` or it is set to `false`, it does nothing. If it is a list of extensions, it will copy each file with the same name as your main tex file and the given extension to the same folder as your main tex file. This is useful for copying, e.g., .synctex.gz or .log files.
 - `temp_files_exts`: list of file extensions to be considered temporary, and hence deleted using the `C-l, backspace` command.
 - `temp_files_ignored_folders`: subdirectories to skip when deleting temp files.
@@ -681,6 +688,7 @@ Each command can use the following variables which will be expanded before it is
 |`$file_path`| The directory of the main file, e.g., _C:\Files_|
 |`$aux_directory`| The auxiliary directory set via a `%!TEX` directive or the settings|
 |`$output_directory`| The output directory set via a `%!TEX` directive or the settings|
+|`$jobname`| The jobname set via a `%!TEX` directive or the settings|
 
 For example:
 
@@ -703,26 +711,6 @@ Note that if none of these variables occur in the command string, the `$file_bas
 
 Commands are executed in the same path as `$file_path`, i.e. the folder containing the main document. Note, however, on Windows, since commands are launched using `cmd.exe`, you need to be careful if your root document is opened via a UNC path (this doesn't apply if you are simply using a mapped drive). `cmd.exe` doesn't support having the current working directory set to a UNC path and will change the path to `%SYSTEMROOT%`. In such a case, just ensure all the paths you specify are absolute paths and use `pushd` in place of `cd`, as this will create a (temporary) drive mapping.
 
-### Supporting output and auxiliary directories ###
-
-If you are using LaTeXTools output and auxiliary directory behavior there are some caveats to be aware of. First, it is, of course, your responsibility to ensure that the approrpiate variables are passed to the appropriate commands in your script. Second, `pdflatex` and friends do not create output directories as needed. Therefore, at the very least, your script must start with either `"mkdir $output_directory"` (Windows) or `"mkdir -p $output_directory"` and a corresponding command if using a separate `$aux_directory`. Note that if you `\include` (or otherwise attempt anything that will `\@openout` a file in a subfolder), you will need to ensure the subfolder exists. Otherwise, your run of `pdflatex` will fail.
-
-Finally, unlike Biber, bibtex (and bibtex8) does not support an output directory parameter, which can make it difficult to use if you are using the LaTeXTools output directory behavior. The following work-arounds can be used to get BibTeX to do the right thing.
-
-On Windows, run BibTeX like so:
-
-```
-cd $aux_directory & set BIBINPUTS=\"$file_path:%BIBINPUTS%\" & bibtex $file_base_name
-```
-
-And on OS X or Linux, use this:
-
-```
-"cd $output_directory; BIBINPUTS=\"$file_path;$BIBINPUTS\" bibtex $file_base_name"
-```
-
-In either case, these run bibtex *inside* the output / auxiliary directory while making the directory containing your main file available to the `BIBINPUTS` environment variable. Note if you use a custom style file in the same directory, you will need to apply a similar work-around for the `BSTINPUTS` environment variable.
-
 #### Supporting output and auxiliary directories
 
 If you are using LaTeXTools output and auxiliary directory behavior there are some caveats to be aware of. First, it is, of course, your responsibility to ensure that the approrpiate variables are passed to the appropriate commands in your script. Second, `pdflatex` and friends do not create output directories as needed. Therefore, at the very least, your script must start with either `"mkdir $output_directory"` (Windows) or `"mkdir -p $output_directory"` and a corresponding command if using a separate `$aux_directory`. Note that if you `\include` (or otherwise attempt anything that will `\@openout` a file in a subfolder), you will need to ensure the subfolder exists. Otherwise, your run of `pdflatex` will fail.
@@ -742,6 +730,46 @@ And on OS X or Linux, use this:
 ```
 
 In either case, these run bibtex *inside* the output / auxiliary directory while making the directory containing your main file available to the `BIBINPUTS` environment variable. Note if you use a custom style file in the same directory, you will need to apply a similar work-around for the `BSTINPUTS` environment variable.
+
+#### Support jobname
+
+If you are using LaTeXTools jobname behaviour, you should be aware that you are responsible for ensure jobname is set in the appropriate context. In particular, a standard build cycle might look something like this:
+
+```json
+{
+	"builder_settings": {
+		"osx": {
+			"script_commands": [
+				[
+					"pdflatex", 
+					"-synctex=1"
+					"-interaction=nonstopmode",
+					"-jobname=$jobname",
+					"$file_base_name"
+				],
+				[
+					"bibtex", 
+					"$jobname"
+				],
+				[
+					"pdflatex", 
+					"-synctex=1"
+					"-interaction=nonstopmode",
+					"-jobname=$jobname",
+					"$file_base_name"
+				],
+				[
+					"pdflatex", 
+					"-synctex=1"
+					"-interaction=nonstopmode",
+					"-jobname=$jobname",
+					"$file_base_name"
+				]
+			]
+		}
+	}
+}
+```
 
 #### Caveats
 

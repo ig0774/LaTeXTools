@@ -18,7 +18,7 @@ if sublime.version() < '3000':
 		execute_command, external_command, get_texpath, update_env
 	)
 	from latextools_utils.output_directory import (
-		get_aux_directory, get_output_directory
+		get_aux_directory, get_output_directory, get_jobname
 	)
 	from latextools_utils.progress_indicator import ProgressIndicator
 
@@ -38,7 +38,7 @@ else:
 		execute_command, external_command, get_texpath, update_env
 	)
 	from .latextools_utils.output_directory import (
-		get_aux_directory, get_output_directory
+		get_aux_directory, get_output_directory, get_jobname
 	)
 	from .latextools_utils.progress_indicator import ProgressIndicator
 
@@ -374,7 +374,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			sublime.error_message(self.file_name + ": file not found.")
 			return
 
-		self.tex_base, self.tex_ext = os.path.splitext(self.file_name)
+		self.tex_base = get_jobname(view)
 		tex_dir = os.path.dirname(self.file_name)
 
 		if not is_tex_file(self.file_name):
@@ -476,7 +476,8 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		# handled separately
 		options = [opt for opt in options if (
 			not opt.startswith('--aux-directory') and
-			not opt.startswith('--output-directory')
+			not opt.startswith('--output-directory') and
+			not opt.startswith('--jobname')
 		)]
 
 		self.aux_directory = get_aux_directory(self.file_name)
@@ -519,6 +520,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			options,
 			self.aux_directory,
 			self.output_directory,
+			self.tex_base,
 			tex_directives,
 			builder_settings,
 			platform_settings
@@ -608,7 +610,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 					shutil.copy2(
 						os.path.join(
 							self.output_directory,
-							os.path.basename(self.tex_base) + u'.pdf'
+							self.tex_base + u'.pdf'
 						),
 						os.path.dirname(self.file_name)
 					)
@@ -617,7 +619,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 						shutil.copy2(
 							os.path.join(
 								self.output_directory,
-								os.path.basename(self.tex_base) + ext
+								self.tex_base + ext
 							),
 							os.path.dirname(self.file_name)
 						)

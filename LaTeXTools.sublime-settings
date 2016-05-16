@@ -236,6 +236,11 @@
 
 	"output_directory": "",
 
+	// OPTION: "jobname"
+	// Specifies the jobname to use when building the document
+
+	"jobname": "",
+
 	// OPTION: "copy_output_on_build"
 	// Specifies whether to copy the final PDF file to the same folder
 	// as the main tex file; if it is neither true nor false it must be

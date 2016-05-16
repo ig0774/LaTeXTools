@@ -8,7 +8,9 @@ if sublime.version() < '3000':
 	import getTeXRoot
 	from latextools_utils.is_tex_file import is_tex_file
 	from latextools_utils import get_setting
-	from latextools_utils.output_directory import get_output_directory
+	from latextools_utils.output_directory import (
+		get_output_directory, get_jobname
+	)
 	from latextools_utils.sublime_utils import get_sublime_exe
 	from latextools_plugin import (
 		get_plugin, add_plugin_path, NoSuchPluginException,
@@ -19,7 +21,9 @@ else:
 	from . import getTeXRoot
 	from .latextools_utils.is_tex_file import is_tex_file
 	from .latextools_utils import get_setting
-	from .latextools_utils.output_directory import get_output_directory
+	from .latextools_utils.output_directory import (
+		get_output_directory, get_jobname
+	)
 	from .latextools_utils.sublime_utils import get_sublime_exe
 	from .latextools_plugin import (
 		get_plugin, add_plugin_path, NoSuchPluginException,
@@ -132,22 +136,27 @@ class JumpToPdf(sublime_plugin.TextCommand):
 		if not is_tex_file(self.view.file_name()):
 			sublime.error_message("%s is not a TeX source file: cannot jump." % (os.path.basename(view.fileName()),))
 			return
-		
-		root = getTeXRoot.get_tex_root(self.view)
-		print("!TEX root = ", repr(root))  # need something better here, but this works.
-		root_path, _ = os.path.splitext(root)
 
-		output_directory = get_output_directory(root)
+		file_name = get_jobname(self.view)
+
+		output_directory = get_output_directory(self.view)
 		if output_directory is None:
-			pdffile = root_path + u'.pdf'
+			root = getTeXRoot.get_tex_root(self.view)
+			pdffile = os.path.join(
+				os.path.dirname(root),
+				file_name + u'.pdf'
+			)
 		else:
 			pdffile = os.path.join(
 				output_directory,
-				os.path.basename(root_path) + u'.pdf'
+				file_name + u'.pdf'
 			)
 
 			if not os.path.exists(pdffile):
-				pdffile = root_path + u'.pdf'
+				pdffile = os.path.join(
+					os.path.dirname(root),
+					file_name + u'.pdf'
+				)
 
 		(line, col) = self.view.rowcol(self.view.sel()[0].end())
 		print("Jump to: ", line, col)

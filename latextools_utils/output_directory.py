@@ -19,7 +19,10 @@ except ImportError:
     from .sublime_utils import get_project_file_name
 
 
-__all__ = ['get_aux_directory', 'get_output_directory', 'UnsavedFileException']
+__all__ = [
+    'get_aux_directory', 'get_output_directory', 'get_jobname',
+    'UnsavedFileException'
+]
 
 
 # raised whenever the root cannot be determined, which indicates an unsaved
@@ -37,14 +40,8 @@ class UnsavedFileException(Exception):
 #   5. assume aux_directory is the same as output_directory
 def get_aux_directory(view_or_root):
     # not supported using texify or the simple builder
-    if using_miktex():
-        builder = get_setting('builder', 'traditional')
-        if builder in ['', 'default', 'traditional', 'simple']:
-            return None
-    else:
-        builder = get_setting('builder', 'traditional')
-        if builder == 'simple':
-            return None
+    if using_texify_or_simple():
+        return None
 
     root = get_root(view_or_root)
 
@@ -87,14 +84,8 @@ def get_aux_directory(view_or_root):
 #   5. assume output_directory is None
 def get_output_directory(view_or_root):
     # not supported using texify or the simple builder
-    if using_miktex():
-        builder = get_setting('builder', 'traditional')
-        if builder in ['', 'default', 'traditional', 'simple']:
-            return None
-    else:
-        builder = get_setting('builder', 'traditional')
-        if builder == 'simple':
-            return None
+    if using_texify_or_simple():
+        return None
 
     root = get_root(view_or_root)
 
@@ -126,6 +117,46 @@ def get_output_directory(view_or_root):
         )
 
     return None
+
+
+# finds the jobname
+# general algorithm:
+#   1. check for an explict jobname setting
+#   2. check for a --jobname flag
+#   3. check for a project setting
+#   4. check for a global setting
+#   5. assume jobname is basename of tex_root
+# Note: returns None if root is unsaved
+def get_jobname(view_or_root):
+    root = get_root(view_or_root)
+
+    if root is None:
+        return None
+
+    if using_texify_or_simple():
+        return os.path.splitext(
+            os.path.basename(root)
+        )[0]
+
+    jobname = get_directive(root, 'jobname')
+
+    if jobname is None or jobname == '':
+        jobname = get_setting('jobname')
+
+    if jobname is None or jobname == '':
+        return os.path.splitext(
+            os.path.basename(root)
+        )[0]
+
+    return jobname
+
+
+def using_texify_or_simple():
+    if using_miktex():
+        builder = get_setting('builder', 'traditional')
+        if builder in ['', 'default', 'traditional', 'simple']:
+            return True
+    return False
 
 
 def get_root(view_or_root):

@@ -89,6 +89,9 @@ class BasicBuilder(PdfBuilder):
             self.make_directory(self.aux_directory)
             latex.append(u'--output-directory=' + self.output_directory)
 
+        if self.job_name != self.base_name:
+            latex.append(u'--jobname=' + self.job_name)
+
         for option in self.options:
             latex.append(option)
 
@@ -121,7 +124,7 @@ class BasicBuilder(PdfBuilder):
                     else:
                         break
                 if added_directory:
-                    yield (latex, "running {0}... ".format(engine))
+                    yield (latex, "running {0}...".format(engine))
                     self.display("done.\n")
                     self.log_output()
                 else:
@@ -147,7 +150,7 @@ class BasicBuilder(PdfBuilder):
             match = BIBLATEX_REGEX.search(self.out)
             if match:
                 if match.group(1).lower() == 'biber':
-                    yield (biber + [self.base_name], "running biber...")
+                    yield (biber + [self.job_name], "running biber...")
                 else:
                     yield (
                         self.run_bibtex(match.group(1).lower()),
@@ -222,7 +225,7 @@ class BasicBuilder(PdfBuilder):
         else:
             preexec_fn = os.setsid
 
-        command.append(self.base_name)
+        command.append(self.job_name)
         print(command)
         bib_proc = subprocess.Popen(
             command,
