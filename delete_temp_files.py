@@ -49,8 +49,12 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 
 		root_file = getTeXRoot.get_tex_root(view)
 		if root_file is None:
-			sublime.status_message('Could not find TEX root. Please ensure that either you have configured a TEX root in your project settings or have a LaTeX document open.')
-			print('Could not find TEX root. Please ensure that either you have configured a TEX root in your project settings or have a LaTeX document open.')
+			msg = \
+				'Could not find TEX root. Please ensure that either you '
+				'have configured a TEX root in your project settings or '
+				'have a LaTeX document open.'
+			sublime.status_message(msg)
+			print(msg)
 			return
 
 		if not os.path.isfile(root_file):
@@ -66,8 +70,13 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			print('Error while trying to delete local cache')
 			traceback.print_exc()
 
-		aux_directory = get_aux_directory(root_file)
-		output_directory = get_output_directory(root_file)
+		aux_directory, aux_directory_setting = get_aux_directory(
+			root_file, return_setting=True
+		)
+
+		output_directory, output_directory_setting = get_output_directory(
+			root_file, return_setting=True
+		)
 
 		if aux_directory is not None:
 			# we cannot delete the output directory on Windows in case
@@ -76,41 +85,43 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 				sublime.platform() != 'windows' or
 				aux_directory != output_directory
 			):
-				self._rmtree(aux_directory)
+				if aux_directory_setting.startswith('<<'):
+					self._rmtree(aux_directory)
+				else:
+					self.delete_temp_files(aux_directory)
 
 		if output_directory is not None:
-			# we cannot delete the output directory on Windows in case
-			# Sumatra is holding a reference to it
-			if sublime.platform() == 'windows':
-				self._clear_dir(output_directory)
+			if output_directory_setting.startswith('<<'):
+				# we cannot delete the output directory on Windows in case
+				# Sumatra is holding a reference to it
+				if sublime.platform() == 'windows':
+					self._clear_dir(output_directory)
+				else:
+					self._rmtree(output_directory)
 			else:
-				self._rmtree(output_directory)
+				self.delete_temp_files(output_directory)
 		else:
 			# if there is no output directory, we may need to clean files
 			# in the main directory, even if aux_directory is used
-			path = os.path.dirname(root_file)
-
-			# Load the files to delete from the settings
-			temp_files_exts = get_setting('temp_files_exts',
-				['.blg', '.bbl', '.aux', '.log', '.brf', '.nlo', '.out', '.dvi',
-				 '.ps', '.lof', '.toc', '.fls', '.fdb_latexmk', '.pdfsync',
-				 '.synctex.gz', '.ind', '.ilg', '.idx'])
-
-			ignored_folders = get_setting('temp_files_ignored_folders',
-				['.git', '.svn', '.hg'])
-
-			ignored_folders = set(ignored_folders)
-
-			for dir_path, dir_names, file_names in os.walk(path):
-				dir_names[:] = [d for d in dir_names if d not in ignored_folders]
-				for file_name in file_names:
-					for ext in temp_files_exts:
-						if file_name.endswith(ext):
-							self._rmfile(os.path.join(dir_path, file_name))
-							# exit extension
-							break
+			self.delete_temp_files(os.dirname(root_file))
 
 		sublime.status_message("Deleted temp files")
+
+	def delete_temp_files(self, path):
+		# Load the files to delete from the settings
+		temp_files_exts = get_setting(
+			'temp_files_exts',
+			['.blg', '.bbl', '.aux', '.log', '.brf', '.nlo', '.out', '.dvi',
+				'.ps', '.lof', '.toc', '.fls', '.fdb_latexmk', '.pdfsync',
+				'.synctex.gz', '.ind', '.ilg', '.idx']
+		)
+
+		ignored_folders = get_setting(
+			'temp_files_ignored_folders',
+			['.git', '.svn', '.hg']
+		)
+
+		ignored_folders = set(ignored_folders)
 
 	def _rmtree(self, path):
 		if os.path.exists(path):
@@ -137,4 +148,8 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 			for directory in directories:
 				self._rmtree(os.path.join(root, directory))
 			for file_name in file_names:
-				self._rmfile(os.path.join(root, file_name))
+				for ext in temp_files_exts:
+					if file_name.endswith(ext):
+						self._rmfile(os.path.join(dir_path, file_name))
+						# exit extension
+						break

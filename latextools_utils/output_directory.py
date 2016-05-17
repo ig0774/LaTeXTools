@@ -38,10 +38,15 @@ class UnsavedFileException(Exception):
 #   3. check for a project setting
 #   4. check for a global setting
 #   5. assume aux_directory is the same as output_directory
-def get_aux_directory(view_or_root):
+# return_setting indicates that the raw setting should be returned
+# as well as the auxiliary directory
+def get_aux_directory(view_or_root, return_setting=False):
     # not supported using texify or the simple builder
     if using_texify_or_simple():
-        return None
+        if return_setting:
+            return (None, None)
+        else:
+            return None
 
     root = get_root(view_or_root)
 
@@ -50,29 +55,44 @@ def get_aux_directory(view_or_root):
         aux_directory = get_directive(root, 'aux_directory')
 
     if aux_directory is not None and aux_directory != '':
-        return resolve_to_absolute_path(
+        aux_dir = resolve_to_absolute_path(
             root, aux_directory, _get_root_directory(root)
         )
+
+        if return_setting:
+            return (aux_dir, aux_directory)
+        else:
+            return aux_dir
 
     view = sublime.active_window().active_view()
     aux_directory = view.settings().get('aux_directory')
 
     if aux_directory is not None and aux_directory != '':
-        return resolve_to_absolute_path(
+        aux_dir = resolve_to_absolute_path(
             root,
             aux_directory,
             _get_root_directory(get_project_file_name(view))
         )
 
+        if return_setting:
+            return (aux_dir, aux_directory)
+        else:
+            return aux_dir
+
     settings = sublime.load_settings('LaTeXTools.sublime-settings')
     aux_directory = settings.get('aux_directory')
 
     if aux_directory is not None and aux_directory != '':
-        return resolve_to_absolute_path(
+        aux_dir = resolve_to_absolute_path(
             root, aux_directory, _get_root_directory(root)
         )
 
-    return get_output_directory(root)
+        if return_setting:
+            return (aux_dir, aux_directory)
+        else:
+            return aux_dir
+
+    return get_output_directory(root, return_setting)
 
 
 # finds the output-directory
@@ -82,10 +102,15 @@ def get_aux_directory(view_or_root):
 #   3. check for a project setting
 #   4. check for a global setting
 #   5. assume output_directory is None
-def get_output_directory(view_or_root):
+# return_setting indicates that the raw setting should be returned
+# as well as the output directory
+def get_output_directory(view_or_root, return_setting=False):
     # not supported using texify or the simple builder
     if using_texify_or_simple():
-        return None
+        if return_setting:
+            return (None, None)
+        else:
+            return None
 
     root = get_root(view_or_root)
 
@@ -94,29 +119,47 @@ def get_output_directory(view_or_root):
         output_directory = get_directive(root, 'output_directory')
 
     if output_directory is not None and output_directory != '':
-        return resolve_to_absolute_path(
+        out_dir = resolve_to_absolute_path(
             root, output_directory, _get_root_directory(root)
         )
+
+        if return_setting:
+            return (out_dir, output_directory)
+        else:
+            return out_dir
 
     view = sublime.active_window().active_view()
     output_directory = view.settings().get('output_directory')
 
     if output_directory is not None and output_directory != '':
-        return resolve_to_absolute_path(
+        out_dir = resolve_to_absolute_path(
             root,
             output_directory,
             _get_root_directory(get_project_file_name(view))
         )
 
+        if return_setting:
+            return (out_dir, output_directory)
+        else:
+            return out_dir
+
     settings = sublime.load_settings('LaTeXTools.sublime-settings')
     output_directory = settings.get('output_directory')
 
     if output_directory is not None and output_directory != '':
-        return resolve_to_absolute_path(
+        out_dir = resolve_to_absolute_path(
             root, output_directory, _get_root_directory(root)
         )
 
-    return None
+        if return_setting:
+            return (out_dir, output_directory)
+        else:
+            return out_dir
+
+    if return_setting:
+        return (None, None)
+    else:
+        return None
 
 
 # finds the jobname
