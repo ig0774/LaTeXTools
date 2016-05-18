@@ -216,9 +216,9 @@ class ViewPdf(sublime_plugin.WindowCommand):
 
 			file_name = get_jobname(view)
 
-			output_directory = get_output_directory(self.view)
+			output_directory = get_output_directory(view)
 			if output_directory is None:
-				root = getTeXRoot.get_tex_root(self.view)
+				root = getTeXRoot.get_tex_root(view)
 				pdffile = os.path.join(
 					os.path.dirname(root),
 					file_name + u'.pdf'
