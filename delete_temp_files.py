@@ -98,7 +98,7 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 		else:
 			# if there is no output directory, we may need to clean files
 			# in the main directory, even if aux_directory is used
-			self.delete_temp_files(os.dirname(root_file))
+			self.delete_temp_files(os.path.dirname(root_file))
 
 		sublime.status_message("Deleted temp files")
 
