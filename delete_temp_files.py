@@ -118,6 +118,55 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 
 		ignored_folders = set(ignored_folders)
 
+		for dir_path, dir_names, file_names in os.walk(path):
+			dir_names[:] = [d for d in dir_names if d not in ignored_folders]
+			for file_name in file_names:
+				for ext in temp_files_exts:
+					if file_name.endswith(ext):
+						file_name_to_del = os.path.join(dir_path, file_name)
+						if os.path.exists(file_name_to_del):
+							try:
+								os.remove(file_name_to_del)
+							except OSError:
+								# basically here for locked files in Windows,
+								# but who knows what we might find?
+								print(u'Error while trying to delete {0}'.format(file_name_to_del))
+								traceback.print_exc()
+						# exit extension
+						break
+
+	def _rmtree(self, path):
+		if os.path.exists(path):
+			try:
+				shutil.rmtree(path)
+			except OSError:
+				if os.path.exists(path):
+					# report the exception if the folder didn't end up deleted
+					traceback.print_exc()
+
+	def _rmfile(self, path):
+		if os.path.exists(path):
+			try:
+				os.remove(path)
+			except OSError:
+				if os.path.exists(path):
+					# basically here for locked files in Windows,
+					# but who knows what we might find?
+					print('Error while trying to delete {0}'.format(path))
+					traceback.print_exc()
+
+	def _clear_dir(self, path):
+		for root, directories, file_names in os.walk(path):
+			for directory in directories:
+				self._rmtree(os.path.join(root, directory))
+			for file_name in file_names:
+				for ext in temp_files_exts:
+					if file_name.endswith(ext):
+						self._rmfile(os.path.join(dir_path, file_name))
+						# exit extension
+						break
+
+
 	def _rmtree(self, path):
 		if os.path.exists(path):
 			try:
