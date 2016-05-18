@@ -4,6 +4,7 @@ import sublime
 import sublime_plugin
 
 import os
+import shutil
 import traceback
 
 if sublime.version() < '3000':
@@ -21,12 +22,6 @@ else:
 	from .latextools_utils.output_directory import (
 		get_aux_directory, get_output_directory
 	)
-
-import sublime_plugin
-import os
-import shutil
-
-import traceback
 
 
 class ClearLocalLatexCacheCommand(sublime_plugin.WindowCommand):
@@ -50,8 +45,8 @@ class DeleteTempFilesCommand(sublime_plugin.WindowCommand):
 		root_file = getTeXRoot.get_tex_root(view)
 		if root_file is None:
 			msg = \
-				'Could not find TEX root. Please ensure that either you '
-				'have configured a TEX root in your project settings or '
+				'Could not find TEX root. Please ensure that either you ' + \
+				'have configured a TEX root in your project settings or ' + \
 				'have a LaTeX document open.'
 			sublime.status_message(msg)
 			print(msg)
