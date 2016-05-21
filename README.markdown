@@ -238,7 +238,7 @@ By default, LaTeXTools supports the following viewers, depending on platform:
  * On Windows, Sumatra
  * On Linux, Evince
 
-However, it is possible to use other programs to view PDF files. Currently the only non-default viewers supported are Preview.appp on OS X and Okular on Linux (patches welcome!). Preview can be selected by changing the `viewer` setting in your LaTeXTools preferences to `"preview"`. Okular can be used by changing the `viewer` setting in your LaTeXTools preferences to `"okular"`. See the [Viewer Settings](#viewer-settings) section for more details. For a manner of supporting other viewers, please see the section on [Alternate Viewers](#alternate-viewers) below.
+However, there is now support for custom viewers, if not a lot of choice available at the moment (patches welcome). Currently the only non-default viewers supported are Preview on OS X and Okular and Zathura on Linux. Preview can be selected by changing the `viewer` setting in your LaTeXTools preferences to `"preview"`. Okular can be used by changing the `viewer` setting in your LaTeXTools preferences to `"okular"`. Zathura can be used by changing the `viewer setting to `"zathura"`. See the [Viewer Settings](#viewer-settings) section for more details. For a manner of supporting other viewers, please see the section on [Alternate Viewers](#alternate-viewers) below.
 
 ## Keybindings
 
@@ -1207,6 +1207,10 @@ To use this builder, save it to a file called `"mikbibBuilder.py"` and change th
 Sublime Text provides a very rich API that could be of use to builders. However, it is advisable that any interactions with the Sublime Text API happen in the `__init__()` function, if possible. This is because the `__init__()` function is run on the main Sublime thread whereas the `commands()` function is called from a separate thread which cannot safely interact with the Sublime API on ST2. `commands()` is run on a separate thread.
 
 ## Alternative Viewers
+
+### Zathura
+
+Zathura should mostly work out-of-the-box, but under some circumstances, Zathura will not gain focus as might be expected. If you want to ensure that the focus ends up on Zathura, you will have to install either `wmctrl` or `xdotool` so that LaTeXTools ensure focus is set on Zathura.
 
 ### Command Viewer
 
