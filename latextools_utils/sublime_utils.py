@@ -1,6 +1,7 @@
 # This module provides some functions that handle differences between ST2 and
 # ST3. For the most part, they provide ST2-compatible functionality that is
 # already available in ST3.
+from __future__ import print_function
 
 import json
 import os
@@ -138,7 +139,7 @@ def get_sublime_exe():
     if hasattr(sublime, 'executable_path'):
         get_sublime_exe.result = sublime.executable_path()
         # on osx, the executable does not function the same as subl
-        if platform== 'osx':
+        if platform == 'osx':
             get_sublime_exe.result = os.path.normpath(
                 os.path.join(
                     os.path.dirname(get_sublime_exe.result),
@@ -148,6 +149,8 @@ def get_sublime_exe():
                     'subl'
                 )
             )
+
+        return get_sublime_exe.result
     # in ST2 on Windows the Python executable is actually "sublime_text"
     elif platform == 'windows' and sys.executable != 'python' and \
             os.path.isabs(sys.executable):
