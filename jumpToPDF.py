@@ -79,28 +79,38 @@ def focus_st():
 
 	if sublime_command is not None:
 		platform = sublime.platform()
-		# TODO: this does not work on OSX
-		# and I don't know why...
-		if platform == 'osx':
-			return
 
 		plat_settings = get_setting(platform, {})
 		wait_time = plat_settings.get('keep_focus_delay', 0.5)
 
-		def keep_focus():
-			startupinfo = None
-			shell = False
-			if platform == 'windows':
-				startupinfo = subprocess.STARTUPINFO()
-				startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-				shell = _ST3
+		# osx is a special snowflake
+		if platform == 'osx':
+			# sublime_command should be /path/to/Sublime Text.app/Contents/...
+			sublime_app = sublime_command.split('/Contents/')[0]
 
-			subprocess.Popen(
-				sublime_command,
-				startupinfo=startupinfo,
-				shell=shell,
-				env=os.environ
-			)
+			def keep_focus():
+				subprocess.Popen(
+					[
+						'osascript', '-e',
+						'tell application "{0}" to activate'.format(sublime_app)
+					],
+					env=os.environ
+				)
+		else:
+			def keep_focus():
+				startupinfo = None
+				shell = False
+				if platform == 'windows':
+					startupinfo = subprocess.STARTUPINFO()
+					startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+					shell = _ST3
+
+				subprocess.Popen(
+					sublime_command,
+					startupinfo=startupinfo,
+					shell=shell,
+					env=os.environ
+				)
 
 		if hasattr(sublime, 'set_async_timeout'):
 			sublime.set_async_timeout(keep_focus, int(wait_time * 1000))
