@@ -7,12 +7,12 @@ import os.path
 
 
 # To accommodate both Python 2 and 3
-if sys.version_info > (3, 0):
-	def advance_iterator(it):
-		return next(it)
+if sys.version_info >= (3,):
+	advance_iterator = next
 else:
-	def advance_iterator(it):
+	def _advance_iterator(it):
 		return it.next()
+	advance_iterator = _advance_iterator
 
 print_debug = False
 interactive = False
@@ -655,26 +655,22 @@ if __name__ == '__main__':
 	interactive = True
 	try:
 		logfilename = sys.argv[1]
-		# logfile = open(logfilename, 'r') \
-		# 		.read().decode(enc, 'ignore') \
-		# 		.encode(enc, 'ignore').splitlines()
 		if len(sys.argv) == 3:
 			extra_file_ext = sys.argv[2].split(" ")
-		data = open(logfilename,'r').read()
-		(errors,warnings,badboxes) = parse_tex_log(data)
-		print ("")
+		data = open(logfilename, 'rb').read()
+		errors, warnings, badboxes = parse_tex_log(data)
+		print("")
+		print("Errors:")
+		for err in errors:
+			print(err)
+		print("")
 		print ("Warnings:")
 		for warn in warnings:
-			print (warn.encode('UTF-8'))
-		print ("")
-		print ("Bad boxes:")
+			print(warn)
+		print("")
+		print("Bad boxes:")
 		for box in badboxes:
-			print (box.encode('UTF-8'))
-		print ("")
-		print ("Errors:")
-		for err in errors:
-			print (err.encode('UTF-8'))
-
+			print(box)
 	except Exception as e:
 		import traceback
 		traceback.print_exc()
