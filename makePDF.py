@@ -543,7 +543,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		if path is not None:
 			self.path = expand_vars(path)
 		else:
-			self.path = get_texpath or os.environ['PATH']
+			self.path = get_texpath() or expand_vars(os.environ['PATH'])
 		os.chdir(tex_dir)
 		thread = CmdThread(self)
 		thread.start()
