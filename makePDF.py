@@ -466,13 +466,13 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 				builder_settings.get("program", "pdflatex")
 			)
 
-		engine_ = engine_.lower()
+		engine = engine.lower()
 
 		# Sanity check: if "strange" engine, default to pdflatex (silently...)
-		if engine_ not in [
+		if engine not in [
 			'pdflatex', "pdftex", 'xelatex', 'xetex', 'lualatex', 'luatex'
 		]:
-			engine_ = 'pdflatex'
+			engine = 'pdflatex'
 
 		options = builder_settings.get("options", [])
 		if isinstance(options, strbase):
@@ -515,7 +515,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			add_plugin_path(bld_path)
 
 		try:
-			builder = get_plugin('{0}_builder'.format(builder_name_))
+			builder = get_plugin('{0}_builder'.format(builder_name))
 		except NoSuchPluginException:
 			sublime.error_message(
 				"Cannot find builder {0}.\n"
@@ -528,7 +528,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.builder = builder(
 			self.file_name,
 			self.output,
-			engine_,
+			engine,
 			options,
 			self.aux_directory,
 			self.output_directory,
