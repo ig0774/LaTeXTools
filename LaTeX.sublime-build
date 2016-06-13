@@ -30,50 +30,46 @@
 	"variants":
 	[
 		{
+			"name": "Traditional",
+			"builder": "traditional"
+		},
+		{
 			"name": "PdfLaTeX",
-			"engine": "pdflatex"
+			"builder": "traditional",
+			"program": "pdflatex"
 		},
 		{
 			"name": "XeLaTeX",
-			"engine": "xelatex"
+			"builder": "traditional",
+			"program": "xelatex"
 		},
 		{
 			"name": "LuaLaTeX",
-			"engine": "lualatex"
+			"builder": "traditional",
+			"program": "lualatex"
+		},
+		{
+			"name": "Basic Builder",
+			"builder": "basic"
 		},
 		{
 			"name": "Basic Builder - PdfLaTeX",
-			"builder_name": "basic",
-			"engine": "pdflatex"
+			"builder": "basic",
+			"program": "pdflatex"
 		},
 		{
 			"name": "Basic Builder - XeLaTeX",
-			"builder_name": "basic",
-			"engine": "xelatex"
+			"builder": "basic",
+			"program": "xelatex"
 		},
 		{
 			"name": "Basic Builder - LuaLaTeX",
-			"builder_name": "basic",
-			"engine": "lualatex"
-		},
-		{
-			"name": "Traditional Builder - PdfLaTeX",
-			"builder_name": "traditional",
-			"engine": "pdflatex"
-		},
-		{
-			"name": "Traditional Builder - XeLaTeX",
-			"builder_name": "traditional",
-			"engine": "xelatex"
-		},
-		{
-			"name": "Traditional Builder - LuaLaTeX",
-			"builder_name": "traditional",
-			"engine": "lualatex"
+			"builder": "basic",
+			"program": "lualatex"
 		},
 		{
 			"name": "Script",
-			"builder_name": "script"
+			"builder": "script"
 		}
 	]
 }

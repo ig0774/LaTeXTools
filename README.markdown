@@ -17,8 +17,6 @@ Additional contributors (*thank you thank you thank you*): first of all, Wallace
  * Support for \subref
  * Improve Okular support
 
-*Reminder*: See the [Settings section](#settings) for details on the Settings system, which was updated in v3.6.1 (2016-01-01).
-
 ## Introduction
 
 This plugin provides several features that simplify working with LaTeX files:
@@ -78,14 +76,6 @@ If you don't want to install the entire MacTeX distro, which is pretty big, Basi
 
 Sadly, with each OS X release, Apple deviates more and more from established Unix conventions. The latest "innovation" is that, beginning with El Capitan, applications can no longer write to `/usr`. MacTeX 2015 remedies this by creating a link to TeX binaries in `/Library/TeX`. The default LaTeXTools settings file now adds `/Library/TeX/texbin` to the `texpath`. In practice, this means the following.
 
-#### Support for BasicTeX
-
-If you don't want to install the entire MacTeX distro, which is pretty big, BasicTeX will also work (of course, as long as the LaTeX packages you need are included). **However**, you need to explicitly add the `latexmk` utility, which is not included by default: from the Terminal, type `sudo tlmgr install latexmk` (you will need to provide your password, assuming you are Administrator on your machine).
-
-#### El Capitan
-
-Sadly, with each OS X release, Apple deviates more and more from established Unix conventions. The latest "innovation" is that, beginning with El Capitan, applications can no longer write to `/usr`. MacTeX 2015 remedies this by creating a link to TeX binaries in `/Library/TeX`. The default LaTeXTools settings file now adds `/Library/TeX/texbin` to the `texpath`. In practice, this means the following.
-
 ### Windows
 
 On **Windows**, both [MikTeX](http://www.miktex.org/) and [TeXLive](https://www.tug.org/texlive/) are supported. Install either of these as usual.
@@ -120,7 +110,7 @@ Recent versions of MikTeX add themselves to your path automatically, but in case
 
 #### Install TeXLive
 
-You need to install TeXLive; if you are on Ubuntu, note that `apt-get install texlive` will get you a working but incomplete setup. In particular, it will *not* bring in `latexmk`, which is essential to LaTeXTools. You need to install it via `apt-get install latexmk`. If on the other hand you choose to install the TeXlive distro from TUG, `latexmk` comes with it, so you don't need to do anything else.
+You need to install TeXlive; if you are on Ubuntu, note that `apt-get install texlive` will get you a working but incomplete setup. In particular, it will *not* bring in `latexmk`, which is essential to LaTeXTools. You need to install it via `apt-get install latexmk`. If on the other hand you choose to install the TeXlive distro from TUG, `latexmk` comes with it, so you don't need to do anything else.
 
 #### Setup LaTeXTools
 
@@ -140,9 +130,9 @@ Also, to get inverse search working on ST3, make sure you set the `sublime` opti
 
 #### Setup Evince
 
-By default LaTeXTools assumes you are using Evince (Document Viewer) as your PDF viewer. Support is also available for Okular and other viewers that can be run via the command line. See the section on [Viewers](#viewers) below for details on how to setup other viewers. Backward and forward search should work, but let us know if they don't.
+By default LaTeXTools assumes you are using Evince (Document Viewer) as your PDF viewer. Support is also available for Okular and other viewers that can be run via the command line. See the section on [Viewers](#viewers) below for details on how to setup other viewers. 
 
-When using Evince, it may be necessary to adjust the `python` setting (see [Settings](#settings)) to point to a particular interpreter. Note that the Python interpreter you select must have the DBus bindings installed or else neither backward nor forward search will work.
+If you opt to use Evince, which is installed by default on Ubuntu and any distro that provides the Gnome desktop, you don't need to configure anything. Backward and forward search Work For Me (TM). Hopefully they will work for you, too, but let me know if this is not the case.
 
 ## General Features
 
@@ -186,7 +176,6 @@ LaTeXTools has some enhanced support for editing either BibTeX or BibLaTeX `.bib
 
 This behaviour is controlled by a single setting, `use_biblatex` (default: `false`), which indicates whether LaTeXTools should use the BibTeX versions of the auto-completions (this is the default behavior) or the BibLaTeX versions of the auto-completions (if `use_biblatex` is set to `true`).
 
-
 ### Package Documentation
 
 You can consult the documentation for any LaTeX package by invoking the `View Package Documentation` command via the Command Palette (for now). This relies on your system's `texdoc` command.
@@ -204,23 +193,37 @@ Most of the builder features are controlled through the `LaTeXTools.sublime-sett
 The default builder (called the `traditional` builder) supports several additional features.
 
 #### TeX Engine Selection
+
 If the first line of the current file consists of the text `%!TEX program = <program>`, where `program` is `pdflatex`, `lualatex` or `xelatex`, the corresponding engine is selected. If no such directive is specified, `pdflatex` is the default. Multi-file documents are supported: the directive must be in the *root* (i.e. master) file. Also, for compatibility with TeXshop, you can use `TS-program` instead of `program`. **Note**: for this to work, you must **not** customize the `command` option in `LaTeXTools.sublime-settings`. If you do, you will not get this functionality. Finally, if you use project files, the `program` builder setting can also be customized there, under `settings`.
 
 #### TeX Options
+
 You can pass command-line options to your engine in two ways (thanks Ian Bacher!). One is to use a `%!TEX options = ...` line at the top of your file. The other is to use the `options` builder setting in your settings file. This can be useful, for instance, if you need to allow shell escape. Finally, if you use project files, the `options` builder setting can also be customized there (again, under `settings`).
 
-#### Output and Aux Directories
-It is possible to set the `--output-directory` or `--aux-directory` arguments in several ways. If the first few lines of the main file contains the text `%!TEX output_directory = <path>`, the corresponding path is used for the output directory. Similarly,  `%!TEX aux_directory = <path>` will also be interpreted as the auxiliary directory. In addition, you can specify either `--output-directory` or `--aux-directory` in the TeX options (see above) and it will be interpretted accordingly. Finally, these two can also be controlled by a corresponding setting detailed in the section on settings. There are also three special values that can be used, `<<temp>>` `<<project>>` and `<<cache>>`. Their meaning is the same as that found in the [Settings](#settings) section and they are described there.
+#### Output Directory and Auxiliary Directory
 
-**Note** output directory and aux directory are only available when either using `latexmk` (default on OS X and Linux), using the `basic` builder or using the `script` builder (see below [for documentation on using the script builder](#script-builder)). If you are using texify (default when using MiKTeX) or the simple builder, setting an aux directory or output directory will be ignored.
+The `--output-directory` and `--aux-directory` flags can be set in several ways:
+ * Using a TEX directive, such as `%!TEX output_directory = <path>` near the top of the file.
+ * Using the [TeX Options](#tex-options) feature to set `--output-directory` and / or `--aux-directory`.
+ * Using the corresponding `output_directory` and `aux_directory` settings detailed in [the settings section](#settings).
+
+There are three special values that can be used, `<<temp>>` `<<project>>` and `<<cache>>`. Their meaning is the same as that found in the [settings section](#settings) and they are described there.
+
+**Note**: the `--aux-directory` flag is only meaningful when used with MiKTeX, but see the `copy_on_build` setting for an option to get some similar behaviour with TeXLive. 
+
+**Note**: These flags can only be set when using latexmk (default on OS X and Linux), the `basic` builder or the `script` builder (see below [for documentation on using the script builder](#script-builder)). If you are using texify (default when using MiKTeX) or the simple builder, setting these flags through any method will be ignored.
 
 #### Jobname
-It is possible to set the `--jobname` argument in several ways. If the first few lines of the main file contains the text `%!TEX jobname = <jobname>`, the corresponding name is used as the `\jobname` for the build. In addition, you can specify `--jobname` in the TeX options (see above), and it will be interpretted accordingly. Finally, jobname can be set by a setting detailed below.
 
-**Note** jobname is only availabe either using latexmk (default on OS X and Linux), the `basic` builder or the `script` builder (see below [for documentation on using the script builder](#script-builder)). If you are using texify (default when using MiKTeX) or the simple builder, setting a jobname will be ignored.
+The `--jobname` flag can be set in several ways:
+ * Using a TEX directive, such as `%!TEX jobname = <jobname>` near the top of the file.
+ * Using the [TeX Options](#tex-options) feature to set `--jobname`
+ * Using the corresponding `jobname` setting detailed in [the settings section](#settings).
 
+**Note**: Jobname can only be set when using latexmk (default on OS X and Linux), the `basic` builder or the `script` builder (see below [for documentation on using the script builder](#script-builder)). If you are using texify (default when using MiKTeX) or the simple builder, setting the jobname flag through any method will be ignored.
 
 #### Customizing the compilation command
+
 It is possible to customize the command run by setting the `command` option under Builder Settings. See the section on [Builder Settings](#builder-settings) for details.
 
 **Note**: If you customize the command, the TeX engine selection facility may no longer work because it relies on a specific compilation command. However, if you want to customize or replace `latexmk`/`texify`, you probably know how to select the right TeX engine, so this shouldn't be a concern. Also note that if you are using `latexmk` and you set the `$pdflatex` variable, the TeX options facility will not function, as `latexmk` does not support this.
@@ -256,7 +259,6 @@ Most plugin facilities are invoked using sequences of 2 keys or key combinations
 
 Henceforth, I will write `C-` to mean `Ctrl-` for Linux or Windows, and `Cmd-` for OS X. You know your platform, so you know what you should use. In a few places, to avoid ambiguities, I will spell out which key I mean.
 
-
 ### Compiling LaTeX files
 
 **Keybinding:** `C-b` (standard ST keybinding)
@@ -270,6 +272,13 @@ The default ST Build command takes care of the following:
 * It parses the tex log file and lists all errors, warnings and, if enabled, bad boxes in an output panel at the bottom of the ST window: click on any error/warning/bad boxes to jump to the corresponding line in the text, or use the ST-standard Next Error/Previous Error commands.
 * It invokes the PDF viewer for your platform and performs a forward search: that is, it displays the PDF page where the text corresponding to the current cursor position is located.
 
+### Selecting Build Variant
+
+**Keybinding:** `C-shift-b` (standard ST3 keybinding) or `C-shift-alt-b` or via the Command Palette (`C-shift-p`)
+
+LaTeXTools offers a range of build variants to select standard build options. These can be selected in the usual way using `C-shift-b` (on ST3) or using the Command Palette on either version of Sublime. The `C-shift-alt-b` keybinding displays the Command Palette focused on the build variants. This is primarily intended for ST2 users.
+
+**Note**: There is a serious difference between how recent versions of ST3 (from v3080 on) and ST2 handle build variants. In particular, ST3 remembers the last used variant so that subsequent builds (using `C-b`) will continue to use the same variant as before. On ST2, it is necessary to use the Command Palette to launch the specified build each time.
 
 ### Toggling window focus following a build
 
@@ -486,7 +495,7 @@ If at any time you wish to erase your customizations and start afresh, you can s
 
 (Historical note: This is no longer relevant in 2016, but just for the record, if you have a pre-2014, old-style settings file, this option will import it).
 
-*Warning*:  in general, tweaking options can cause breakage. For instance, if on Linux you change the default `python` setting (empty by default) to a non-existent binary, forward and inverse search will stop working. With great power comes great responsibility! If you think you have found a bug, *delete your settings file in the `User` directory, or use the `Reset user settings to default` command before reporting it!* Thanks :-)
+**Warning**:  in general, tweaking options can cause breakage. For instance, if on Linux you change the default `python` setting (empty by default) to a non-existent binary, forward and inverse search will stop working. With great power comes great responsibility! If you think you have found a bug, *delete your settings file in the `User` directory, or use the `Reset user settings to default` command before reporting it!* Thanks :-)
 
 The following options are currently available (defaults in parentheses):
 
@@ -581,7 +590,7 @@ The above settings can be overridden on a project-specific basis if you are usin
 
 ```json
 {
-	... <folder-related options here> ...
+	...<folder-related options here>...
 
 	"settings" : {
 		"TEXroot": "main.tex",
@@ -602,7 +611,9 @@ This sets `main.tex` as the master tex file (assuming a multi-file project), and
 
 ### Basic Builder
 
-The basic builder is a simple, straight-forward build system. It differs from the `simple` builder in that: 1) whereas the simple builder is intended as an example of how to create a builder, the basic builder is intended to be an operational build system, 2) it supports all of the various builder settings that the `traditional` builder does, with the exception of the `command` setting, 3) it supports biber and biblatex more generally, and 4) it supports the output and auxiliary directory behavior on MiKTeX without installing any additional components, as recent versions of `texify` cannot be coerced into passing the necessary options to pdflatex and friends.
+The basic builder is a simple, straight-forward build system. that simply runs the configured build engine (pdflatex, xelatex, or lualatex) and bibtex or biber if necessary. It can also be configured to support bibtex8 through the `bibtex` builder setting. In addition, it supports the [TeX Options](#tex-options) feature, the [output and auxiliary directory](#output-directory-and-auxiliary-directory) features and the [Jobname](#jobname) feature. It has been included because the default builder on MiKTeX, `texify` cannot be easily coerced to support biber or any of the other features supported by the basic builder. Note, however, that unlike `texify`, the basic builder does **not** support `makeindex` and friends (patches are welcome!).
+
+You can use the basic builder by changing the `builder` setting to `"basic"`. It will read the same settings as the traditional builder.
 
 ### Script Builder
 
@@ -685,7 +696,7 @@ Each command can use the following variables which will be expanded before it is
 |`$file_name`| The name of the main file, e.g., _document.tex_|
 |`$file_ext`| The extension portion of the main file, e.g., _tex_|
 |`$file_base_name`| The name portion of the main file without the, e.g., _document_|
-|`$file_path`| The directory of the main file, e.g., _C:\Files_|
+|`$file_path`| The directory of the main file, e.g., _C:\\Files_|
 |`$aux_directory`| The auxiliary directory set via a `%!TEX` directive or the settings|
 |`$output_directory`| The output directory set via a `%!TEX` directive or the settings|
 |`$jobname`| The jobname set via a `%!TEX` directive or the settings|
@@ -1206,6 +1217,55 @@ To use this builder, save it to a file called `"mikbibBuilder.py"` and change th
 
 Sublime Text provides a very rich API that could be of use to builders. However, it is advisable that any interactions with the Sublime Text API happen in the `__init__()` function, if possible. This is because the `__init__()` function is run on the main Sublime thread whereas the `commands()` function is called from a separate thread which cannot safely interact with the Sublime API on ST2. `commands()` is run on a separate thread.
 
+### Custom .sublime-build files
+
+If any of the other options for customised builders do not work, you are welcome to use a custom `.sublime-build` file, which may be useful to support some configurations that are not possible or easy using LaTeXTools itself. Please note that we have a limited ability to support customised `.sublime-build` files since they may be totally detached from the standard LaTeXTools machinery. However, this section provides some guidelines on how to create a `.sublime-build` file that interacts with LaTeXTools and some features you can leverage.
+
+Please name your custom `.sublime-build` file something other than `LaTeX.sublime-build`, such as `My LaTeX.sublime-build` or another suitable name. This is so you can properly differentiate the LaTeXTools builders from your own in the Build Variants command pallette (`C-Shift-B`).
+
+For a complete overview of `.sublime-build` files see [the relevant documentation](http://sublime-text-unofficial-documentation.readthedocs.io/en/latest/reference/build_systems.html) in the Unonfficial Sublime Documentation. Please note that the majority of options supported by the Sublime Text default builder, [`exec`](http://sublime-text-unofficial-documentation.readthedocs.io/en/latest/reference/build_systems/exec.html) are **not** supported by LaTeXTools.
+
+To use LaTeXTools with a custom `.sublime-build` file, you must set the `target` option of the `.sublime-build` file to `make_pdf`. This is the name of the LaTeXTools build script. If you don't set this, LaTeXTools will not be involved in your compilation sequence and you will lose its log-parsing capabilities and other features. In addition, the `selector` setting should be set to `text.tex.latex`, but you may use another selector you deem appropriate. In addition, you should set the `file_regex` option as it is in `LaTeX.sublime-build` in order to properly identify files and lines in the output panel.
+
+A minimal `.sublime-build` file may look like this:
+
+```json
+{
+
+	"target": "make_pdf",
+	"selector": "text.tex.latex",
+
+	"osx":
+		{
+			"file_regex": "^(...*?):([0-9]+): ([0-9]*)([^\\.]+)"
+		},
+
+	"windows":
+		{
+			"file_regex": "^((?:.:)?[^:\n\r]*):([0-9]+):?([0-9]+)?:? (.*)$"
+		},
+
+	"linux":
+		{
+			"file_regex": "^(...*?):([0-9]+): ([0-9]*)([^\\.]+)"
+		}
+}
+```
+
+Note, however, that setup this way, this file will do nothing interesting.
+
+#### Recognized Build File Options
+
+The following options in the build file will be recognized by `make_pdf`. They are all optional. Note that these settings *override* those defined in the [settings section](#settings) or via TEX directives and the like.
+
+ * `program`: one of `pdflatex` (the default), `xelatex` or `lualatex`. This selects the TeX engine.
+ * `builder`: the builder you want to use.
+ * `command`: the exact command to run. Note this only has an effect if using the `traditional` builder.
+ * `env`: the environment to use. Note that if you override the PATH in this `env`, please make sure it includes the appropriate path for LaTeX executables.
+ * `path`: the path to use. Note that it is your responsibility to ensure that the LaTeX executables are available on the supplied PATH. This may not be the case on OS X or Linux.
+
+ Any other options will not be used. These options can be set in the usual way either as platform-specific options or via variants.
+
 ## Alternative Viewers
 
 ### Zathura
@@ -1304,7 +1364,6 @@ Spaces in paths and file names *are* supported. As far as I know, the only limit
 ### Compilation hangs on Windows
 
 On Windows, sometimes a build seems to succeed, but the PDF file is not updated. This is most often the case if there is a stale pdflatex process running; a symptom is the appearence of a file with extension `.synctex.gz(busy)`. If so, launch the Task Manager and end the `pdflatex.exe` process; if you see a `perl.exe` process, end that, too. This kind of behavior is probably a bug: LaTeXTools should be able to see that something went wrong in the earlier compilation. So, *please let me know*, and provide me with as much detail as you can (ideally, with a test case). Thanks!
-
 
 ### Log parsing issues, and good vs. bad path/file names (again!)
 
