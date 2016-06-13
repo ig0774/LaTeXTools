@@ -437,8 +437,8 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			builder_name = get_setting("builder", "traditional")
 
 		# Default to 'traditional' builder
-		if builder_name_ in ['', 'default']:
-			builder_name_ = 'traditional'
+		if builder_name in ['', 'default']:
+			builder_name = 'traditional'
 
 		# this is to convert old-style names (e.g. AReallyLongName)
 		# to new style plugin names (a_really_long_name)
