@@ -131,6 +131,11 @@ LaTeX Package keymap for Linux
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
 		"command": "toggle_show"},
 
+	{ 	"keys": ["ctrl+l","w"],
+		"context":  [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
+		"command": "texcount"},
+
 	// Jump to a tex file (will create the file if it does not exists)
 	{ "keys": ["ctrl+l", "ctrl+o"],
 		"context": [
