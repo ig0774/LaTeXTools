@@ -53,7 +53,7 @@ LaTeX Package keymap for Windows
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
 			{"key": "preceding_text", "operator": "regex_contains",
-				"operand": "\\\\(?:(?:(?:(?:eq|page|v|V|auto|name|c|C|cpage)?ref)|subref\\*?)|(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)cquote\\*?\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2}|(?:text|block)cquote\\*?(?:\\[[^\\]]*\\]){0,2}|(?:p|P|f|ft|s|S|t|T|a|A)?volcite(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?|(?:p|P|f|ft|s|S|t|T|a|A)?volcites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)(?:\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcites)(?:[A-Z]?[a-z]*c)|C)ites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\]){0,2}\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2})*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcite|mcite)(?:[A-Z]?[a-z]*c)|C)ite(?!reset|style)([a-zX*]*?)([.*?]){0,2}(?:\\[[^\\]]*\\]){0,2})|cite(?:(?:author|year)(?:NP)?|NP|A)?(?:<[^>]*>)?(?:\\[[^\\]]*\\])?)$", "match_all": true}],
+				"operand": "\\\\(?:(?:(?:(?:eq|page|v|V|auto|name|c|C|cpage)?ref)|subref\\*?)|(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)cquote\\*?\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2}|(?:text|block)cquote\\*?(?:\\[[^\\]]*\\]){0,2}|(?:p|P|f|ft|s|S|t|T|a|A)?volcite(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?|(?:p|P|f|ft|s|S|t|T|a|A)?volcites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)(?:\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcites)(?:[A-Z]?[a-z]*c)|C)ites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\]){0,2}\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2})*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcite|mcite)(?:[A-Z]?[a-z]*c)|C)ite(?!reset\\*?|style)([a-zX*]*?)([.*?]){0,2}(?:\\[[^\\]]*\\]){0,2})|cite(?:(?:mask)?(?:full|short)?(?:author|year)(?:NP)?|NP|A)?(?:<[^>]*>)?(?:\\[[^\\]]*\\])?)$", "match_all": true}],
 		"command": "latex_ref_cite", "args": {"insert_char": "{"}},
 
 	{	"keys": [","],
@@ -151,6 +151,11 @@ LaTeX Package keymap for Windows
 		"context":  [
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
 		"command": "insert_snippet", "args": {"name":"Packages/LaTeXTools/Wrap in environment.sublime-snippet"}},
+	{ "keys": ["ctrl+l","ctrl+n"],  
+		"context":  [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
+			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true}],
+		"command": "insert_snippet", "args": {"name":"Packages/LaTeXTools/Insert environment.sublime-snippet"}},
 	// Change the surrounding environment
 	{ "keys": ["ctrl+l", "ctrl+shift+n"],
 		"context":  [

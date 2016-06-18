@@ -136,7 +136,7 @@ def plugin_loaded():
     ])
 
     global _TEX_INPUT_GROUP_MAPPING, TEX_INPUT_FILE_REGEX
-    _TEX_INPUT_GROUP_MAPPING = {i: v for i, v in enumerate(_fillall_entries)}
+    _TEX_INPUT_GROUP_MAPPING = dict((i, v) for i, v in enumerate(_fillall_entries))
     TEX_INPUT_FILE_REGEX = re.compile(
         "(?:{0})".format("|".join(entry["regex"] for entry in _fillall_entries))
     )
@@ -324,7 +324,7 @@ class LatexFillInputCompletions(sublime_plugin.EventListener):
         return result
 
     def on_query_completions(self, view, prefix, locations):
-        if not view.match_selector(0, 'text.tex.latex'):
+        if view.score_selector(0, 'text.tex.latex') == 0:
             return []
 
         results = []

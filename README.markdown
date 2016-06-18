@@ -1,6 +1,6 @@
 # LaTeX Plugin for Sublime Text 2 and 3
 
-by Ian Bacher and Marciano Siniscalchi
+by Ian Bacher, Marciano Siniscalchi, and Richard Stein
 
 Marciano's blog:
 <http://tekonomist.wordpress.com>
@@ -10,12 +10,16 @@ Additional contributors (*thank you thank you thank you*): first of all, Wallace
 
 *If you have contributed and I haven't acknowledged you, email me!*
 
-*Latest revision:* v3.7.13 (2016-05-17).
+*Latest revision:* v3.8.0 (2016-06-18).
 
 *Headline features*:
 
- * Support for \subref
- * Improve Okular support
+ * *Welcome to Richard Stein* who joined the team several weeks ago!
+ * Support for output directory and aux directory
+ * Support for editing BibTeX and BibLaTeX files
+ * Improved environment and command completions
+ * Viewer for Zathura
+ * New, Improved README format
 
 ## Introduction
 
@@ -28,6 +32,12 @@ This plugin provides several features that simplify working with LaTeX files:
 * Smart command completion for a variety of text and math commands is provided
 * Additional snippets and commands are also provided
 * The build command is fully customizable, as is the PDF previewer.
+
+## Bugs, issues & feature requests
+
+Please read the [Requirements and Setup](#requirements-and-setup) section carefully to ensure you get up and running as quickly as possible. Help for troubleshooting common issues can be found in the [Troubleshooting](#troubleshooting) section at the end of this README. For other bugs, issues or to request new features, please get in touch with us via [Github](https://github.com/SublimeText/LaTeXTools).
+
+**Please** [search for existing issues and pull requests](https://github.com/SublimeText/LaTeXTools/issues/?q=is%3Aopen) before [opening a new issue](https://github.com/SublimeText/LaTeXTools/issues/new).
 
 ## Requirements and Setup
 
@@ -194,7 +204,9 @@ The default builder (called the `traditional` builder) supports several addition
 
 #### TeX Engine Selection
 
-If the first line of the current file consists of the text `%!TEX program = <program>`, where `program` is `pdflatex`, `lualatex` or `xelatex`, the corresponding engine is selected. If no such directive is specified, `pdflatex` is the default. Multi-file documents are supported: the directive must be in the *root* (i.e. master) file. Also, for compatibility with TeXshop, you can use `TS-program` instead of `program`. **Note**: for this to work, you must **not** customize the `command` option in `LaTeXTools.sublime-settings`. If you do, you will not get this functionality. Finally, if you use project files, the `program` builder setting can also be customized there, under `settings`.
+If the first line of the current file consists of the text `%!TEX program = <program>`, where `program` is `pdflatex`, `lualatex` or `xelatex`, the corresponding engine is selected. If no such directive is specified, `pdflatex` is the default. Multi-file documents are supported: the directive must be in the *root* (i.e. master) file. Also, for compatibility with TeXshop, you can use `TS-program` instead of `program`.
+
+**Note**: for this to work, you must **not** customize the `command` option in `LaTeXTools.sublime-settings`. If you do, you will not get this functionality. Finally, if you use project files, the `program` builder setting can also be customized there, under `settings`.
 
 #### TeX Options
 
@@ -241,7 +253,7 @@ By default, LaTeXTools supports the following viewers, depending on platform:
  * On Windows, Sumatra
  * On Linux, Evince
 
-However, there is now support for custom viewers, if not a lot of choice available at the moment (patches welcome). Currently the only non-default viewers supported are Preview on OS X and Okular and Zathura on Linux. Preview can be selected by changing the `viewer` setting in your LaTeXTools preferences to `"preview"`. Okular can be used by changing the `viewer` setting in your LaTeXTools preferences to `"okular"`. Zathura can be used by changing the `viewer setting to `"zathura"`. See the [Viewer Settings](#viewer-settings) section for more details. For a manner of supporting other viewers, please see the section on [Alternate Viewers](#alternate-viewers) below.
+However, it is possible to use other programs to view PDF files. Currently the only non-default viewers supported are Preview.appp on OS X and Okular and Zathura on Linux (patches welcome!). Preview can be selected by changing the `viewer` setting in your LaTeXTools preferences to `"preview"`. Okular can be used by changing the `viewer` setting in your LaTeXTools preferences to `"okular"`. Zathura can be used by changing the `viewer setting to `"zathura"`. See the [Viewer Settings](#viewer-settings) section for more details. For a manner of supporting other viewers, please see the section on [Alternate Viewers](#alternate-viewers) below.
 
 ## Keybindings
 
@@ -310,8 +322,7 @@ This deletes all temporary files from a previous build (the PDF file is kept). S
 
 Two settings allow you to fine-tune the behavior of this command. `temp_files_exts` allows you to specify which file extensions should be considered temporary, and hence deleted. `temp_files_ignored_folders` allows you to specify folders that should not be traversed. A good example are `.git` folders, for people who use git for version control.
 
-**NOTE**: If you use any of the special values with the output directory or auxiliary directory feature, the above is ignored, and the entire directory is simply deleted. If you are using the auxiliary directory feature *without* using an output directory, the auxiliary directory will be cleared and the normal process will be run.
-
+**Note**: If you use any of the special values with the output directory or auxiliary directory feature, the above is ignored, and the entire directory is simply deleted. If you are using the auxiliary directory feature *without* using an output directory, the auxiliary directory will be cleared and the normal process will be run.
 
 ### Clearing the cache
 
@@ -799,478 +810,9 @@ Custom builders are small Python scripts that interact with the LaTeXTools build
 
 LaTeXTools comes packaged with a small sample builder to demonstrate the basics of the builder system, called [`SimpleBuilder`](https://github.com/SublimeText/LaTeXTools/blob/master/builders/simpleBuilder.py) which can be used as a reference for what builders can do.
 
-Note that if you are interested in creating your own builder, please pay attention to the [Caveats](#caveats) section above.
-
-#### The Basics
-
-##### A really simple Builder
-
-Every builder consists of a single Python `class` called "WhateverBuilder" (so, for example, `"TraditionalBuilder"`, `"SimpleBuilder"`, etc.) which is a sub-class of a class called `"PdfBuilder"`. Note that the class name should be unique (i.e., it can't share a name with any of the built-in builders) and it must end with `"Builder"`. Each builder class implements a single [generator function](https://wiki.python.org/moin/Generators) called `commands()` which is responsible for generating a list of commands to be run.
-
-Below is a really simple builder that does nothing to demonstrate the basic structure of a builder:
-
-```python
-# the pdfBuilder module will always be available on the PYTHONPATH
-from pdfBuilder import PdfBuilder
-
-class ReallySimpleBuilder(PdfBuilder):
-    # for now, we are ignoring all of the arguments passed to the
-    # builder
-    def __init__(self, *args):
-        # call the __init__ method of PdfBuilder
-        # this does some basic initialization, which we'll discuss
-        # in more detail later
-        super(ReallySimpleBuilder, self).__init__(*args)
-        
-        # now we do the initialization for this builder
-        # the only thing that must be set here is the builder name
-        self.name = "Really Simple Builder"
-    
-    # commands is a generator function that yields the commands to
-    # be run
-    def commands(self):
-        # display a message in the build output console
-        self.display("\n\nReallySimpleBuilder")
-        
-        # yield is how we pass the command to be run back to
-        # LaTeXTools
-        #
-        # each yield should yield a tuple consisting of the command
-        # to be run and a message to be displayed, if any
-        #
-        # for the ReallySimpleBuilder, we yield ("", None) which
-        # tells LaTeXTools there is no command to be run and no
-        # message to be displayed
-        yield ("", None)
-```
-
-To use this, save it to a file called `"reallySimpleBuilder.py"` in your Sublime Text `User` package (you can find this folder by selecting **Preferences|Browse Packages...** or running the **Preferences: Browse Packages** command). Then, in your LaTeXTools preferences, change the `"builder"` setting to `"reallySimple"` and change the `"builder_path"` setting to `"User"`. Try compiling a document. You should see the following:
-```
-[Compiling ...]
-
-ReallySimpleBuilder
-```
-Notice how the message we set using `self.display()` gets displayed.
-
-Also notice how the _name_ of the Python file matches the name of the builder (except with the first letter lower-cased) and the name given to the setting. These **must** match in order for LaTeXTools to be able to find and execute your builder.
-
-##### Generating Basic Commands
-
-The `PdfBuilder` base class provides access to some very basic information about the tex document being compiled, which can be gathered from the following variables:
-
-|Variable|Description|
-|-----------------|------------------------------------------------------------|
-|`self.tex_root`|the full path of the main tex document, e.g. _C:\\path\\to\\tex\_root.tex_|
-|`self.tex_dir`|the full path to the directory containing the main tex document, e.g. _C:\\path\\to_|
-|`self.tex_name`|the name of the main tex document, e.g. _tex_root.tex_|
-|`self.base_name`|the name of the main tex document without the extension, e.g. _tex_root_|
-|`self.tex_ext`|the extension of the main tex document, e.g. _tex_|
-
-(Note that all of these refer to the main tex document, specified using the `%!TEX root` directive or the `"TEXroot"` setting)
-
-With this is mind, we can now write a builder that actually does something useful. Below is a sample builder that simply runs the standard `pdflatex`, `bibtex`, `pdflatex`, `pdflatex` pattern.
-
-```python
-from pdfBuilder import PdfBuilder
-
-# here we define the commands to be used
-# commands are passed to subprocess.Popen which prefers a list of
-# arguments to a string
-PDFLATEX = ["pdflatex", "-interaction=nonstopmode", "-synctex=1"]
-BIBTEX = ["bibtex"]
-
-class BasicBuilder(PdfBuilder):
-    def __init__(self, *args):
-        super(BasicBuilder, self).__init__(*args)
-        
-        # now we do the initialization for this builder
-        self.name = "Basic Builder"
-
-    def commands(self):
-        self.display("\n\nBasicBuilder: ")
-
-        # first run of pdflatex
-        # this tells LaTeXTools to run:
-        #  pdflatex -interaction=nonstopmode -synctex=1 tex_root
-        # note that we append the base_name of the file to the
-        # command here
-        yield(PDFLATEX + [self.base_name], "Running pdflatex...")
-
-        # LaTeXTools has run pdflatex and returned control to the
-        # builder
-        # here we just add text saying the step is done, to give
-        # some feedback
-        self.display("done.\n")
-
-        # now run bibtex
-        yield(BIBTEX + [self.base_name], "Running bibtex...")
-
-        self.display("done.\n")
-
-        # second run of pdflatex
-        yield(
-            PDFLATEX + [self.base_name],
-            "Running pdflatex again..."
-        )
-
-        self.display("done.\n")
-
-        # third run of pdflatex
-        yield(
-            PDFLATEX + [self.base_name],
-            "Running pdflatex for the last time..."
-        )
-
-        self.display("done.\n")
-```
-
-To use this, save it to a file called `"basicBuilder.py"` then change your `"builder"` setting to `"basic"`. When you compile a document, you should see the following output:
-
-```
-[Compiling ...]
-
-BasicBuilder: Running pdflatex...done.
-Running bibtex...done.
-Running pdflatex again...done.
-Running pdflatex for the last time...done.
-
-...
-```
-
-Since this builder actually does a build, there may be additional messages displayed after the last message from our builder. These usually come from LaTeXTools log-parsing code which is run after the build completes.
-
-##### Interacting with Output
-
-Of course, sometimes it is necessary not just to run a series of commands, but also to react to the output of those commands to determine the next step in the process. This is what the [`SimpleBuilder`](https://github.com/SublimeText/LaTeXTools/blob/master/builders/simpleBuilder.py) does to determine whether or not to run BibTeX, searching the output for a particular pattern that `pdflatex` generates to determine whether or not to run BibTeX. 
-
-The output of the previously run command is available after LaTeXTools returns control to the builder in the variable `self.out`. This consists of anything written to STDOUT and STDERR, i.e., all the messages you would see if running the command from the terminal / command line.
-
-Building on our previous example, here's a builder that checks to see if BibTeX (only) needs to be run. This example makes use of Python's [re](https://docs.python.org/library/re.html) library, which provides operations for dealing with regular expressions, a way of matching patterns in strings.
-
-```python
-from pdfBuilder import PdfBuilder
-
-import re
-
-PDFLATEX = ["pdflatex", "-interaction=nonstopmode", "-synctex=1"]
-BIBTEX = ["bibtex"]
-
-# here we define a regular expression to match the output expected
-# if we need to run bibtex
-# this matches any lines like:
-#  Warning: Citation: `aristotle:ethics' on page 2 undefined
-CITATIONS_REGEX = re.compile(
-    r"Warning: Citation `.+' on page \d+ undefined"
-)
-
-class BibTeXBuilder(PdfBuilder):
-    def __init__(self, *args):
-        super(BibTeXBuilder, self).__init__(*args)
-        
-        # now we do the initialization for this builder
-        self.name = "BibTeX Builder"
-
-    def commands(self):
-        self.display("\n\nBibTeXBuilder: ")
-
-        # we always run pdflatex
-        yield(PDFLATEX + [self.base_name], "Running pdflatex...")
-
-        # here control has returned to the builder from LaTeXTools
-        # we display the same message as last time...
-        self.display("done.\n")
-
-        # and now we check the output to see if bibtex needs to be
-        # run
-        # search will scan the entire output for any match of the
-        # pattern we defined above
-        if CITATIONS_REGEX.search(self.out):
-            # if a matching bit of text is found, we need to run
-            # bibtex
-            # now run bibtex
-            yield(BIBTEX + [self.base_name], "Running bibtex...")
-
-            self.display("done.\n")
-
-            # we only need to run the second and third runs of
-            # pdflatex if we actually ran bibtex, so these remain
-            # inside the same `if` block code to run bibtex
-
-            # second run of pdflatex
-            yield(
-                PDFLATEX + [self.base_name],
-                "Running pdflatex again..."
-            )
-
-            self.display("done.\n")
-
-            # third run of pdflatex
-            yield(
-                PDFLATEX + [self.base_name],
-                "Running pdflatex for the last time..."
-            )
-
-            self.display("done.\n")
-```
-
-To use this builder, save it to a file called `"bibTeXBuilder.py"` and change the `"builder"` setting to `"bibTeX"`. When using this builder, you should see that it only runs `bibtex` and the final two `pdflatex` commands if you have any citations.
-
-#### More Advanced Topics
-
-The following sections deal with more advanced concepts in creating builders or with features that need careful handling for one reason or another.
-
-##### Allowing the user to set options
-
-Sometimes having a static series of commands to build a document is not enough and you'd want to give the user an opportunity to, for example, tell the builder what command to run to generate a bibliography. LaTeXTools provides your builder with access to the settings in the `build_settings` block of your LaTeXTools preferences through the variable `self.builder_settings`. Note that when allowing the use of settings it is important to verify that values you get make sense and that if no value is supplied, you provide a sane default.
-
-Our builder from the previous example could be modified to support either bibtex or biber as the bibliography program depending on a user setting like so:
-
-```python
-from pdfBuilder import PdfBuilder
-
-import re
-import sublime
-
-PDFLATEX = ["pdflatex", "-interaction=nonstopmode", "-synctex=1"]
-# notice that we do not define the bibliography command here, since
-# it will depend on settings that can only be known when our builder
-# is initialized
-
-CITATIONS_REGEX = re.compile(
-    r"Warning: Citation `.+' on page \d+ undefined"
-)
-# BibLaTeX outputs a different message from BibTeX, so we must catch
-# that too
-BIBLATEX_REGEX = re.compile(
-    r"Package biblatex Warning: Please \(re\)run \S*"
-)
-
-class BibBuilder(PdfBuilder):
-    def __init__(self, *args):
-        super(BibBuilder, self).__init__(*args)
-
-        # now we do the initialization for this builder
-        self.name = "Bibliography Builder"
-
-        # here we get which bibliography command to use from the
-        # builder_settings
-        # notice that we draw this setting from the
-        # platform-specific portion of the builder_settings block
-        # this allows the setting to be changed for each platform
-        self.bibtex = self.builder_settings.get(
-            sublime.platform(), {}).get('bibtex') or 'bibtex'
-        # notice that or clause here ensures that self.bibtex will
-        # be set to 'bibtex' if the 'bibtex' setting is unset or
-        # blank.
-
-    def commands(self):
-        self.display("\n\nBibBuilder: ")
-
-        # we always run pdflatex
-        yield(PDFLATEX + [self.base_name], "Running pdflatex...")
-
-        # here control has returned to the builder from LaTeXTools
-        self.display("done.\n")
-
-        # and now we check the output to see if bibtex / biber needs
-        # to be run
-        if (
-            CITATIONS_REGEX.search(self.out) or 
-            BIBLATEX_REGEX.search(self.out)
-        ):
-            # if a matching bit of text is found, we need to run the
-            # configured bibtex command
-            # note that we wrap this value in a list to ensure that
-            # a list is yielded to LaTeXTools
-            yield(
-                [self.bibtex] + [self.base_name],
-                "Running " + self.bibtex + "..."
-            )
-
-            self.display("done.\n")
-
-            # second run of pdflatex
-            yield(
-                PDFLATEX + [self.base_name],
-                "Running pdflatex again..."
-            )
-
-            self.display("done.\n")
-
-            # third run of pdflatex
-            yield(
-                PDFLATEX + [self.base_name],
-                "Running pdflatex for the last time..."
-            )
-
-            self.display("done.\n")
-```
-
-To use this builder, save it to a file called `"bibBuilder.py"` and change the `"builder"` setting to `"bib"`. You should be able to change what command gets run when a bibliography is needed by changing the `"bibtex"` setting in `"builder_settings"`. 
-
-Assuming you are on OS X, you might use something like this to run biber instead of bibtex with this builder:
-
-```json
-{
-	"builder_settings": {
-		"osx": {
-			"bibtex": "biber"
-		}
-	}
-}
-```
-
-**Important** Notice that all interaction with the settings occurred in builder's `__init__()` function. This is to ensure that the builder works on ST2 as well as ST3. For more on this, see the section on [Interacting with the Sublime API](#interacting-with-the-sublime-api) below.
-
-##### Passing [`Popen`](https://docs.python.org/2/library/subprocess.html#popen-objects) Objects
-
-With [v3.6.2](https://github.com/SublimeText/LaTeXTools/tree/v3.6.2) (released January 18, 2016), the main execution loop has been modified to support accepting not only strings and lists as we have seen above, but also to allow a builder to yield `Popen` objects as well. This might be useful if you need more fine-grained control over the exact way a command is executed, perhaps using a custom environment or using the user's shell. For the most part, it is recommended that you avoid creating custom `Popen` objects unless you cannot get the standard tools to do what you need.
-
-In principle, using `Popen` objects is pretty much the same as using strings or lists of commands, you simply yield them, and LaTeXTools allows them to run before returning to your code. However, some caveats must be observed.
-
-**Caveats:**
-
-* It is important to ensure that your `Popen` objects are always created with `stdout` set to `subprocess.PIPE`. Otherwise, you will not get any output to respond to. It is recommended that you set `stderr` to `subprocess.STDOUT` so that you also get any error output.
-
-* On OS X and Linux, it is important to set the `preexec_fn` to `os.setsid`. Otherwise, your builder could fail to kill any spawned or forked processes that are started as part of the build.
-
-* If you override the `env`, please be sure that you properly copy the `PATH` variable from `os.environ` to your new environment, especially on OS X or otherwise take account of the user's configured `texpath` setting. Otherwise, your builder may be unable to find LaTeX and friends. This is especially true on more recent versions of OS X.
-
-* In addition to the above, please make sure you have read through and understood the other caveats in the [**Caveats**](#caveats) section of this document.
-
-An example where this could be helpful is in selecting the bibliography engine to run using the MiKTeX-only command [`texify`](http://docs.miktex.org/manual/texify.html). As the [documentation](http://docs.miktex.org/manual/texify.html#id590926) states, the bibliography processing program can be selected by setting the `%BIBTEX%` environment variable. Expanding on our previous example, here is a builder that uses `texify` to run a standard latex build with the bibliography processor selected by a user-configurable option:
-
-```python
-from pdfBuilder import PdfBuilder
-
-import copy
-import os
-import sublime
-# we need to import subprocess as we will be creating one of our own
-import subprocess
-
-
-class MikbibBuilder(PdfBuilder):
-    def __init__(self, *args):
-        super(BibBuilder, self).__init__(*args)
-        
-        # now we do the initialization for this builder
-        self.name = "MiKTeX Bibliography Builder"
-
-        self.bibtex = self.builder_settings.get(
-            sublime.platform(), {}).get('bibtex') or 'bibtex'
-
-    def commands(self):
-        self.display("\n\nMiKTeX BibliographyBuilder: ")
-
-        # MiKTeX is Windows-specific, so it doesn't make sense to
-        # try to run it on a non-Windows machine
-        if sublime.platform() != 'windows':
-            yield(
-                "",
-                "The MiKTeX Bibliography Builder can only be used"
-                " on Windows"
-            )
-            return
-
-        # we create this startupinfo object to ensure that the
-        # Windows console does not appear
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-        # now we construct the environment
-        # first creating a copy of the current environment
-        env = copy.copy(os.environ)
-        # then setting the %BIBTEX% variable to the user-configured
-        # setting
-        env['BIBTEX'] = self.bibtex
-        # note that LaTeXTools ensures that the %PATH% variable
-        # contains the `texpath` setting by default
-
-        # here we construct our Popen object
-        p = subprocess.Popen(
-            ['texify', '-b', '-p', '--texoption="--synctex=1"'],
-            # here we use the startupinfo object created above
-            startupinfo=startupinfo,
-            # we redirect any output to stderr to stdout
-            stderr=subprocess.STDOUT,
-            # ensure that the output to stdout is available to
-            # LaTeXTools
-            stdout=subprocess.PIPE,
-            # finally, we pass in the environment that should be
-            # used including our modified %BIBTEX% value
-            env=env
-        )
-
-        # now we yield the Popen object to LaTeXTools to be run
-        yield(p, "Running texify...")
-
-        # here control has returned to the builder from LaTeXTools
-        self.display("done.\n")
-        # because texify runs the whole pdflatex, bibtex, pdflatex,
-        # pdflatex cycle, we don't need to do anything else.
-```
-
-To use this builder, save it to a file called `"mikbibBuilder.py"` and change the `"builder"` setting to `"mikbib"`. You should be able to change what command gets run when a bibliography is needed by changing the `"bibtex"` setting in `"builder_settings"` as with the previous builder.
-
-#### Interacting with the Sublime API
-
-Sublime Text provides a very rich API that could be of use to builders. However, it is advisable that any interactions with the Sublime Text API happen in the `__init__()` function, if possible. This is because the `__init__()` function is run on the main Sublime thread whereas the `commands()` function is called from a separate thread which cannot safely interact with the Sublime API on ST2. `commands()` is run on a separate thread.
-
-### Custom .sublime-build files
-
-If any of the other options for customised builders do not work, you are welcome to use a custom `.sublime-build` file, which may be useful to support some configurations that are not possible or easy using LaTeXTools itself. Please note that we have a limited ability to support customised `.sublime-build` files since they may be totally detached from the standard LaTeXTools machinery. However, this section provides some guidelines on how to create a `.sublime-build` file that interacts with LaTeXTools and some features you can leverage.
-
-Please name your custom `.sublime-build` file something other than `LaTeX.sublime-build`, such as `My LaTeX.sublime-build` or another suitable name. This is so you can properly differentiate the LaTeXTools builders from your own in the Build Variants command pallette (`C-Shift-B`).
-
-For a complete overview of `.sublime-build` files see [the relevant documentation](http://sublime-text-unofficial-documentation.readthedocs.io/en/latest/reference/build_systems.html) in the Unonfficial Sublime Documentation. Please note that the majority of options supported by the Sublime Text default builder, [`exec`](http://sublime-text-unofficial-documentation.readthedocs.io/en/latest/reference/build_systems/exec.html) are **not** supported by LaTeXTools.
-
-To use LaTeXTools with a custom `.sublime-build` file, you must set the `target` option of the `.sublime-build` file to `make_pdf`. This is the name of the LaTeXTools build script. If you don't set this, LaTeXTools will not be involved in your compilation sequence and you will lose its log-parsing capabilities and other features. In addition, the `selector` setting should be set to `text.tex.latex`, but you may use another selector you deem appropriate. In addition, you should set the `file_regex` option as it is in `LaTeX.sublime-build` in order to properly identify files and lines in the output panel.
-
-A minimal `.sublime-build` file may look like this:
-
-```json
-{
-
-	"target": "make_pdf",
-	"selector": "text.tex.latex",
-
-	"osx":
-		{
-			"file_regex": "^(...*?):([0-9]+): ([0-9]*)([^\\.]+)"
-		},
-
-	"windows":
-		{
-			"file_regex": "^((?:.:)?[^:\n\r]*):([0-9]+):?([0-9]+)?:? (.*)$"
-		},
-
-	"linux":
-		{
-			"file_regex": "^(...*?):([0-9]+): ([0-9]*)([^\\.]+)"
-		}
-}
-```
-
-Note, however, that setup this way, this file will do nothing interesting.
-
-#### Recognized Build File Options
-
-The following options in the build file will be recognized by `make_pdf`. They are all optional. Note that these settings *override* those defined in the [settings section](#settings) or via TEX directives and the like.
-
- * `program`: one of `pdflatex` (the default), `xelatex` or `lualatex`. This selects the TeX engine.
- * `builder`: the builder you want to use.
- * `command`: the exact command to run. Note this only has an effect if using the `traditional` builder.
- * `env`: the environment to use. Note that if you override the PATH in this `env`, please make sure it includes the appropriate path for LaTeX executables.
- * `path`: the path to use. Note that it is your responsibility to ensure that the LaTeX executables are available on the supplied PATH. This may not be the case on OS X or Linux.
-
- Any other options will not be used. These options can be set in the usual way either as platform-specific options or via variants.
+If you are interested in developing your own builder, please see [our page on the wiki](https://github.com/SublimeText/LaTeXTools/wiki/Custom-Builders) with documentation and code samples!
 
 ## Alternative Viewers
-
-### Zathura
-
-Zathura should mostly work out-of-the-box, but under some circumstances, Zathura will not gain focus as might be expected. If you want to ensure that the focus ends up on Zathura, you will have to install either `wmctrl` or `xdotool` so that LaTeXTools ensure focus is set on Zathura.
 
 ### Command Viewer
 
