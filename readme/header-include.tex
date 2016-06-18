@@ -3,5 +3,9 @@
 \usemintedstyle{github}
 % minted uses fancyvrb internally, so we can customize it ``globally'' here
 \fvset{fontsize=\footnotesize}
+% keep backticks in source code
 \usepackage{upquote}
+% formatting for listings package
 \lstset{breaklines=true,basicstyle=\footnotesize\ttfamily,fontadjust,showstringspaces=false}
+% redefine \thesubsection to exclude \thesection
+\renewcommand\thesubsection{\arabic{subsection}}

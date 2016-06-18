@@ -37,7 +37,7 @@ pip install -r "$DIR/requirements.txt"
 # ensure filter is executable
 chmod +x "$DIR/readme-filter.py"
 # run pandoc
-pandoc -f markdown_github+yaml_metadata_block -H "$DIR/header-include.tex" --listings -F "$DIR/readme-filter.py" -o "$BUILD/README.tex" "$DIR/../README.markdown" "$DIR/metadata.yaml"
+pandoc -f markdown_github+yaml_metadata_block -H "$DIR/header-include.tex" --listings --number-sections -F "$DIR/readme-filter.py" -o "$BUILD/README.tex" "$DIR/../README.markdown" "$DIR/metadata.yaml"
 
 if [ -f "$BUILD/README.tex" ]; then
 	# run latexmk to build PDF

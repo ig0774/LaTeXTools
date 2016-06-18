@@ -52,7 +52,7 @@ pip install -r "%DIR%\requirements.txt"
 :: run pandoc
 :: the final slash in the -F parameter must be /
 :: see https://github.com/jgm/pandoc/issues/1096
-pandoc -f markdown_github+yaml_metadata_block -H "%DIR%\header-include.tex" -V colorlinks=true --listings -F "%DIR%/readme-filter.py" -o "%BUILD%\README.tex" "%SRC%\README.markdown" "%DIR%\metadata.yaml"
+pandoc -f markdown_github+yaml_metadata_block -H "%DIR%\header-include.tex" --listings --number-sections -F "%DIR%/readme-filter.py" -o "%BUILD%\README.tex" "%SRC%\README.markdown" "%DIR%\metadata.yaml"
 
 if not exist "%BUILD%\README.tex" (
 	echo Could not find "%BUILD%\README.tex"
