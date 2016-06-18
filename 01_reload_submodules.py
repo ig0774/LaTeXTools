@@ -31,6 +31,7 @@ LOAD_ORDER = [
     'latextools_utils.is_tex_file',
     'latextools_utils.sublime_utils',
     'latextools_utils.cache',
+    'latextools_utils.external_command',
 
     # depend on any previous
     'latextools_utils.analysis',
