@@ -5,11 +5,9 @@ import sublime_plugin
 import traceback
 
 try:
-    from latextools_utils import get_setting
     from latextools_utils.external_command import external_command
     from latextools_utils.distro_utils import using_miktex
 except ImportError:
-    from .latextools_utils import get_setting
     from .latextools_utils.external_command import external_command
     from .latextools_utils.distro_utils import using_miktex
 

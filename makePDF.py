@@ -36,7 +36,8 @@ else:
 	from .latextools_utils import get_setting
 	from .latextools_utils.tex_directives import parse_tex_directives
 	from .latextools_utils.external_command import (
-		execute_command, external_command, get_texpath, update_env
+		execute_command, external_command, get_texpath, update_env,
+		expand_vars
 	)
 	from .latextools_utils.output_directory import (
 		get_aux_directory, get_output_directory, get_jobname

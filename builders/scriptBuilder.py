@@ -109,7 +109,8 @@ class ScriptBuilder(PdfBuilder):
 				# run with use_texpath=False as we have already configured
 				# the environment above, including the texpath
 				external_command(
-					cmd, env=env, shell=True, cwd=self.tex_dir, use_texpath=False
+					cmd, env=env, cwd=self.tex_dir, use_texpath=False,
+					shell=True
 				),
 				""
 			)
