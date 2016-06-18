@@ -439,8 +439,8 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			return
 
 		# Get platform settings, builder, and builder settings
-		platform_settings = get_setting(self.plat, {})
-		self.hide_panel_level = get_setting("hide_build_panel", "never")
+		platform_settings  = get_setting(self.plat, {})
+		builder_name = get_setting("builder", "traditional")
 		self.display_bad_boxes = get_setting("display_bad_boxes", False)
 
 		if builder is not None:
@@ -533,7 +533,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 				"Cannot find builder {0}.\n"
 				"Check your LaTeXTools Preferences".format(builder_name)
 			)
-			self.window.run_command('hide_panel', {"panel": "output.exec"})
+			self.window.run_command('hide_panel', {"panel": "output.latextools"})
 			return
 
 		print(repr(builder))
