@@ -14,6 +14,9 @@ if sublime.version() < '3000':
 	from latextools_utils.is_tex_file import is_tex_file
 	from latextools_utils import get_setting
 	from latextools_utils.tex_directives import parse_tex_directives
+	from latextools_utils.external_command import (
+		execute_command, external_command, get_texpath, update_env
+	)
 	from latextools_utils.output_directory import (
 		get_aux_directory, get_output_directory, get_jobname
 	)
@@ -30,6 +33,9 @@ else:
 	from .latextools_utils.is_tex_file import is_tex_file
 	from .latextools_utils import get_setting
 	from .latextools_utils.tex_directives import parse_tex_directives
+	from .latextools_utils.external_command import (
+		execute_command, external_command, get_texpath, update_env
+	)
 	from .latextools_utils.output_directory import (
 		get_aux_directory, get_output_directory, get_jobname
 	)
@@ -38,7 +44,7 @@ else:
 
 import sublime_plugin
 import sys
-import os, os.path
+import os
 import signal
 import threading
 import functools
@@ -81,32 +87,13 @@ class CmdThread ( threading.Thread ):
 		print ("Welcome to thread " + self.getName())
 		self.caller.output("[Compiling " + self.caller.file_name + "]")
 
+		env = dict(os.environ)
+		if self.caller.path:
+			env['PATH'] = self.caller.path
+
 		# Handle custom env variables
 		if self.caller.env:
-			old_env = os.environ;
-			if not _ST3:
-				os.environ.update(dict((k.encode(sys.getfilesystemencoding()), v) for (k, v) in self.caller.env.items()))
-			else:
-				os.environ.update(self.caller.env.items());
-
-		# Handle path; copied from exec.py
-		if self.caller.path:
-			# if we had an env, the old path is already backuped in the env
-			if not self.caller.env:
-				old_path = os.environ["PATH"]
-			# The user decides in the build system  whether he wants to append $PATH
-			# or tuck it at the front: "$PATH;C:\\new\\path", "C:\\new\\path;$PATH"
-			# Handle differently in Python 2 and 3, to be safe:
-			if not _ST3:
-				os.environ["PATH"] = os.path.expandvars(self.caller.path).encode(sys.getfilesystemencoding())
-			else:
-				os.environ["PATH"] = os.path.expandvars(self.caller.path)
-
-		# Set up Windows-specific parameters
-		if self.caller.plat == "windows":
-			# make sure console does not come up
-			startupinfo = subprocess.STARTUPINFO()
-			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+			update_env(env, self.caller.env)
 
 		# Now, iteratively call the builder iterator
 		#
@@ -127,24 +114,12 @@ class CmdThread ( threading.Thread ):
 					print(cmd)
 					# Now create a Popen object
 					try:
-						if self.caller.plat == "windows":
-							proc = subprocess.Popen(cmd, startupinfo=startupinfo, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-						elif self.caller.plat == "osx":
-							# Temporary (?) fix for Yosemite: pass environment
-							proc = subprocess.Popen(
-								cmd,
-								stderr=subprocess.STDOUT,
-								stdout=subprocess.PIPE, 
-								env=os.environ,
-								preexec_fn=os.setsid
-							)
-						else: # Must be linux
-							proc = subprocess.Popen(
-								cmd,
-								stderr=subprocess.STDOUT,
-								stdout=subprocess.PIPE,
-								preexec_fn=os.setsid
-							)
+						proc = external_command(
+							cmd,
+							env=env,
+							use_texpath=False,
+							preexec_fn=os.setsid if self.caller.plat != 'windows' else None
+						)
 					except:
 						self.caller.output("\n\nCOULD NOT COMPILE!\n\n")
 						self.caller.output("Attempted command:")
@@ -190,12 +165,6 @@ class CmdThread ( threading.Thread ):
 			self.caller.proc = None
 			print(traceback.format_exc())
 			return
-		finally:
-			# restore environment
-			if self.caller.env:
-				os.environ = old_env
-			elif self.caller.path:
-				os.environ['PATH'] = old_path
 
 		# Clean up
 		cmd_iterator.close()
@@ -368,18 +337,20 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		
 		# Try to handle killing
 		with self.proc_lock:
-			if self.proc: # if we are running, try to kill running process
+			if self.proc:  # if we are running, try to kill running process
 				self.output("\n\n### Got request to terminate compilation ###")
-				if sublime.platform() == 'windows':
-					startupinfo = subprocess.STARTUPINFO()
-					startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-					subprocess.call(
-						'taskkill /t /f /pid {pid}'.format(pid=self.proc.pid),
-						startupinfo=startupinfo,
-						shell=True
-					)
-				else:
-					os.killpg(self.proc.pid, signal.SIGTERM)
+				try:
+					if sublime.platform() == 'windows':
+						execute_command(
+							'taskkill /t /f /pid {pid}'.format(pid=self.proc.pid),
+							use_texpath=False
+						)
+					else:
+						os.killpg(self.proc.pid, signal.SIGTERM)
+				except:
+					print('Exception occurred while killing build')
+					traceback.print_exc()
+
 				self.proc = None
 				return
 			else: # either it's the first time we run, or else we have no running processes
@@ -535,7 +506,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		# Now get the tex binary path from prefs, change directory to
 		# that of the tex root file, and run!
-		self.path = platform_settings['texpath']
+		self.path = get_texpath() or os.environ['PATH']
 		os.chdir(tex_dir)
 		CmdThread(self).start()
 		print(threading.active_count())
