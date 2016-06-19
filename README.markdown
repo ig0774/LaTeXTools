@@ -473,8 +473,6 @@ You can also *change the current environment* using the `C-l,C-Shift-n` shortcut
 
 ## Completions
 
-## Completions
-
 ### Command completion, snippets, etc.
 
 By default, ST provides a number of snippets for LaTeX editing; the LaTeXTools plugin adds a few more. You can see what they are, and experiment, by selecting **Tools|Snippets|LaTeX** and **Tools|Snippets|LaTeXTools** from the menu.
