@@ -325,17 +325,24 @@ class CmdThread ( threading.Thread ):
 
 					self.caller.progress_indicator.success_message = message
 			except Exception as e:
+				traceback.print_exc()
+
 				if self.caller.hide_panel_level != 'always':
 					self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
-				content=["",""]
-				content.append("LaTeXtools could not parse the TeX log file")
-				content.append("(actually, we never should have gotten here)")
-				content.append("")
-
-				content.append("Python exception: " + repr(e))
-				content.append("")
-				content.append("Please let me know on GitHub. Thanks!")
-				traceback.print_exc()
+					content = ["", ""]
+					content.append(
+						"LaTeXTools could not parse the TeX log file {0}".format(
+							log_file
+						)
+					)
+					content.append("(actually, we never should have gotten here)")
+					content.append("")
+					content.append("Python exception: {0!r}".format(e))
+					content.append("")
+					content.append(
+						"The full error description can be found on the console."
+					)
+					content.append("Please let us know on GitHub. Thanks!")
 
 			self.caller.output(content)
 			self.caller.output("\n\n[Done!]\n")

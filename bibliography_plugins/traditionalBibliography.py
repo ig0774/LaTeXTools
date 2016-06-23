@@ -10,6 +10,7 @@ import hashlib
 import os
 import re
 import sublime
+import time
 import traceback
 
 kp = re.compile(r'@[^\{]+\{(.+),')
@@ -79,7 +80,7 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                 modified_time = os.path.getmtime(bibfname)
 
                 (cached_time, cached_entries) = cache.read_global(cache_name)
-                if modified_time < cached_time:
+                if modified_time <= cached_time:
                     entries.extend(cached_entries)
                     continue
             except:
@@ -144,7 +145,8 @@ class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
                 print ('Loaded %d bibitems' % (len(entries)))
 
                 try:
-                    cache.write_global(cache_name, (modified_time, entries))
+                    current_time = time.time()
+                    cache.write_global(cache_name, (current_time, entries))
                 except:
                     print('Error occurred while trying to write to cache {0}'.format(
                         cache_name
