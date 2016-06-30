@@ -999,19 +999,6 @@ class TestQuotedStringToken(LexerTest):
             )
         )
 
-    def test_quoted_string_token_with_escaped_quotes(self):
-        self.lexer.code = '"value \\\"other value\\\""'
-        self.lexer.code_len = len(self.lexer.code)
-        self.lexer.quoted_string_token()
-
-        self.assertEqual(
-            self.lexer.tokens[0][1],
-            'value "other value"',
-            'expected token value to be "value \"other value\"", was "{0}"'.format(
-                self.lexer.tokens[0][1]
-            )
-        )
-
     def test_quoted_string_token_with_newline(self):
         self.lexer.code = '"value\nother value"'
         self.lexer.code_len = len(self.lexer.code)
