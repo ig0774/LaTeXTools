@@ -22,6 +22,7 @@ LOAD_ORDER = [
     'latextools_utils',
 
     # no internal dependencies
+    'latextools_utils.bibformat',
     'latextools_utils.settings',
     'latextools_utils.system',
     'latextools_utils.utils',
@@ -33,11 +34,10 @@ LOAD_ORDER = [
     'latextools_utils.cache',
 
     # use the preceeding
-    'latextools_utils.analysis',
     'latextools_utils.external_command',
     'latextools_utils.subfiles',
     'latextools_utils.tex_directives',
-
+    'latextools_utils.bibcache',
     'latextools_utils.output_directory',
 
     'latextools_plugin_internal',
