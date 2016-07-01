@@ -1,11 +1,11 @@
 from latextools_plugin import LaTeXToolsPlugin
 
-from latextools_utils import bibcache
-
 from kpsewhich import kpsewhich
+from latextools_utils import bibcache
 from latextools_utils.subfiles import walk_subfiles
 
 import codecs
+import os
 import re
 import sublime
 import traceback
