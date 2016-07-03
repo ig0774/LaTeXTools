@@ -40,10 +40,10 @@ from subprocess import Popen, PIPE, STDOUT
 
 try:
     from latextools_utils.settings import get_setting
-    from latextools_utils.sublime_utils import run_on_main_thread
+    from latextools_utils.utils import run_on_main_thread
 except ImportError:
     from .settings import get_setting
-    from .sublime_utils import run_on_main_thread
+    from .utils import run_on_main_thread
 
 if sys.version_info < (3,):
     from pipes import quote

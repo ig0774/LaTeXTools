@@ -1,5 +1,6 @@
 import sublime
 import codecs
+import threading
 
 if sublime.version() < '3000':
     _ST3 = False
@@ -74,3 +75,47 @@ def get_file_content(file_name, encoding="utf8", ignore=True,
     content = (get_view_content(file_name) or
                read_file_content(file_name, encoding, ignore))
     return content
+
+
+class TimeoutError(Exception):
+    pass
+
+
+__sentinel__ = object()
+
+
+# ensures a function is run on the main thread on ST2 and returns the result
+# note that this function blocks the thread it is executed on and should only
+# be used when the result of a function call is necessary to continue.
+#   `func` should be a no-args callable, usually a `functools.partial`
+#   `timeout` is in seconds. Note that this is, at best, an approximate
+#       maximum. Actual execution may exceed this value. Raises a TimeoutError
+#       if a timeout occurs unless a `default_value` is specified.
+#   `default_value` indicates a value to be returned if a timeout occurs. If
+#       specified, no TimeoutError will be raised
+# Both `timeout` and `default_value` are ignored if run on ST3 or executed
+# from the main thread.
+def run_on_main_thread(func, timeout=10, default_value=__sentinel__):
+    # quick exit condition: we are on ST3 or the main thread
+    if _ST3 or threading.current_thread().getName() == 'MainThread':
+        return func()
+
+    condition = threading.Condition()
+    condition.acquire()
+
+    def _get_result():
+        with condition:
+            _get_result.result = func()
+            condition.notify()
+
+    sublime.set_timeout(_get_result, 0)
+
+    condition.wait(timeout)
+
+    if not hasattr(_get_result, 'result'):
+        if default_value is __sentinel__:
+            raise TimeoutError('Timeout while waiting for {0}'.format(func))
+        else:
+            return default_value
+
+    return _get_result.result
