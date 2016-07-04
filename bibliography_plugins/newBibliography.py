@@ -9,9 +9,7 @@ from latextools_utils import bibcache
 
 import codecs
 from collections import Mapping
-import hashlib
 import sublime
-import time
 import traceback
 
 # LaTeX -> Unicode decoder

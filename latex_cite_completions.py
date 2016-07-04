@@ -436,11 +436,6 @@ def get_cite_completions(view, point, autocompleting=False):
 
     completions = run_plugin_command('get_entries', *bib_files)
 
-    #### END COMPLETIONS HERE ####
-
-    completions = [bibformat.CompletionWrapper(completion)
-                   for completion in completions]
-
     return completions, prefix, post_brace, new_point_a, new_point_b
 
 # Based on html_completions.py
@@ -488,10 +483,9 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
 
         # filter against keyword or title
         if prefix:
-            completions = [comp for comp in completions if prefix.lower() in "%s %s" %
-                                                    (
-                                                        comp['keyword'].lower(),
-                                                        comp['title'].lower())]
+            lprefix = prefix.lower()
+            completions = [comp for comp in completions
+                           if _is_prefix(lprefix, comp)]
             prefix += " "
 
         # get preferences for formating of autocomplete entries
@@ -499,9 +493,9 @@ class LatexCiteCompletions(sublime_plugin.EventListener):
             "{keyword}: {title}")
 
         def formatted_entry(entry):
-            if "<autocomplete_formatted>" in entry:
+            try:
                 return entry["<autocomplete_formatted>"]
-            else:
+            except:
                 return bibformat.format_entry(cite_autocomplete_format, entry)
 
         completion_entries = [
@@ -546,11 +540,9 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
 
         # filter against keyword, title, or author
         if prefix:
-            completions = [comp for comp in completions if prefix.lower() in "%s %s %s" % 
-                                                    (
-                                                        comp['keyword'].lower(),
-                                                        comp['title'].lower(),
-                                                        comp['author'].lower())]
+            lprefix = prefix.lower()
+            completions = [comp for comp in completions
+                           if _is_prefix(lprefix, comp)]
 
         # Note we now generate citation on the fly. Less copying of vectors! Win!
         def on_done(i):
@@ -617,15 +609,22 @@ class LatexCiteCommand(sublime_plugin.TextCommand):
 
             # show quick
             def formatted_entry(entry):
-                if "<panel_formatted>" in entry:
+                try:
                     return entry["<panel_formatted>"]
-                else:
+                except:
                     return [formatted_entry(s, entry) for s in cite_panel_format]
             panel_entries = [
                 formatted_entry(completion)
                 for completion in completions
             ]
             view.window().show_quick_panel(panel_entries, on_done)
+
+
+def _is_prefix(lower_prefix, entry):
+    try:
+        return lower_prefix in entry["<prefix_match>"]
+    except:
+        return lower_prefix in bibformat.create_prefix_match_str(entry)
 
 
 def plugin_loaded():
