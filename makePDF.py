@@ -22,6 +22,7 @@ if sublime.version() < '3000':
 		get_aux_directory, get_output_directory, get_jobname
 	)
 	from latextools_utils.progress_indicator import ProgressIndicator
+	from latextools_utils.sublime_utils import get_project_file_name
 
 	strbase = basestring
 else:
@@ -43,6 +44,7 @@ else:
 		get_aux_directory, get_output_directory, get_jobname
 	)
 	from .latextools_utils.progress_indicator import ProgressIndicator
+	from .latextools_utils.sublime_utils import get_project_file_name
 
 	strbase = str
 	long = int
@@ -57,6 +59,10 @@ import subprocess
 import types
 import traceback
 import shutil
+import glob
+import re
+import json
+import codecs
 
 DEBUG = False
 
@@ -75,7 +81,223 @@ def getOEMCP():
     return str(codepage)
 
 
+class LatextoolsBuildSelector(sublime_plugin.WindowCommand):
+	# tokens used to clean-up JSON files
+	TOKENIZER = re.compile(r'(?<![^\\]\\)"|(/\*)|(//)|(#)')
+	QUOTE = re.compile(r'(?<![^\\]\\)"')
+	NEWLINE = re.compile(r'\r?\n')
 
+	# on 3080+, the necessary features are built-in by default
+	if sublime.version() > '3079':
+		def run(self, select=False):
+			select = False if select not in (True, False) else select
+			self.window.run_command('build', {'select': select})
+	# ST2 or ST3 before 3080
+	else:
+		# stores last settings for build
+		WINDOWS = {}
+
+		if _ST3:
+			def load_build_system(self, build_system):
+				build_system = sublime.load_resource(build_system)
+		else:
+			def load_build_system(self, build_system):
+				build_system = os.path.normpath(
+					build_system.replace('Packages', sublime.packages_path())
+				)
+
+				return self.parse_json_with_comments(build_system)
+
+		def run(self, select=False):
+			select = False if select not in (True, False) else select
+			view = self.view = self.window.active_view()
+			if not select:
+				window_settings = self.WINDOWS.get(self.window.id(), {})
+				build_system = window_settings.get('build_system')
+
+				if build_system:
+					build_variant = window_settings.get('build_variant', '')
+					self.run_build(build_system, build_variant)
+					return
+
+			# no previously selected build system or select is True
+			# find all .sublime-build files
+			if _ST3:
+				sublime_build_files = sublime.find_resources('*.sublime-build')
+				project_settings = self.window.project_data()
+			else:
+				sublime_build_files = glob.glob(os.path.join(
+					sublime.packages_path(), '*', '*.sublime-build'
+				))
+				project_file_name = get_project_file_name(view)
+				if project_file_name is not None:
+					try:
+						project_settings = self.parse_json_with_comments(project_file_name)
+					except:
+						print('Error parsing project file')
+						traceback.print_exc()
+						project_settings = {}
+				else:
+					project_settings = {}
+
+			builders = []
+			for i, build_system in enumerate(
+				project_settings.get('build_systems', [])
+			):
+				if (
+					'selector' not in build_system or
+					view.score_selector(0, project_settings['selector']) > 0
+				):
+					try:
+						build_system['name']
+					except:
+						print('Could not determine name for build system {0}'.format(
+							build_system
+						))
+						continue
+
+					build_system['index'] = i
+					builders.append(build_system)
+
+			for filename in sublime_build_files:
+				try:
+					sublime_build = self.parse_json_with_comments(filename)
+				except:
+					print(u'Error parsing file {0}'.format(filename))
+					continue
+
+				if (
+					'selector' not in sublime_build or
+					view.score_selector(0, sublime_build['selector']) > 0
+				):
+					sublime_build['file'] = filename.replace(
+						sublime.packages_path(), 'Packages', 1
+					).replace(os.path.sep, '/')
+
+					sublime_build['name'] = os.path.splitext(
+						os.path.basename(sublime_build['file'])
+					)[0]
+
+					builders.append(sublime_build)
+
+			formatted_entries = []
+			build_system_variants = []
+			for builder in builders:
+				build_system_name = builder['name']
+				build_system_internal_name = builder.get(
+					'index', builder.get('file')
+				)
+
+				formatted_entries.append(build_system_name)
+				build_system_variants.append((build_system_internal_name, ''))
+
+				for variant in builder.get('variants', []):
+					try:
+						formatted_entries.append(
+							"{0} - {1}".format(
+								build_system_name,
+								variant['name']
+							)
+						)
+					except KeyError:
+						continue
+
+					build_system_variants.append(
+						(build_system_internal_name, variant['name'])
+					)
+
+			entries = len(formatted_entries)
+			if entries == 0:
+				self.window.run_command('build')
+			elif entires == 1:
+				build_system, build_variant = build_system_variants[0]
+				self.WINDOWS[self.window.id()] = {
+					'build_system': build_system,
+					'build_variant': build_variant
+				}
+				self.run_build(build_system, build_variant)
+			else:
+				def on_done(index):
+					# cancel
+					if index == -1:
+						return
+
+					build_system, build_variant = build_system_variants[index]
+					self.WINDOWS[self.window.id()] = {
+						'build_system': build_system,
+						'build_variant': build_variant
+					}
+					self.run_build(build_system, build_variant)
+
+				self.window.show_quick_panel(formatted_entries, on_done)
+
+	def run_build(self, build_system, build_variant):
+		if build_system.isdigit():
+			self.window.run_command('set_build_system', {'index': int(build_system)})
+		else:
+			self.window.run_command('set_build_system', {'file': build_system})
+
+		if build_variant:
+			self.window.run_command('build', {'variant': build_variant})
+		else:
+			self.window.run_command('build')
+
+	def parse_json_with_comments(self, filename):
+		with codecs.open(filename, 'r', 'utf-8', 'ignore') as f:
+			content = f.read()
+
+		try:
+			return json.loads(content)
+		except:
+			pass
+
+		# pre-process to strip comments
+		new_content = []
+		index = 0
+
+		content_length = len(content) - 1
+
+		match = self.TOKENIZER.search(content, index)
+		while match:
+			new_content.append(content[index:match.start()])
+
+			index = match.end()
+			value = match.group()
+
+			if value == '/*':
+				comment_end = content.find('*/', index)
+				if comment_end == -1:
+					# unbalanced comment
+					break
+				else:
+					new_lines = len(content[index:comment_end].split('\n')) - 1
+					new_content.extend(['\n'] * new_lines)
+					index = comment_end + 2
+			elif value == '//' or value == '#':
+				comment_end = self.NEWLINE.search(content, index)
+				if comment_end:
+					index = comment_end.end()
+				else:
+					break
+			elif value == '"':
+				new_content.append('"')
+				next_quote = self.QUOTE.search(content, index)
+				if next_quote:
+					new_content.append(content[index:next_quote.end()])
+					index = next_quote.end()
+				else:
+					# unclosed quote; return to generate json error
+					break
+
+			if index < content_length:
+				match = self.TOKENIZER.search(content, index)
+			else:
+				break
+
+		if index < content_length:
+			new_content.append(content[index:])
+
+		return json.loads(''.join(new_content))
 
 
 # First, define thread class for async processing
@@ -448,7 +670,6 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		# Get platform settings, builder, and builder settings
 		platform_settings  = get_setting(self.plat, {})
-		builder_name = get_setting("builder", "traditional")
 		self.display_bad_boxes = get_setting("display_bad_boxes", False)
 
 		if builder is not None:
@@ -671,12 +892,14 @@ class DoOutputEditCommand(sublime_plugin.TextCommand):
 		if selection_was_at_end:
 		    self.view.show(self.view.size())
 
+
 class DoFinishEditCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		self.view.sel().clear()
 		reg = sublime.Region(0)
 		self.view.sel().add(reg)
 		self.view.show(reg)
+
 
 def plugin_loaded():
 	# load the plugins from the builders dir

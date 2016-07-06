@@ -68,7 +68,7 @@
 			"program": "lualatex"
 		},
 		{
-			"name": "Script",
+			"name": "Script Builder",
 			"builder": "script"
 		}
 	]
