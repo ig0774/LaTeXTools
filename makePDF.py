@@ -504,7 +504,9 @@ class CmdThread ( threading.Thread ):
 					if self.caller.display_bad_boxes:
 						if errors or warnings:
 							content.append("")
-						content.append("No bad boxes.")
+							content.append("No bad boxes.")
+						else:
+							content[-1] = content[-1] + " No bad boxes."
 
 				show_panel = {
 					"always": False,
