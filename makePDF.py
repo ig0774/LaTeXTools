@@ -893,12 +893,14 @@ class DoOutputEditCommand(sublime_plugin.TextCommand):
 		    self.view.show(self.view.size())
 
 
+
 class DoFinishEditCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		self.view.sel().clear()
 		reg = sublime.Region(0)
 		self.view.sel().add(reg)
 		self.view.show(reg)
+
 
 
 def plugin_loaded():
