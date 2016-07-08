@@ -45,7 +45,7 @@ def prepend_toc_to_body(key, value, format_, meta):
         value[0] == 2
     ):
         prepend_toc_to_body.added_toc = True
-        return [Para([RawInline("tex", '\\tableofcontents')]), Header(*value)]
+        return [Para([RawInline("tex", '\\clearpage\\tableofcontents\\clearpage')]), Header(*value)]
 
 prepend_toc_to_body.added_toc = False
 
