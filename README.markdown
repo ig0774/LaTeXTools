@@ -294,21 +294,6 @@ In addition, custom Sublime build files can be created to add your own variants 
 
 **Note**: The settings provided by build variants *override* settings specified in the file itself or in your settings. This means, for example, if you select a build variant that changes the program, `%!TEX program` directives or `program` settings will be ignored. If you want to return LaTeXTools back to its default behavior, please select the **LaTeX** build variant.
 
-**ST2 Users**: ST3 since version 3080 has had a new build system which some people like and other don't. LaTeXTools now emulates that build system so, for example, the first time you run a build using LaTeXTools in a new window, you'll be prompted by a window to select a build variant. You can disable this by overriding the LaTeXTools keybinding. In your own keybinding file (`Preferences | Keybindings - User`) add an entry like this:
-
-```json
-{
-	"keys": ["ctrl+b"], // change to "cmd"+"b" on OS X
-	"context": [
-		{
-			"key": "selector", "operator": "equal",
-			"operand": "text.tex.latex"
-		}
-	],
-	"command": "build"
-},
-```
-
 ### Toggling window focus following a build ###
 
 **Keybinding:** `C-l,t,f` (yes, this means `C-l`, then `t`, then `f`)
