@@ -9,5 +9,5 @@ if __dir__ == '.':
     dir = sublime.packages_path()
 
 sys.path.insert(0, os.path.join(
-    __dir__, 'external')
-)
+    __dir__, 'external'
+))
