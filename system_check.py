@@ -63,7 +63,10 @@ else:
         return os.path.expandvars(texpath).encode(sys.getfilesystemencoding())
 
     def update_environment(old, new):
-        old.update((dict((k.encode(sys.getfilesystemencoding()), v) for (k, v) in new.items())))
+        old.update(dict(
+            (k.encode(sys.getfilesystemencoding()), v)
+            for (k, v) in new.items()
+        ))
 
     # reraise implementation from 6
     exec("""def reraise(tp, value, tb=None):
@@ -191,7 +194,9 @@ def tabulate(table, wrap_column=0, output=sys.stdout):
     for i in range(len(headers)):
         padding = 2 if i < len(headers) - 1 else 0
         if headers[i]:
-            output.write((u'-' * len(headers[i])).ljust(column_widths[i] + padding))
+            output.write(
+                (u'-' * len(headers[i])).ljust(column_widths[i] + padding)
+            )
         else:
             output.write(u''.ljust(column_widths[i] + padding))
     output.write(u'\n')
@@ -278,7 +283,10 @@ class SystemCheckThread(threading.Thread):
                 if extension is not None:
                     sublime_exe = ''.join((basename, extension.lower()))
 
-            version_info = get_version_info(sublime_exe, env=env) if available else None
+            version_info = get_version_info(
+                sublime_exe, env=env
+            ) if available else None
+
             table.append([
                 'sublime',
                 sublime_exe,
@@ -297,7 +305,10 @@ class SystemCheckThread(threading.Thread):
                 if extension is not None:
                     location = ''.join((basename, extension.lower()))
 
-            version_info = get_version_info(location, env=env) if available else None
+            version_info = get_version_info(
+                location, env=env
+            ) if available else None
+
             table.append([
                 program,
                 location,
@@ -323,8 +334,9 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             sublime_exe=get_sublime_exe(),
             uses_miktex=uses_miktex,
             texpath=_get_texpath(self.view) or os.environ['PATH'],
-            build_env=get_setting('builder_settings', {})
-                        .get(sublime.platform(), {}).get('env'),
+            build_env=get_setting('builder_settings', {}).get(
+                sublime.platform(), {}
+            ).get('env'),
             on_done=self.on_done
         )
 
@@ -336,7 +348,10 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             for item in results:
                 tabulate(item, output=buf)
 
-            builder_name = get_setting('builder', 'traditional', view=self.view)
+            builder_name = get_setting(
+                'builder', 'traditional', view=self.view
+            )
+
             if builder_name in ['', 'default']:
                 builder_name = 'traditional'
 
@@ -372,13 +387,8 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
 
             if builder_settings is not None:
                 table = [[u'Builder Setting', u'Value']]
-                # this is a bit hackish, but appears necessary for things
-                # to work on ST2
-                for key in sorted(builder_settings._values.keys()):
-                    value = builder_settings._values[key]
-                    # get the actual values from a SettingsWrapper
-                    if hasattr(value, '_values'):
-                        value = value._values
+                for key in sorted(builder_settings.keys()):
+                    value = builder_settings[key]
                     table.append([key, value])
                 tabulate(table, output=buf)
 
@@ -397,8 +407,11 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
                 tabulate([
                     [u'LaTeX Engine'],
                     [
-                        tex_directives.get('program',
-                            get_setting('program', 'pdflatex', self.view)
+                        tex_directives.get(
+                            'program',
+                            get_setting(
+                                'program', 'pdflatex', self.view
+                            )
                         )
                     ]
                 ], output=buf)
@@ -438,12 +451,21 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             new_view.set_scratch(True)
             new_view.settings().set('word_wrap', False)
             new_view.set_name('LaTeXTools System Check')
-            new_view.settings().set('syntax',
-                                'Packages/LaTeXTools/system_check.tmLanguage')
+            if sublime.version() < '3103':
+                new_view.settings().set(
+                    'syntax', 'Packages/LaTeXTools/system_check.tmLanguage'
+                )
+            else:
+                new_view.settings().set(
+                    'syntax', 'Packages/LaTeXTools/system_check.sublime-syntax'
+                )
+
             new_view.set_encoding('UTF-8')
 
-            new_view.run_command('latextools_insert_text',
-                             {'text': buf.getvalue()})
+            new_view.run_command(
+                'latextools_insert_text',
+                {'text': buf.getvalue()}
+            )
 
             new_view.set_read_only(True)
 
