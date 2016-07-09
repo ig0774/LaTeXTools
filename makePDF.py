@@ -348,7 +348,9 @@ class CmdThread ( threading.Thread ):
 						)
 					except:
 						if self.caller.hide_panel_level != 'always':
-							self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
+							self.caller.window.run_command(
+								"show_panel", {"panel": "output.latextools"}
+							)
 						self.caller.output("\n\nCOULD NOT COMPILE!\n\n")
 						self.caller.output("Attempted command:")
 						self.caller.output(" ".join(cmd))
@@ -390,7 +392,9 @@ class CmdThread ( threading.Thread ):
 				# we pass it to the cmd_iterator and get the next command, until completion
 		except:
 			if self.caller.hide_panel_level != 'always':
-				self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
+				self.caller.window.run_command(
+					"show_panel", {"panel": "output.latextools"}
+				)
 			self.caller.output("\n\nCOULD NOT COMPILE!\n\n")
 			self.caller.output("\nBuild engine: " + self.caller.builder.name)
 			self.caller.proc = None
@@ -453,7 +457,9 @@ class CmdThread ( threading.Thread ):
 			traceback.print_exc()
 
 			if self.caller.hide_panel_level != 'always':
-				self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
+				self.caller.window.run_command(
+					"show_panel", {"panel": "output.latextools"}
+				)
 			content = ['', 'Could not read log file {0}.log'.format(
 				self.caller.tex_base
 			), '']
@@ -522,10 +528,15 @@ class CmdThread ( threading.Thread ):
 					self.caller.progress_indicator.success_message = "build completed"
 					# show the build panel (ST2 api is not thread save)
 					if _ST3:
-						self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
+						self.caller.window.run_command(
+							"show_panel", {"panel": "output.latextools"}
+						)
 					else:
 						sublime.set_timeout(
-							lambda: self.caller.window.run_command("show_panel", {"panel": "output.latextools"}), 0)
+							lambda: self.caller.window.run_command(
+								"show_panel",
+								{"panel": "output.latextools"}
+							), 0)
 				else:
 					message = "build completed"
 					if errors:
@@ -549,24 +560,27 @@ class CmdThread ( threading.Thread ):
 
 					self.caller.progress_indicator.success_message = message
 			except Exception as e:
-				traceback.print_exc()
-
 				if self.caller.hide_panel_level != 'always':
-					self.caller.window.run_command("show_panel", {"panel": "output.latextools"})
-					content = ["", ""]
-					content.append(
-						"LaTeXTools could not parse the TeX log file {0}".format(
-							log_file
-						)
+					self.caller.window.run_command(
+						"show_panel", {"panel": "output.latextools"}
 					)
-					content.append("(actually, we never should have gotten here)")
-					content.append("")
-					content.append("Python exception: {0!r}".format(e))
-					content.append("")
-					content.append(
-						"The full error description can be found on the console."
+
+				content = ["", ""]
+				content.append(
+					"LaTeXTools could not parse the TeX log file {0}".format(
+						log_file
 					)
-					content.append("Please let us know on GitHub. Thanks!")
+				)
+				content.append("(actually, we never should have gotten here)")
+				content.append("")
+				content.append("Python exception: {0!r}".format(e))
+				content.append("")
+				content.append(
+					"The full error description can be found on the console."
+				)
+				content.append("Please let us know on GitHub. Thanks!")
+
+				traceback.print_exc()
 
 			self.caller.output(content)
 			self.caller.output("\n\n[Done!]\n")
@@ -652,7 +666,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.output_view.set_read_only(True)
 
 		# Dumb, but required for the moment for the output panel to be picked
-        # up as the result buffer
+		# up as the result buffer
 		self.window.get_output_panel("latextools")
 
 		self.hide_panel_level = get_setting("hide_build_panel", "no_warnings")
@@ -671,7 +685,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			return
 
 		# Get platform settings, builder, and builder settings
-		platform_settings  = get_setting(self.plat, {})
+		platform_settings = get_setting(self.plat, {})
 		self.display_bad_boxes = get_setting("display_bad_boxes", False)
 
 		if builder is not None:
