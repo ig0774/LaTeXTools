@@ -80,22 +80,28 @@ def get_file_content(file_name, encoding="utf8", ignore=True,
 class TimeoutError(Exception):
     pass
 
-
 __sentinel__ = object()
 
 
-# ensures a function is run on the main thread on ST2 and returns the result
-# note that this function blocks the thread it is executed on and should only
-# be used when the result of a function call is necessary to continue.
-#   `func` should be a no-args callable, usually a `functools.partial`
-#   `timeout` is in seconds. Note that this is, at best, an approximate
-#       maximum. Actual execution may exceed this value. Raises a TimeoutError
-#       if a timeout occurs unless a `default_value` is specified.
-#   `default_value` indicates a value to be returned if a timeout occurs. If
-#       specified, no TimeoutError will be raised
-# Both `timeout` and `default_value` are ignored if run on ST3 or executed
-# from the main thread.
 def run_on_main_thread(func, timeout=10, default_value=__sentinel__):
+    """
+    Ensures the function, func is run on the main thread and returns the rsult
+    of that function call.
+
+    Note that this function blocks the thread it is executed on and should only
+    be used when the result of the function call is necessary to continue.
+
+    Arguments:
+    func (callable): a no-args callable; functions that need args should
+        be wrapped in a `functools.partial`
+    timeout (int): the maximum amount of time to wait in seconds. A
+        TimeoutError is raised if this limit is reached a no `default_value`
+        is specified
+    default_value (any): the value to be returned if a timeout occurs
+
+    Note that both timeout and default value are ignored when run in ST3 or
+    from the main thread.
+    """
     # quick exit condition: we are on ST3 or the main thread
     if _ST3 or threading.current_thread().getName() == 'MainThread':
         return func()
