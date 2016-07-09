@@ -453,7 +453,8 @@ class LatextoolsSystemCheckCommand(sublime_plugin.ApplicationCommand):
             new_view.set_name('LaTeXTools System Check')
             if sublime.version() < '3103':
                 new_view.settings().set(
-                    'syntax', 'Packages/LaTeXTools/system_check.tmLanguage'
+                    'syntax',
+                    'Packages/LaTeXTools/system_check.hidden-tmLanguage'
                 )
             else:
                 new_view.settings().set(
