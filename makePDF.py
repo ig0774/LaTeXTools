@@ -896,7 +896,8 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 							os.path.dirname(self.file_name)
 						)
 
-			self.view.run_command("jump_to_pdf", {"from_keybinding": False})
+			if get_setting('open_pdf_on_build', True):
+				self.view.run_command("jump_to_pdf", {"from_keybinding": False})
 
 			# clean-up temp files if clean_on_build set to true
 			if get_setting('clean_on_build', False):
