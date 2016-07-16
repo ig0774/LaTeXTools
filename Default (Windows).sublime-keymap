@@ -2,8 +2,12 @@
 LaTeX Package keymap for Windows
 */
 [
-	// create a keybinding to select variant builds on ST2
-	// this also overrides on ST3, but we simply run the same commands
+	// these also override ST3 commands, but we simply run the same commands
+	// it is necessary so on ST2 we can implement our build selector
+	{	"keys": ["ctrl+b"],
+		"context": [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
+		"command": "latextools_build_selector"},
 	{	"keys": ["ctrl+shift+b"],
 		"context": [
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],

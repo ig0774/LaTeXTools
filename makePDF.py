@@ -22,7 +22,9 @@ if sublime.version() < '3000':
 		get_aux_directory, get_output_directory, get_jobname
 	)
 	from latextools_utils.progress_indicator import ProgressIndicator
-	from latextools_utils.sublime_utils import get_project_file_name
+	from latextools_utils.sublime_utils import (
+		get_project_file_name, parse_json_with_comments
+	)
 
 	strbase = basestring
 else:
@@ -44,7 +46,9 @@ else:
 		get_aux_directory, get_output_directory, get_jobname
 	)
 	from .latextools_utils.progress_indicator import ProgressIndicator
-	from .latextools_utils.sublime_utils import get_project_file_name
+	from .latextools_utils.sublime_utils import (
+		get_project_file_name, parse_json_with_comments
+	)
 
 	strbase = str
 	long = int
@@ -82,10 +86,6 @@ def getOEMCP():
 
 
 class LatextoolsBuildSelector(sublime_plugin.WindowCommand):
-	# tokens used to clean-up JSON files
-	TOKENIZER = re.compile(r'(?<![^\\]\\)"|(/\*)|(//)|(#)')
-	QUOTE = re.compile(r'(?<![^\\]\\)"')
-	NEWLINE = re.compile(r'\r?\n')
 
 	# on 3080+, the necessary features are built-in by default
 	if sublime.version() > '3079':
@@ -132,7 +132,8 @@ class LatextoolsBuildSelector(sublime_plugin.WindowCommand):
 				project_file_name = get_project_file_name(view)
 				if project_file_name is not None:
 					try:
-						project_settings = self.parse_json_with_comments(project_file_name)
+						project_settings = \
+							parse_json_with_comments(project_file_name)
 					except:
 						print('Error parsing project file')
 						traceback.print_exc()
@@ -161,7 +162,7 @@ class LatextoolsBuildSelector(sublime_plugin.WindowCommand):
 
 			for filename in sublime_build_files:
 				try:
-					sublime_build = self.parse_json_with_comments(filename)
+					sublime_build = parse_json_with_comments(filename)
 				except:
 					print(u'Error parsing file {0}'.format(filename))
 					continue
@@ -209,7 +210,7 @@ class LatextoolsBuildSelector(sublime_plugin.WindowCommand):
 			entries = len(formatted_entries)
 			if entries == 0:
 				self.window.run_command('build')
-			elif entires == 1:
+			elif entries == 1:
 				build_system, build_variant = build_system_variants[0]
 				self.WINDOWS[self.window.id()] = {
 					'build_system': build_system,
@@ -233,71 +234,18 @@ class LatextoolsBuildSelector(sublime_plugin.WindowCommand):
 
 	def run_build(self, build_system, build_variant):
 		if build_system.isdigit():
-			self.window.run_command('set_build_system', {'index': int(build_system)})
+			self.window.run_command(
+				'set_build_system', {'index': int(build_system)}
+			)
 		else:
-			self.window.run_command('set_build_system', {'file': build_system})
+			self.window.run_command(
+				'set_build_system', {'file': build_system}
+			)
 
 		if build_variant:
 			self.window.run_command('build', {'variant': build_variant})
 		else:
 			self.window.run_command('build')
-
-	def parse_json_with_comments(self, filename):
-		with codecs.open(filename, 'r', 'utf-8', 'ignore') as f:
-			content = f.read()
-
-		try:
-			return json.loads(content)
-		except:
-			pass
-
-		# pre-process to strip comments
-		new_content = []
-		index = 0
-
-		content_length = len(content) - 1
-
-		match = self.TOKENIZER.search(content, index)
-		while match:
-			new_content.append(content[index:match.start()])
-
-			index = match.end()
-			value = match.group()
-
-			if value == '/*':
-				comment_end = content.find('*/', index)
-				if comment_end == -1:
-					# unbalanced comment
-					break
-				else:
-					new_lines = len(content[index:comment_end].split('\n')) - 1
-					new_content.extend(['\n'] * new_lines)
-					index = comment_end + 2
-			elif value == '//' or value == '#':
-				comment_end = self.NEWLINE.search(content, index)
-				if comment_end:
-					index = comment_end.end()
-				else:
-					break
-			elif value == '"':
-				new_content.append('"')
-				next_quote = self.QUOTE.search(content, index)
-				if next_quote:
-					new_content.append(content[index:next_quote.end()])
-					index = next_quote.end()
-				else:
-					# unclosed quote; return to generate json error
-					break
-
-			if index < content_length:
-				match = self.TOKENIZER.search(content, index)
-			else:
-				break
-
-		if index < content_length:
-			new_content.append(content[index:])
-
-		return json.loads(''.join(new_content))
 
 
 # First, define thread class for async processing
@@ -912,12 +860,14 @@ class DoOutputEditCommand(sublime_plugin.TextCommand):
 
 
 
+
 class DoFinishEditCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		self.view.sel().clear()
 		reg = sublime.Region(0)
 		self.view.sel().add(reg)
 		self.view.show(reg)
+
 
 
 
