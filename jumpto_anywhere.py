@@ -94,7 +94,7 @@ def _jumpto_ref(view, com_reg, pos):
         print(message)
         sublime.status_message(message)
         return
-    label_region = label.args_region
+    label_region = label.region
     message = "Jumping to label '{0}'.".format(label_id)
     print(message)
     sublime.status_message(message)
@@ -220,7 +220,7 @@ class JumptoTexAnywhereCommand(sublime_plugin.TextCommand):
             return
         command = com_reg.group("command")
         args = com_reg.group("args")
-        reversed_command = command[::-1]
+        reversed_command = "{" + command[::-1] + "\\"
         # the cursor position inside the command
         pos = view.sel()[0].b - line_r.begin() - com_reg.start()
         # check if its a ref
