@@ -128,12 +128,14 @@ from collections import MutableMapping
 
 try:
     from latextools_utils import get_setting
+    import latextools_plugin_internal as internal
 except ImportError:
     from .latextools_utils import get_setting
+    from . import latextools_plugin_internal as internal
 
 __all__ = [
-    'LaTeXToolsPlugin', 'get_plugin', 'add_plugin_path',
-    'LaTeXToolsPluginException', 'InvalidPluginException',
+    'LaTeXToolsPlugin', 'get_plugin', 'get_plugins_by_type',
+    'add_plugin_path', 'LaTeXToolsPluginException', 'InvalidPluginException',
     'NoSuchPluginException'
 ]
 
@@ -168,39 +170,7 @@ class InvalidPluginException(LaTeXToolsPluginException):
     pass
 
 
-# LaTeXToolsPlugin
-class LaTeXToolsPluginMeta(type):
-    '''
-    Metaclass for plugins which will automatically register them with the
-    plugin registry
-    '''
-    def __init__(cls, name, bases, attrs):
-        try:
-            super(LaTeXToolsPluginMeta, cls).__init__(name, bases, attrs)
-        except TypeError:
-            # occurs on reload
-            return
-
-        if cls == LaTeXToolsPluginMeta:
-            return
-
-        try:
-            if not any(
-                (True for base in bases if issubclass(base, LaTeXToolsPlugin))
-            ):
-                return
-        except NameError:
-            return
-
-        registered_name = _classname_to_internal_name(name)
-        internal._REGISTRY[registered_name] = cls
-
-
-LaTeXToolsPlugin = LaTeXToolsPluginMeta('LaTeXToolsPlugin', (object,), {})
-LaTeXToolsPlugin.__doc__ = '''
-Base class for LaTeXTools plugins. Implementation details will depend on where
-this plugin is supposed to be loaded. See the documentation for details.
-'''
+LaTeXToolsPlugin = internal.LaTeXToolsPlugin
 
 
 # methods for consumers
@@ -295,6 +265,19 @@ def get_plugin(name):
         )
     return internal._REGISTRY[name]
 
+
+def get_plugins_by_type(cls):
+    if internal._REGISTRY is None:
+        raise NoSuchPluginException(
+            'No plugins could be loaded because the registry either hasn\'t '
+            'been loaded or has been unloaded'
+        )
+
+    plugins = [plugin for _, plugin in internal._REGISTRY.items()
+               if issubclass(plugin, cls)]
+
+    return plugins
+
 # -- Private API --#
 if sys.version_info < (3, 0):
     exec("""def reraise(tp, value, tb=None):
@@ -384,6 +367,7 @@ class LaTeXToolsPluginRegistry(MutableMapping):
     Registry used internally to store references to plugins to be retrieved
     by plugin consumers.
     '''
+
     def __init__(self):
         self._registry = {}
 
@@ -392,10 +376,12 @@ class LaTeXToolsPluginRegistry(MutableMapping):
             return self._registry[key]
         except KeyError:
             raise NoSuchPluginException(
-                'Plugin {0} does not exist. Please ensure that the plugin is configured as documented'.format(key))
+                'Plugin {0} does not exist. Please ensure that the plugin is '
+                'configured as documented'.format(key)
+            )
 
     def __setitem__(self, key, value):
-        if not isinstance(value, LaTeXToolsPluginMeta):
+        if not isinstance(value, internal.LaTeXToolsPluginMeta):
             raise InvalidPluginException(value)
 
         self._registry[key] = value
@@ -413,41 +399,7 @@ class LaTeXToolsPluginRegistry(MutableMapping):
         return str(self._registry)
 
 
-def _classname_to_internal_name(s):
-    '''
-    Converts a Python class name in to an internal name
-
-    The intention here is to mirror how ST treats *Command objects, i.e., by
-    converting them from CamelCase to under_scored. Similarly, we will chop
-    "Plugin" off the end of the plugin, though it isn't necessary for the class
-    to be treated as a plugin.
-
-    E.g.,
-        SomeClass will become some_class
-        ReferencesPlugin will become references
-        BibLaTeXPlugin will become biblatex
-    '''
-    if not s:
-        return s
-
-    # little hack to support LaTeX or TeX in the plugin name
-    while True:
-        match = re.search(r'(?:Bib)?(?:La)?TeX', s)
-        if match:
-            s = s.replace(
-                match.group(0),
-                match.group(0)[0] + match.group(0)[1:].lower()
-            )
-        else:
-            break
-
-    # pilfered from http://code.activestate.com/recipes/66009/
-    s = re.sub(r'(?<=[a-z])[A-Z]|(?<!^)[A-Z](?=[a-z])', r"_\g<0>", s).lower()
-
-    if s.endswith('_plugin'):
-        s = s[:-7]
-
-    return s
+_classname_to_internal_name = internal._classname_to_internal_name
 
 
 def _get_plugin_paths():
@@ -555,7 +507,10 @@ def _latextools_module_hack():
                 try:
                     sys.modules[name] = _load_module(name, name, __dir__)
                 except ImportError:
-                    print('An error occurred while trying to load white-listed module {0}'.format(name))
+                    print(
+                        'An error occurred while trying to load white-listed '
+                        'module {0}'.format(name)
+                    )
                     traceback.print_exc()
         else:
             sys.modules[name] = module
@@ -578,6 +533,10 @@ def plugin_loaded():
     internal._REGISTRY = LaTeXToolsPluginRegistry()
 
     print('Loading LaTeXTools plugins...')
+
+    for name, cls in internal._REGISTERED_CLASSES_TO_LOAD:
+        internal._REGISTRY[name] = cls
+
     _load_plugins()
 
     for path, glob in internal._REGISTERED_PATHS_TO_LOAD:
@@ -590,14 +549,6 @@ def plugin_loaded():
         '*.latextools-plugin'
     )
 
-
-# when this plugin is unloaded, remove the registry
-def plugin_unloaded():
-    internal._REGISTRY = None
-
 # ensure plugin_loaded() called on ST2
-if sublime.version() < '3000':
-    unload_handler = plugin_unloaded
-
-    if internal._REGISTRY is None:
-        plugin_loaded()
+if sublime.version() < '3000' and internal._REGISTRY is None:
+    plugin_loaded()
