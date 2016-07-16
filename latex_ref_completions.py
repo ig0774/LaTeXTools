@@ -15,14 +15,9 @@ else:
     from .latextools_utils.is_tex_file import is_tex_file, get_tex_extensions
     from .latextools_utils import get_setting
 
-import sublime_plugin
-import os, os.path
+import os
 import re
 import codecs
-
-
-class UnrecognizedRefFormatError(Exception):
-    pass
 
 _ref_special_commands = "|".join([
     "", "eq", "page", "v", "V", "auto", "name", "c", "C", "cpage", "sub"
@@ -158,10 +153,7 @@ class RefFillAllHelper(FillAllHelper):
         if old_style and not prefix:
             return []
 
-        try:
-            completions = get_ref_completions(view)
-        except UnrecognizedRefFormatError:
-            return []
+        completions = get_ref_completions(view)
 
         if prefix:
             lower_prefix = prefix.lower()
@@ -173,13 +165,7 @@ class RefFillAllHelper(FillAllHelper):
             return completions
 
     def get_completions(self, view, prefix, line):
-        try:
-            completions = get_ref_completions(view)
-        except UnrecognizedRefFormatError:
-            sublime.error_message(
-                "Unrecognized format for reference completion"
-            )
-            return
+        completions = get_ref_completions(view)
 
         completions_length = len(completions)
         if completions_length == 0:

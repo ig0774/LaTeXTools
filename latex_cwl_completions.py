@@ -209,7 +209,11 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
         is_prefixed = char_before == "\\"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         line = view.substr(get_Region(view.line(point).begin(), point_before))
+=======
+        line = view.substr(getRegion(view.line(point).begin(), point))
+>>>>>>> unified_completions
 =======
         line = view.substr(getRegion(view.line(point).begin(), point))
 >>>>>>> unified_completions

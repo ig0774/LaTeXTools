@@ -15,6 +15,7 @@ try:
     from latextools_utils.output_directory import (
         get_aux_directory, get_output_directory
     )
+    from getTeXRoot import get_tex_root
 except ImportError:
     from .latex_fill_all import FillAllHelper
     from .latextools_utils import get_setting
@@ -22,6 +23,9 @@ except ImportError:
     from .latextools_utils.output_directory import (
         get_aux_directory, get_output_directory
     )
+    from .getTeXRoot import get_tex_root
+
+_ST3 = sublime.version() >= '3000'
 
 def get_input_completion_matcher():
     _, dyn_regex = _get_dyn_entries()
@@ -222,7 +226,7 @@ def parse_completions(view, line):
     completions = []
 
     if entry["type"] == "input":
-        root = getTeXRoot.get_tex_root(view)
+        root = get_tex_root(view)
         if root:
             output_directory = get_output_directory(root)
             aux_directory = get_aux_directory(root)
@@ -328,7 +332,7 @@ class InputFillAllHelper(FillAllHelper):
         elif not type(completions[0]) is tuple:
             return completions
         else:
-            tex_root = getTeXRoot.get_tex_root(view)
+            tex_root = get_tex_root(view)
             if tex_root:
                 root_path = os.path.dirname(tex_root)
             else:

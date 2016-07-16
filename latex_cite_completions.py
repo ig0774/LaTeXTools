@@ -3,7 +3,7 @@ This module implements the cite-completion behaviour, largely by relying on
 implementations registered with latextools_plugin and configured using the
 `bibliograph_plugins` configuration key.
 
-At present, there are two supported methods on custom plugins.
+At present, there is one supported method on custom plugins.
 
 `find_bibliography_files`:
     This method should take a single argument, the full path the to root
@@ -64,7 +64,6 @@ import re
 from string import Formatter
 import traceback
 
-class UnrecognizedCiteFormatError(Exception): pass
 class NoBibFilesError(Exception): pass
 
 class BibParsingError(Exception):
@@ -334,6 +333,7 @@ def get_cite_completions(view):
 
     return completions
 
+
 # Based on html_completions.py
 # see also latex_ref_completions.py
 #
@@ -371,8 +371,6 @@ class CiteFillAllHelper(FillAllHelper):
 
         try:
             completions = get_cite_completions(view)
-        except UnrecognizedCiteFormatError:
-            return []
         except NoBibFilesError:
             print("No bib files found!")
             sublime.status_message("No bib files found!")
@@ -425,11 +423,6 @@ class CiteFillAllHelper(FillAllHelper):
     def get_completions(self, view, prefix, line):
         try:
             completions = get_cite_completions(view)
-        except UnrecognizedCiteFormatError:
-            sublime.error_message(
-                "Unrecognized format for citation completion"
-            )
-            return
         except NoBibFilesError:
             sublime.error_message("No bib files found!")
             return
