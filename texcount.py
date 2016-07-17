@@ -14,6 +14,7 @@ else:
     from .latextools_utils.external_command import check_output
     from .getTeXRoot import get_tex_root
 
+
 class TexcountCommand(sublime_plugin.TextCommand):
     """
     Simple TextCommand to run TeXCount against the current document
@@ -24,7 +25,8 @@ class TexcountCommand(sublime_plugin.TextCommand):
 
         if not os.path.exists(tex_root):
             sublime.error_message(
-                'Tried to run TeXCount on non-existent file. Please ensure all files are saved before invoking TeXCount.'
+                'Tried to run TeXCount on non-existent file. Please ensure '
+                'all files are saved before invoking TeXCount.'
             )
             return
 
@@ -59,5 +61,6 @@ class TexcountCommand(sublime_plugin.TextCommand):
             )
         except OSError:
             sublime.error_message(
-                'Could not run texcount. Please ensure that your texpath setting is configured correctly in the LaTeXTools settings.'
+                'Could not run texcount. Please ensure that your texpath '
+                'setting is configured correctly in the LaTeXTools settings.'
             )
