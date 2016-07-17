@@ -8,7 +8,7 @@ try:
         is_cwl_available, get_packages, get_cwl_completions,
         BEGIN_END_BEFORE_REGEX
     )
-    from .getTexRoot import get_tex_root
+    from .getTeXRoot import get_tex_root
 except:
     _ST3 = False
     from latex_fill_all import FillAllHelper
