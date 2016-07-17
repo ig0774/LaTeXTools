@@ -61,7 +61,6 @@ else:
     strbase = str
 
 import re
-from string import Formatter
 import traceback
 
 class NoBibFilesError(Exception): pass
@@ -312,8 +311,8 @@ def get_cite_completions(view):
         raise NoBibFilesError()
 
     print(u"TEX root: " + repr(root))
-    bib_files = []
-    find_bib_files(os.path.dirname(root), root, bib_files)
+    bib_files = run_plugin_command('find_bibliography_files', root)
+
     # remove duplicate bib files
     bib_files = list(set(bib_files))
     print("Bib files found: ")
@@ -328,8 +327,6 @@ def get_cite_completions(view):
     completions = run_plugin_command('get_entries', *bib_files)
 
     #### END COMPLETIONS HERE ####
-
-    completions = [CompletionWrapper(completion) for completion in completions]
 
     return completions
 
