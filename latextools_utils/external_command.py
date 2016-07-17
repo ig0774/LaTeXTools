@@ -1,9 +1,15 @@
 # This module provides tools for running external commands.
 # It is mainly a wrapper around subprocess calls with some defaults
 # specific to LaTeXTools. In particular:
+#
 #  * it executes commands using the PATH defined by the texpath setting
+#  * STDOUT is set to PIPE
 #  * it redirects STDERR to STDOUT
 #  * it hides the console window on Windows
+#
+# All of these, except hiding the console window, can be overridden via
+# parameters passed to the method. The point is to simplify running things
+# the way we normally do.
 #
 # All of the above can be overridden using optional parameters
 #
@@ -167,7 +173,11 @@ def external_command(command, cwd=None, shell=False, env=None,
     try:
         print(u'Running "{0}"'.format(u' '.join([quote(s) for s in command])))
     except UnicodeError:
-        print(u'Running "{0}"'.format(command))
+        try:
+            print(u'Running "{0}"'.format(command))
+        except:
+            pass
+
     p = Popen(
         command,
         stdin=stdin,

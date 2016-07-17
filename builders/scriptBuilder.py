@@ -7,14 +7,9 @@ import sys
 
 from string import Template
 
-try:
-	from latextools_utils.external_command import (
-		external_command, get_texpath, update_env
-	)
-except:
-	from LaTeXTools.latextools_utils.external_command import (
-		external_command, get_texpath, update_env
-	)
+from latextools_utils.external_command import (
+	external_command, get_texpath, update_env
+)
 
 if sys.version_info < (3, 0):
 	strbase = basestring
@@ -118,7 +113,7 @@ class ScriptBuilder(PdfBuilder):
 			self.display("done.\n")
 
 			# This is for debugging purposes
-			if self.display_log and p.stdout is not None:
+			if self.display_log and self.out is not None:
 				self.display("\nCommand results:\n")
 				self.display(self.out)
 				self.display("\n\n")
