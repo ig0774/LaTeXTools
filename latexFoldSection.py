@@ -5,11 +5,11 @@ import re
 
 if sublime.version() < '3000':
     _ST3 = False
-    from getRegion import get_Region
+    from getRegion import getRegion
     from latextools_utils import get_setting
 else:
     _ST3 = True
-    from .getRegion import get_Region
+    from .getRegion import getRegion
     from .latextools_utils import get_setting
 
 SECTION_TYPES = ['part', 'chapter', 'section', 'subsection',
@@ -81,14 +81,14 @@ def find_sec_regions(view, sec_type, execute_toc=False):
     # if find, return first match's index, else return None
     def find_parent_tags(sec_type, a, b):
         result = []
-        s = view.substr(get_Region(a, b))
+        s = view.substr(getRegion(a, b))
         for i in SECTION_TYPES[:SECTION_TYPES.index(sec_type)]:
             rs = re.findall(get_begin_mark_pattern(i), s)
             if len(rs) != 0:
                 for r in rs:
                     m_pos = s.find(r)
                     m_size = len(r)
-                    result.append(get_Region(a + m_pos, a + m_pos + m_size))
+                    result.append(getRegion(a + m_pos, a + m_pos + m_size))
 
         # sorted by apperance
         return sorted(result, key=lambda x: x.begin())
@@ -97,14 +97,14 @@ def find_sec_regions(view, sec_type, execute_toc=False):
     # if find, return first match's index, else return None
     def find_child_tags(sec_type, a, b):
         result = []
-        s = view.substr(get_Region(a, b))
+        s = view.substr(getRegion(a, b))
         for i in SECTION_TYPES[SECTION_TYPES.index(sec_type) + 1:]:
             rs = re.findall(get_begin_mark_pattern(i), s)
             if len(rs) != 0:
                 for r in rs:
                     m_pos = s.find(r)
                     m_size = len(r)
-                    result.append(get_Region(a + m_pos, a + m_pos + m_size))
+                    result.append(getRegion(a + m_pos, a + m_pos + m_size))
 
         return sorted(result, key=lambda x: x.begin())
 
@@ -156,7 +156,10 @@ def find_sec_regions(view, sec_type, execute_toc=False):
 
             # if there is no end mark or next end mark is bellow next same
             # level's mark or a parents' mark
-            if first_end_mark.begin() == -1 or first_end_mark.begin() > next_mark.begin():
+            if (
+                first_end_mark.begin() == -1 or
+                first_end_mark.begin() > next_mark.begin()
+            ):
                 current_end_mark = next_mark
             else:
                 current_end_mark = first_end_mark
@@ -165,9 +168,9 @@ def find_sec_regions(view, sec_type, execute_toc=False):
 
         # if just one line at the last
         if current_mark.end() == current_end_mark.end():
-            content = get_Region(current_mark.end(), current_mark.end())
+            content = getRegion(current_mark.end(), current_mark.end())
         else:
-            content = get_Region(
+            content = getRegion(
                 current_mark.end(),
                 view.line(current_end_mark.begin()).begin() - 1
             )
@@ -270,7 +273,7 @@ def get_toc(view):
             j = code_segs[code_segs.index(i) + 1]
             if i[0].end() > j[0].begin():
                     toc_strc.append([
-                        get_Region(
+                        getRegion(
                             i[0].begin(),
                             view.line(j[0].begin()).begin() - 1
                         ),
@@ -353,7 +356,10 @@ class LatexFoldCurrentCommand(sublime_plugin.TextCommand):
 
                 # if end mark is a norm end mark
                 if extreme_fold != 'ALL':
-                    if re.search(r'%\s*.*\(end\)', view.substr(i[2])) is not None:
+                    if (
+                        re.search(r'%\s*.*\(end\)', view.substr(i[2]))
+                        is not None
+                    ):
                         region_span = region_span.cover(i[2])
 
                 if region_span.contains(point):
@@ -378,9 +384,9 @@ class LatexFoldCurrentCommand(sublime_plugin.TextCommand):
 
                 # region contain preamble
                 preamble_region = sublime.Region(
-                        documentclass.end(),
-                        doc_begin.begin() - 1
-                    )
+                    documentclass.end(),
+                    doc_begin.begin() - 1
+                )
 
                 first_sec_mark = min(
                     find_all_fold(view, depth=1),
