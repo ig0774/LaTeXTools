@@ -26,6 +26,7 @@ LOAD_ORDER = [
     'latextools_utils.settings',
     'latextools_utils.system',
     'latextools_utils.utils',
+    'latextools_utils.internal_types',
 
     # depend on previous only
     'latextools_utils.distro_utils',
