@@ -4,8 +4,10 @@
 # that uses any imports from any of those modules, hence the name.
 #
 
+import importlib
 import sublime
 import sys
+import traceback
 
 if sys.version_info >= (3,):
     from imp import reload
@@ -18,6 +20,9 @@ if sublime.version() > '3000':
 
 # these modules must be specified in the order they depend on one another
 LOAD_ORDER = [
+    'latextools_plugin_internal',
+    'latextools_plugin',
+
     # base module
     'latextools_utils',
 
@@ -36,13 +41,12 @@ LOAD_ORDER = [
     'latextools_utils.external_command',
 
     # use the preceeding
+    'latextools_utils.analysis',
     'latextools_utils.external_command',
     'latextools_utils.subfiles',
     'latextools_utils.tex_directives',
     'latextools_utils.bibcache',
     'latextools_utils.output_directory',
-
-    'latextools_plugin_internal',
 
     'latex_chars'
 ]
@@ -50,5 +54,10 @@ LOAD_ORDER = [
 
 for suffix in LOAD_ORDER:
     mod = MOD_PREFIX + suffix
-    if mod in sys.modules and sys.modules[mod] is not None:
-        reload(sys.modules[mod])
+    try:
+        if mod in sys.modules and sys.modules[mod] is not None:
+            reload(sys.modules[mod])
+        else:
+            importlib.import_module(mod)
+    except:
+        traceback.print_exc()

@@ -118,7 +118,6 @@ import sublime
 import glob as _glob
 import os
 import sys
-import re
 
 import traceback
 
@@ -154,10 +153,11 @@ class LaTeXToolsPluginException(Exception):
 
 class NoSuchPluginException(LaTeXToolsPluginException):
     '''
-    Exception raised if an attempt is made to access a plugin that does not exist
+    Exception raised if an attempt is made to access a plugin that does not
+    exist
 
-    Intended to allow the consumer to provide the user with some more useful information
-    e.g., how to properly configure a module for an extension point
+    Intended to allow the consumer to provide the user with some more useful
+    information e.g., how to properly configure a module for an extension point
     '''
     pass
 
@@ -457,8 +457,11 @@ def _load_plugins():
                 # assume path is a tuple of [<path>, <glob>]
                 add_plugin_path(_resolve_plugin_path(path[0]), path[1])
             except:
-                print('An error occurred while trying to add the plugin path {0}'.format(path))
+                print(
+                    'An error occurred while trying to add the plugin '
+                    'path {0}'.format(path))
                 traceback.print_exc()
+
 
 @contextmanager
 def _latextools_module_hack():
@@ -470,9 +473,10 @@ def _latextools_module_hack():
     the user as-needed.
     '''
     # add any white-listed plugins to sys.modules under their own name
-    plugins_whitelist = get_setting('plugins_whitelist',
-        ['getTeXRoot', 'kpsewhich', 'latex_chars', 'latextools_utils'])
-
+    plugins_whitelist = get_setting(
+        'plugins_whitelist',
+        ['getTeXRoot', 'kpsewhich', 'latextools_utils']
+    )
 
     # always include latextools_pluing
     plugins_whitelist.append('latextools_plugin')

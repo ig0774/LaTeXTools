@@ -296,6 +296,75 @@ class LatexFillHelper(object):
         except:
             pass
 
+    def get_common_prefix(self, view, locations):
+        '''
+        gets the common prefix (if any) from a list of locations
+
+        :param view:
+            the current view
+
+        :param locations:
+            either a list of points or a list of sublime.Regions
+        '''
+        if type(locations[0]) is int:
+            locations = [getRegion(l, l) for l in locations]
+
+        old_prefix = None
+        for location in locations:
+            if location.empty():
+                word_region = getRegion(
+                    self.get_current_word(view, location).begin(),
+                    location.b
+                )
+                prefix = view.substr(word_region)
+            else:
+                prefix = view.substr(location)
+
+            if old_prefix is None:
+                old_prefix = prefix
+            elif old_prefix != prefix:
+                prefix = ''
+                break
+
+        return prefix
+
+    def get_common_fancy_prefix(self, view, locations):
+        '''
+        get the common fancy prefix (if any) from a list of locations
+
+        see get_fancy_prefix for the definition of a fancy prefix
+
+        :param view:
+            the current view
+
+        :param locations:
+            either a list of points or a list of sublime.Regions
+        '''
+        remove_regions = []
+        old_prefix = None
+        for location in locations:
+            prefix_region = self.get_fancy_prefix(view, location)
+            if prefix_region.empty():
+                continue
+
+            new_prefix = view.substr(prefix_region)
+
+            remove_regions.append(
+                getRegion(
+                    prefix_region.begin() - 1, prefix_region.end()
+                ),
+            )
+
+            if old_prefix is None:
+                old_prefix = new_prefix
+            elif old_prefix != new_prefix:
+                # dummy value that is not None and will never match the
+                # prefix
+                old_prefix = True
+                new_prefix = ''
+
+        return new_prefix, remove_regions
+
     def get_current_word(self, view, location):
         '''
         Gets the region containing the current word which contains the caret
@@ -544,9 +613,79 @@ class LatexFillAllEventListener(
     sublime_plugin.EventListener, LatexFillHelper, LatexFillAllPluginConsumer
 ):
     '''
-    Implements the query completions functionality for some completions and the
-    logic to insert brackets as necessary
+    Implements the query completions and query context functionality for some
+    completions and the logic to insert brackets as necessary
     '''
+
+    # keys supported by on_query_context
+    SUPPORTED_KEYS = None
+
+    SUPPORTED_INSERT_CHARS = {
+        'open_curly': '{',
+        'open_square': '[',
+        'comma': ','
+    }
+
+    def on_query_context(self, view, key, operator, operand, match_all):
+        '''
+        supports query_context for all completion types
+        key is "lt_fill_all_{name}" where name is the short name of the
+        completion type, e.g. "lt_fill_all_cite", etc.
+        '''
+        # quick exit conditions
+        for sel in view.sel():
+            point = sel.b
+            if (
+                view.score_selector(point, "text.tex.latex") == 0 or
+                view.score_selector(point, "comment") > 0
+            ):
+                return None
+
+        # load the plugins
+        if self.SUPPORTED_KEYS is None:
+            self.SUPPORTED_KEYS = dict(
+                ("lt_fill_all_{0}".format(name), name)
+                for name in self.get_completion_types()
+            )
+
+        try:
+            key, insert_char = key.split('.')
+        except:
+            insert_char = ''
+
+        # not handled here
+        if key not in self.SUPPORTED_KEYS:
+            return None
+        # unsupported bracket
+        elif insert_char and insert_char not in self.SUPPORTED_INSERT_CHARS:
+            return False
+        # unsupported operators
+        elif operator not in [sublime.OP_EQUAL, sublime.OP_NOT_EQUAL]:
+            return False
+
+        insert_char = self.SUPPORTED_INSERT_CHARS.get(insert_char, '')
+
+        completion_type = self.get_completion_type(
+            self.SUPPORTED_KEYS.get(key)
+        )
+
+        if not(completion_type and completion_type.is_enabled()):
+            return False
+
+        lines = [
+            insert_char + view.substr(
+                getRegion(view.line(sel).begin(), sel.b)
+            )[::-1]
+            for sel in view.sel()
+        ]
+
+        func = all if match_all else any
+        result = func((
+            completion_type.matches_line(line)
+            for line in lines
+        ))
+
+        return result if operator == sublime.OP_EQUAL else not result
 
     def on_query_completions(self, view, prefix, locations):
         for location in locations:
@@ -558,33 +697,14 @@ class LatexFillAllEventListener(
 
         completion_types = self.get_completion_types()
 
+        orig_prefix = prefix
+
         # tracks any regions to be removed
         remove_regions = []
-
-        old_prefix = None
-        new_prefix = ''
-        for sel in view.sel():
-            prefix_region = self.get_fancy_prefix(view, sel)
-            if prefix_region.empty():
-                continue
-
-            new_prefix = view.substr(
-                getRegion(prefix_region.begin() + 1, prefix_region.end())
-            )
-
-            remove_regions.append(prefix_region)
-
-            if old_prefix is None:
-                old_prefix = new_prefix
-            elif old_prefix != prefix:
-                # dummy value that is not None and will never match the
-                # prefix
-                old_prefix = True
-                new_prefix = ''
-
-        if new_prefix:
-            old_prefix = prefix
-            prefix = new_prefix
+        fancy_prefix = self.get_fancy_prefix(view, locations)
+        # although a prefix is passed in, our redefinition of "word" boundaries
+        # mean we should recalculate this
+        prefix = self.get_common_prefix(view, locations)
 
         fancy_prefixed_line = None
         if remove_regions:
@@ -611,17 +731,19 @@ class LatexFillAllEventListener(
             ):
                 if ct.matches_line(fancy_prefixed_line):
                     line = fancy_prefixed_line
+                    prefix = fancy_prefix
                     completion_type = ct
                     break
             elif ct.matches_line(line):
                 completion_type = ct
                 # reset fancy prefix
                 remove_regions = []
-                if new_prefix:
-                    prefix = old_prefix
                 break
 
         if completion_type is None:
+            return []
+        # completions could be unpredictable if we've changed the prefix
+        elif orig_prefix and not prefix:
             return []
 
         try:
@@ -679,6 +801,10 @@ class LatexFillAllCommand(
 
     :param completion_type:
         the completion plugin to use (optional)
+        may be:
+            * a string indicating the specific completion type, e.g. "cite"
+            * a list of such strings
+            * None, in which case all available completion types are searched
 
     :param insert_char:
         the character to insert before the completion; also determines the
@@ -690,28 +816,44 @@ class LatexFillAllCommand(
         cursor is treated as the prefix, which usually restricts the
         displayed results;
         if true, the current word will be replaced by the selected entry
+
+    :param force:
+        boolean indicating whether or not to match the context or simply
+        insert an entry; if force is true, completion_type must be a string;
+        if force is true, the bracket matching and word overwriting behaviour
+        is disabled
     '''
 
     def run(
-        self, edit, completion_type=None, insert_char="", overwrite=False
+        self, edit, completion_type=None, insert_char="", overwrite=False,
+        force=False
     ):
+        print('Called with {0}'.format(locals()))
+
         view = self.view
-        point = view.sel()[0].b
 
-        if (
-            view.score_selector(point, "text.tex.latex") == 0 or
-            view.score_selector(point, "comment") > 0
-        ):
-            self.complete_brackets(view, edit, insert_char)
-            return
+        for sel in view.sel():
+            point = sel.b
+            if (
+                view.score_selector(point, "text.tex.latex") == 0 or
+                view.score_selector(point, "comment") > 0
+            ):
+                self.complete_brackets(view, edit, insert_char)
+                return
 
-        completion_types = self.get_completion_types()
-
+        # if completion_type is a simple string, try to load it
         if isinstance(completion_type, strbase):
             completion_type = self.get_completion_type(completion_type)
             if completion_type is None:
                 self.complete_brackets(view, edit, insert_char)
                 return
+        elif force:
+            print('Cannot set `force` if completion type is not specified')
+            return
+
+        if force:
+            insert_char = ''
+            overwrite = False
 
         # tracks any regions to be removed
         remove_regions = []
@@ -719,31 +861,14 @@ class LatexFillAllCommand(
 
         # handle the _ prefix, if necessary
         if (
-            not isinstance(completion_type, FillAllHelper) or
-            completion_type.supports_fancy_prefix()
+            insert_char and (
+                not isinstance(completion_type, FillAllHelper) or
+                completion_type.supports_fancy_prefix()
+            )
         ):
-            if insert_char:
-                old_prefix = None
-                for sel in view.sel():
-                    prefix_region = self.get_fancy_prefix(view, sel)
-                    if prefix_region.empty():
-                        continue
-
-                    new_prefix = view.substr(prefix_region)
-
-                    remove_regions.append(
-                        getRegion(
-                            prefix_region.begin() - 1, prefix_region.end()
-                        ),
-                    )
-
-                    if old_prefix is None:
-                        old_prefix = new_prefix
-                    elif old_prefix != new_prefix:
-                        # dummy value that is not None and will never match the
-                        # prefix
-                        old_prefix = True
-                        new_prefix = ''
+            remove_regions, new_prefix = self.get_common_fancy_prefix(
+                view, view.sel()
+            )
 
         # if we found a _ prefix, we need to use the modified line, so
         # \ref_eq: -> \ref{ with a prefix of "eq:"
@@ -795,7 +920,7 @@ class LatexFillAllCommand(
             completion_type is None or
             completion_type not in self.COMPLETION_TYPES
         ):
-            for name in completion_types:
+            for name in self.get_completion_types():
                 ct = self.get_completion_type(name)
                 if ct is None:
                     continue
@@ -826,17 +951,19 @@ class LatexFillAllCommand(
                 return
         # assume a string: only a single completion type to use
         else:
-            if (
-                fancy_prefixed_line is not None and
-                ct.supports_fancy_prefix()
-            ):
-                if not ct.matches_line(fancy_prefixed_line):
-                    self.remove_regions(view, edit, remove_regions)
+            # if force is set, we do no matching
+            if not force:
+                if (
+                    fancy_prefixed_line is not None and
+                    ct.supports_fancy_prefix()
+                ):
+                    if not ct.matches_line(fancy_prefixed_line):
+                        self.remove_regions(view, edit, remove_regions)
+                        self.complete_brackets(view, edit, insert_char)
+                        return
+                elif ct.matches_line(line):
                     self.complete_brackets(view, edit, insert_char)
                     return
-            elif ct.matches_line(line):
-                self.complete_brackets(view, edit, insert_char)
-                return
 
         # we only check if the completion type is enabled if we're also
         # inserting a comma or bracket; otherwise, it must've been a keypress
@@ -845,22 +972,10 @@ class LatexFillAllCommand(
             return
 
         # we are not adding a bracket or comma, we do not have a fancy prefix
-        # and the overwrite option was not set, so calculate the prefix as the
-        # previous word
-        if insert_char == '' and not prefix and not overwrite:
-            old_prefix = None
-            for sel in view.sel():
-                if sel.empty():
-                    word_region = self.get_current_word(view, sel)
-                    prefix = view.substr(word_region)
-                else:
-                    prefix = view.substr(sel)
-
-                if old_prefix is None:
-                    old_prefix = prefix
-                elif old_prefix != prefix:
-                    prefix = ''
-                    break
+        # and the overwrite and force options were not set, so calculate the
+        # prefix as the previous word
+        if insert_char == '' and not prefix and not overwrite and not force:
+            prefix = self.get_common_prefix(view, view.sel())
 
         # reset the _ completions if we are not using them
         if insert_char and not completion_type.supports_fancy_prefix():
@@ -894,16 +1009,19 @@ class LatexFillAllCommand(
         elif len(completions) == 1:
             # if there is only one completion and it already matches the
             # current text
-            if completions[0] == prefix:
-                return
+            if force:
+                view.insert(edit, completions[0])
+            else:
+                if completions[0] == prefix:
+                    return
 
-            if insert_char:
-                self.insert_at_end(view, edit, insert_char)
+                if insert_char:
+                    self.insert_at_end(view, edit, insert_char)
 
-            if completions[0]:
-                self.replace_word(view, edit, completions[0])
+                if completions[0]:
+                    self.replace_word(view, edit, completions[0])
 
-            self.complete_auto_match(view, edit, insert_char)
+                self.complete_auto_match(view, edit, insert_char)
             self.clear_bracket_cache()
         else:
             def on_done(i):
@@ -918,15 +1036,23 @@ class LatexFillAllCommand(
                     )
                     return
 
-                view.run_command(
-                    'latex_tools_replace_word',
-                    {
-                        'insert_char': insert_char,
-                        'replacement': completions[i],
-                        'remove_regions':
-                            self.regions_to_tuples(remove_regions)
-                    }
-                )
+                if force:
+                    view.run_command(
+                        'insert',
+                        {
+                            'characters': completions[i]
+                        }
+                    )
+                else:
+                    view.run_command(
+                        'latex_tools_replace_word',
+                        {
+                            'insert_char': insert_char,
+                            'replacement': completions[i],
+                            'remove_regions':
+                                self.regions_to_tuples(remove_regions)
+                        }
+                    )
 
             view.window().show_quick_panel(formatted_completions, on_done)
             self.clear_bracket_cache()

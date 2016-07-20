@@ -277,34 +277,6 @@ def _get_cache():
     return cache
 
 
-class LatexFillInputCompletions(sublime_plugin.EventListener):
-    def on_query_context(self, view, key, operator, operand, match_all):
-        if key not in ["lt_fill_input.open", "lt_fill_input.inside"]:
-            return False
-        fill_char = "{" if key == "lt_fill_input.open" else ","
-        matcher = get_input_completion_matcher()
-        for sel in view.sel():
-            line_reg = view.line(sel)
-            before = sublime.Region(line_reg.begin(), sel.b)
-            line = fill_char + view.substr(before)[::-1]
-            search = matcher(line)
-            if match_all and not search:
-                result = False
-                break
-            elif not match_all and search:
-                result = True
-                break
-        else:
-            result = match_all
-
-        if operator == sublime.OP_EQUAL:
-            result = result == operand
-        elif operator == sublime.OP_NOT_EQUAL:
-            result = result != operand
-
-        return result
-
-
 class InputFillAllHelper(FillAllHelper):
 
     def get_auto_completions(self, view, prefix, line):

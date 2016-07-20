@@ -51,14 +51,22 @@ LaTeX Package keymap for OS X
 	{ 	"keys": ["super+l","x"],
 		"context":  [
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
-		"command": "latex_fill_all",  "args": {"completion_type": ["cite", "ref"]}},
+		"command": "latex_fill_all", "args": {"completion_type": ["cite", "ref"]}},
+	{	"keys": ["super+l","alt+x","c"],
+		"context":  [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
+		"command": "latex_fill_all", "args": {"completion_type": "cite", "force": true}},
+	{	"keys": ["super+l","alt+x","r"],
+		"context":  [
+			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
+		"command": "latex_fill_all", "args": {"completion_type": "ref", "force": true}},
 
 	// Fill helper command	
-	{	"keys": ["super+l", "super+f"],
+	{	"keys": ["super+l","super+f"],
 		"context": [
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
 		"command": "latex_fill_all"},
-	{	"keys": ["super+l", "super+alt+f"], 
+	{	"keys": ["super+l","super+alt+f"], 
 		"context": [
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"}],
 		"command": "latex_fill_all", "args": {"overwrite": true}},
@@ -68,8 +76,7 @@ LaTeX Package keymap for OS X
 			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "preceding_text", "operator": "regex_contains", "match_all": true,
-				"operand": "\\\\(?:(?:(?:(?:eq|page|v|V|auto|name|c|C|cpage)?ref)|subref)\\*?)"}],
+			{"key": "lt_fill_all_ref.open_curly", "operator": "equal", "match_all": true, "operand": true}],
 		"command": "latex_fill_all", "args": {"completion_type": "ref", "insert_char": "{"}},
 
 	{	"keys": ["{"],
@@ -77,8 +84,7 @@ LaTeX Package keymap for OS X
 			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "preceding_text", "operator": "regex_contains", "match_all": true,
-				"operand": "\\\\(?:(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)cquote\\*?\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2}|(?:text|block)cquote\\*?(?:\\[[^\\]]*\\]){0,2}|(?:p|P|f|ft|s|S|t|T|a|A)?volcite(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?|(?:p|P|f|ft|s|S|t|T|a|A)?volcites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)(?:\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?)*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcites)(?:[A-Z]?[a-z]*c)|C)ites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\]){0,2}\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2})*|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcite|mcite)(?:[A-Z]?[a-z]*c)|C)ite(?!reset\\*?|style)([a-zX*]*?)([.*?]){0,2}(?:\\[[^\\]]*\\]){0,2})|cite(?:(?:mask)?(?:full|short)?(?:author|year)(?:NP)?|NP|A)?(?:<[^>]*>)?(?:\\[[^\\]]*\\])?)$"}],
+			{"key": "lt_fill_all_cite.open_curly", "operator": "equal", "match_all": true, "operand": true}],
 		"command": "latex_fill_all", "args": {"completion_type": "cite", "insert_char": "{"}},
 
 	{	"keys": [","],
@@ -86,8 +92,7 @@ LaTeX Package keymap for OS X
 			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "preceding_text", "operator": "regex_contains", "match_all": true,
-				"operand": "\\\\(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)quote\\*?\\{[^}]*\\}\\[(?:(?:[^[\\],]*,)*)?[^[\\],]*|(?:text|block)quote\\*?\\[(?:(?:[^[\\],]*,)*)?[^[\\],]*|(?:foreign|hyphen|hybrid(?=block))(?:text|block)cquote\\*?\\{[^}]*\\}(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:text|block)cquote\\*?(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:p|P|f|ft|s|S|t|T|a|A)?volcite(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?[^{},]*|(?:p|P|f|ft|s|S|t|T|a|A)?volcites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\])?\\{[^}]*\\}(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?(?:\\}(?=.*?\\{))?){1,}|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcites)(?:[A-Z]?[a-z]*c)|C)ites(?:\\([^)]*\\)){0,2}(?:(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?(?:\\}(?=.*?\\{))?){1,}|(?:(?!(?:p|P|f|ft|s|S|t|T|a|A)?volcite|mcite)(?:[A-Z]?[a-z]*c)|C)ite(?!reset\\*?|style)([a-zX*]*?)([.*?]){0,2}(?:\\[[^\\]]*\\]){0,2}\\{(?:(?:[^{},]*,)*)?[^{},]*|cite(?:(?:mask)?(?:full|short)?(?:author|year)(?:NP)?|NP|A)?(?:<[^>]*>)?(?:\\[[^\\]]*\\])?\\{(?:(?:[^{},]*,)*)?[^{},]*)$"}],
+			{"key": "lt_fill_all_cite.comma", "operator": "equal", "match_all": true, "operand": true}],
 		"command": "latex_fill_all", "args": {"completion_type": "cite", "insert_char": ","}},
 
 	{	"keys": ["["],
@@ -95,8 +100,7 @@ LaTeX Package keymap for OS X
 			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "preceding_text", "operator": "regex_contains", "match_all": true,
-				"operand": "\\\\(?:(?:foreign|hyphen|hybrid(?=block))(?:text|block)quote\\*?\\{[^}]*\\}|(?:text|block)quote\\*?)$"}],
+			{"key": "lt_fill_all_cite.open_square", "operator": "equal", "match_all": true, "operand": true}],
 		"command": "latex_fill_all", "args": {"completion_type": "cite", "insert_char": "["}},
 
 	{	"keys": ["{"],
@@ -104,7 +108,7 @@ LaTeX Package keymap for OS X
 			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "lt_fill_input.open", "operator": "equal", "operand": true, "match_all": true}],
+			{"key": "lt_fill_all_input.open_curly", "operator": "equal", "operand": true, "match_all": true}],
 		"command": "latex_fill_all", "args": {"completion_type": "input", "insert_char": "{"}},
 
 	{	"keys": [","],
@@ -112,7 +116,7 @@ LaTeX Package keymap for OS X
 			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "lt_fill_input.inside", "operator": "equal", "operand": true, "match_all": true}],
+			{"key": "lt_fill_all_input.comma", "operator": "equal", "operand": true, "match_all": true}],
 		"command": "latex_fill_all", "args": {"completion_type": "input", "insert_char": ","}},
 
 	{	"keys": ["{"],
@@ -120,8 +124,7 @@ LaTeX Package keymap for OS X
 			{"key": "setting.disable_latex_ref_cite_auto_trigger", "operator": "not_equal", "operand": true},
 			{"key": "selector", "operator": "equal", "operand": "text.tex.latex"},
 			{"key": "selection_empty", "operator": "equal", "operand": true, "match_all": true},
-			{"key": "preceding_text", "operator": "regex_contains",
-				"operand": "(?:\\\\begin(?:\\[[^{}\\[\\]]\\])?)|(?:\\\\end)", "match_all": true}],
+			{"key": "lt_fill_all_env.open_curly", "operator": "equal", "operand": true, "match_all": true}],
 		"command": "latex_fill_all", "args": {"completion_type": "env", "insert_char": "{"}},
 
 	// Toggle autocomplete
