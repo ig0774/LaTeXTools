@@ -349,13 +349,13 @@ class LatexFillHelper(object):
             if prefix_region.empty():
                 continue
 
-            new_prefix = view.substr(prefix_region)
-
-            remove_regions.append(
+            new_prefix = view.substr(
                 getRegion(
-                    prefix_region.begin() - 1, prefix_region.end()
-                ),
+                    prefix_region.begin() + 1, prefix_region.end()
+                )
             )
+
+            remove_regions.append(prefix_region)
 
             if old_prefix is None:
                 old_prefix = new_prefix
@@ -365,6 +365,7 @@ class LatexFillHelper(object):
                 old_prefix = True
                 new_prefix = ''
 
+        print(new_prefix, remove_regions)
         return new_prefix, remove_regions
 
     def get_current_word(self, view, location):
@@ -702,8 +703,9 @@ class LatexFillAllEventListener(
         orig_prefix = prefix
 
         # tracks any regions to be removed
-        remove_regions = []
-        fancy_prefix = self.get_fancy_prefix(view, locations)
+        fancy_prefix, remove_regions = self.get_common_fancy_prefix(
+            view, locations
+        )
         # although a prefix is passed in, our redefinition of "word" boundaries
         # mean we should recalculate this
         prefix = self.get_common_prefix(view, locations)
@@ -711,6 +713,7 @@ class LatexFillAllEventListener(
         fancy_prefixed_line = None
         if remove_regions:
             current_line = view.line(locations[0])
+            print(current_line)
             for region in remove_regions:
                 if current_line.contains(region):
                     fancy_prefixed_line = (view.substr(
@@ -719,6 +722,7 @@ class LatexFillAllEventListener(
                         getRegion(region.end(), locations[0])
                     ))[::-1]
                     break
+        print(fancy_prefixed_line)
 
         line = view.substr(
             getRegion(view.line(locations[0]).begin(), locations[0])
@@ -749,6 +753,7 @@ class LatexFillAllEventListener(
             return []
 
         try:
+            print(prefix, line[::-1])
             completions = completion_type.get_auto_completions(
                 view, prefix, line[::-1]
             )
@@ -830,8 +835,6 @@ class LatexFillAllCommand(
         self, edit, completion_type=None, insert_char="", overwrite=False,
         force=False
     ):
-        print('Called with {0}'.format(locals()))
-
         view = self.view
 
         for sel in view.sel():
@@ -868,7 +871,7 @@ class LatexFillAllCommand(
                 completion_type.supports_fancy_prefix()
             )
         ):
-            remove_regions, new_prefix = self.get_common_fancy_prefix(
+            fancy_prefix, remove_regions = self.get_common_fancy_prefix(
                 view, view.sel()
             )
 
@@ -902,7 +905,7 @@ class LatexFillAllCommand(
                     ):
                         if ct.matches_line(fancy_prefixed_line):
                             completion_type = ct
-                            prefix = new_prefix
+                            prefix = fancy_prefix
                             break
                     elif ct.matches_line(line):
                         completion_type = ct
@@ -933,7 +936,7 @@ class LatexFillAllCommand(
                 ):
                     if ct.matches_line(fancy_prefixed_line):
                         completion_type = ct
-                        prefix = new_prefix
+                        prefix = fancy_prefix
                         break
                 elif ct.matches_line(line):
                     completion_type = ct
@@ -959,7 +962,9 @@ class LatexFillAllCommand(
                     fancy_prefixed_line is not None and
                     ct.supports_fancy_prefix()
                 ):
-                    if not ct.matches_line(fancy_prefixed_line):
+                    if ct.matches_line(fancy_prefixed_line):
+                        prefix = fancy_prefix
+                    else:
                         self.remove_regions(view, edit, remove_regions)
                         self.complete_brackets(view, edit, insert_char)
                         return
