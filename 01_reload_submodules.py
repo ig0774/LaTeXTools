@@ -46,14 +46,25 @@ LOAD_ORDER = [
     'latextools_utils.subfiles',
     'latextools_utils.tex_directives',
     'latextools_utils.bibcache',
-    'latextools_utils.output_directory',
+    'latextools_utils.output_directory'
+]
 
+EXTERNAL_LOAD_ORDER = [
     'latex_chars'
 ]
 
 
 for suffix in LOAD_ORDER:
     mod = MOD_PREFIX + suffix
+    try:
+        if mod in sys.modules and sys.modules[mod] is not None:
+            reload(sys.modules[mod])
+        else:
+            importlib.import_module(mod)
+    except:
+        traceback.print_exc()
+
+for mod in EXTERNAL_LOAD_ORDER:
     try:
         if mod in sys.modules and sys.modules[mod] is not None:
             reload(sys.modules[mod])
