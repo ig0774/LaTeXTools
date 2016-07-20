@@ -342,6 +342,8 @@ class LatexFillHelper(object):
         '''
         remove_regions = []
         old_prefix = None
+        new_prefix = ''
+
         for location in locations:
             prefix_region = self.get_fancy_prefix(view, location)
             if prefix_region.empty():
