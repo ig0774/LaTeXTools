@@ -38,6 +38,7 @@ else:
         raise value
 
     strbase = str
+    long = int
 
 
 class LatexFillHelper(object):
@@ -306,7 +307,7 @@ class LatexFillHelper(object):
         :param locations:
             either a list of points or a list of sublime.Regions
         '''
-        if type(locations[0]) is int:
+        if type(locations[0]) is int or type(locations[0]) is long:
             locations = [getRegion(l, l) for l in locations]
 
         old_prefix = None
@@ -365,7 +366,6 @@ class LatexFillHelper(object):
                 old_prefix = True
                 new_prefix = ''
 
-        print(new_prefix, remove_regions)
         return new_prefix, remove_regions
 
     def get_current_word(self, view, location):
@@ -555,7 +555,7 @@ class LatexFillHelper(object):
             return [(regions.a, regions.b)]
 
         return [
-            (r.a, r.b)
+            [r.a, r.b]
             for r in regions
         ]
 
@@ -713,7 +713,6 @@ class LatexFillAllEventListener(
         fancy_prefixed_line = None
         if remove_regions:
             current_line = view.line(locations[0])
-            print(current_line)
             for region in remove_regions:
                 if current_line.contains(region):
                     fancy_prefixed_line = (view.substr(
@@ -722,7 +721,6 @@ class LatexFillAllEventListener(
                         getRegion(region.end(), locations[0])
                     ))[::-1]
                     break
-        print(fancy_prefixed_line)
 
         line = view.substr(
             getRegion(view.line(locations[0]).begin(), locations[0])
@@ -753,7 +751,6 @@ class LatexFillAllEventListener(
             return []
 
         try:
-            print(prefix, line[::-1])
             completions = completion_type.get_auto_completions(
                 view, prefix, line[::-1]
             )
