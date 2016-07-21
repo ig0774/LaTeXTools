@@ -39,6 +39,7 @@ LOAD_ORDER = [
     'latextools_utils.sublime_utils',
     'latextools_utils.cache',
     'latextools_utils.external_command',
+    'latextools_utils.quickpanel',
 
     # use the preceeding
     'latextools_utils.analysis',
