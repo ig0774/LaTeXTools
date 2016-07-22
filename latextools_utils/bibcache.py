@@ -10,8 +10,26 @@ else:
     _ST3 = True
     from . import bibformat, cache, get_setting
 
+_VERSION = 1
 
-def write(bib_name, bib_file, bib_entries):
+
+def write_fmt(bib_name, bib_file, bib_entries):
+    """
+    Writes the entries resulting from the bibliography into the cache.
+    The entries are pre-formatted to improve the time for the cite
+    completion command.
+    These pre-formatted entries are returned and should be used in the
+    to improve the time and be consistent with the return values.
+
+    Arguments:
+    bib_name -- the (unique) name of the bibliography
+    bib_file -- the bibliography file, which resulted in the entries
+    bib_entries -- the entries, which are parsed from the bibliography
+
+    Returns:
+    The pre-formatted entries, which should be passed to the cite
+    completions
+    """
     cache_name, formatted_cache_name = _cache_name(bib_name, bib_file)
 
     current_time = time.time()
@@ -27,7 +45,22 @@ def write(bib_name, bib_file, bib_entries):
     return formatted_entries
 
 
-def read(bib_name, bib_file):
+def read_fmt(bib_name, bib_file):
+    """
+    Reads the cache file of a bibliography file.
+    If the bibliography file has been changed after the caching, this
+    will result in a CacheMiss.
+    These entries are pre-formatted and compatible with cite
+    completions.
+
+    Arguments:
+    bib_name -- the (unique) name of the bibliography
+    bib_file -- the bibliography file, which resulted in the entries
+
+    Returns:
+    The cached pre-formatted entries, which should be passed to the
+    cite completions
+    """
     cache_name, formatted_cache_name = _cache_name(bib_name, bib_file)
 
     try:
@@ -40,9 +73,10 @@ def read(bib_name, bib_file):
     if modified_time > meta_data["cache_time"]:
         raise cache.CacheMiss()
 
-    # validate the format string are still valid
-    if any(meta_data[s] != get_setting("cite_" + s)
-           for s in ["panel_format", "autocomplete_format"]):
+    # validate the version and format strings are still valid
+    if (meta_data["version"] != _VERSION or
+            any(meta_data[s] != get_setting("cite_" + s)
+                for s in ["panel_format", "autocomplete_format"])):
         print("Formatting string has changed, updating cache...")
         # read the base information from the unformatted cache
         current_time, bib_entries = cache.read_global(cache_name)
@@ -68,10 +102,10 @@ def _create_formatted_entries(formatted_cache_name, bib_entries, cache_time):
 
     meta_data = {
         "cache_time": cache_time,
+        "version": _VERSION,
         "autocomplete_format": autocomplete_format,
         "panel_format": panel_format
     }
-    # TODO we might need to keep keys like "author"
     formatted_entries = [
         {
             "keyword": entry["keyword"],

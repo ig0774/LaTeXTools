@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 import sublime
 import sublime_plugin
 
@@ -61,6 +62,11 @@ class TexcountCommand(sublime_plugin.TextCommand):
             )
         except OSError:
             sublime.error_message(
-                'Could not run texcount. Please ensure that your texpath '
-                'setting is configured correctly in the LaTeXTools settings.'
+                'Could not run texcount. Please ensure that TeXcount is '
+                'installed and that your texpath setting includes the path '
+                'containing the TeXcount executable.'
             )
+
+    def is_visible(self, *args):
+        view = self.view
+        return bool(view.score_selector(0, "text.tex"))
