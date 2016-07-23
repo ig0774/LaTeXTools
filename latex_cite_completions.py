@@ -301,8 +301,6 @@ def run_plugin_command(command, *args, **kwargs):
 
 
 def get_cite_completions(view):
-    #### GET COMPLETIONS HERE #####
-
     root = getTeXRoot.get_tex_root(view)
 
     if root is None:
@@ -325,8 +323,6 @@ def get_cite_completions(view):
     bib_files = ([x.strip() for x in bib_files])
 
     completions = run_plugin_command('get_entries', *bib_files)
-
-    #### END COMPLETIONS HERE ####
 
     return completions
 
@@ -397,8 +393,7 @@ class CiteFillAllHelper(FillAllHelper):
             '{keyword}: {title}'
         )
 
-        formatted_completions = []
-        for completion in completions:
+        def formatted_entry(entry):
             try:
                 return entry['<autocomplete_formatted>']
             except:
