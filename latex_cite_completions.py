@@ -400,22 +400,23 @@ class CiteFillAllHelper(FillAllHelper):
         formatted_completions = []
         for completion in completions:
             try:
-                formatted_completions.append((
-                    completion["<autocomplete_formatted>"],
-                    completion['keyword']
-                ))
+                return entry['<autocomplete_formatted>']
             except:
-                formatted_completions.append((
-                    bibformat.format_entry(
-                        cite_autocomplete_format, completion
-                    ),
-                    completion['keyword']
-                ))
+                return bibformat.format_entry(
+                    cite_autocomplete_format, entry
+                )
+
+        completions = [
+            (
+                prefix + formatted_entry(c),
+                c['keyword']
+            ) for c in completions
+        ]
 
         if old_style:
-            return formatted_completions, '{'
+            return completions, '{'
         else:
-            return formatted_completions
+            return completions
 
     def get_completions(self, view, prefix, line):
         try:
@@ -450,18 +451,19 @@ class CiteFillAllHelper(FillAllHelper):
             ["{title} ({keyword})", "{author}"]
         )
 
+        def formatted_entry(entry):
+            try:
+                return entry["<panel_formatted>"]
+            except:
+                return [
+                    bibformat.format_entry(s, entry)
+                    for s in cite_panel_format
+                ]
+
         formatted_completions = []
         result_completions = []
         for completion in completions:
-            try:
-                formatted_completions.append(completion["<panel_formatted>"])
-            except:
-                formatted_completions.append(
-                    [
-                        bibformat.format_entry(s, completion)
-                        for s in cite_panel_format
-                    ]
-                )
+            formatted_completions.append(formatted_entry(completion))
             result_completions.append(completion['keyword'])
 
         return formatted_completions, result_completions

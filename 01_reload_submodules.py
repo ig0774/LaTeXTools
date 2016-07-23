@@ -61,7 +61,7 @@ for suffix in LOAD_ORDER:
         if mod in sys.modules and sys.modules[mod] is not None:
             reload(sys.modules[mod])
         else:
-            importlib.import_module(mod)
+            __import__(mod)
     except:
         traceback.print_exc()
 
@@ -70,6 +70,6 @@ for mod in EXTERNAL_LOAD_ORDER:
         if mod in sys.modules and sys.modules[mod] is not None:
             reload(sys.modules[mod])
         else:
-            importlib.import_module(mod)
+            __import__(mod)
     except:
         traceback.print_exc()
