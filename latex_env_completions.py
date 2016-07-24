@@ -1,23 +1,17 @@
-import os
-
 try:
     _ST3 = True
     from .latex_fill_all import FillAllHelper
     from .latextools_utils import get_setting
     from .latex_cwl_completions import (
-        is_cwl_available, get_packages, get_cwl_completions,
-        BEGIN_END_BEFORE_REGEX
+        get_cwl_completions, is_cwl_available, BEGIN_END_BEFORE_REGEX
     )
-    from .getTeXRoot import get_tex_root
 except:
     _ST3 = False
     from latex_fill_all import FillAllHelper
     from latextools_utils import get_setting
     from latex_cwl_completions import (
-        is_cwl_available, get_packages, get_cwl_completions,
-        BEGIN_END_BEFORE_REGEX
+        get_cwl_completions, is_cwl_available, BEGIN_END_BEFORE_REGEX
     )
-    from getTeXRoot import get_tex_root
 
 
 class EnvFillAllHelper(FillAllHelper):
@@ -26,27 +20,7 @@ class EnvFillAllHelper(FillAllHelper):
         if not is_cwl_available():
             return
 
-        # get the current documents package list
-        packages = get_setting('cwl_list', [
-            "tex.cwl",
-            "latex-209.cwl",
-            "latex-document.cwl",
-            "latex-l2tabu.cwl",
-            "latex-mathsymbols.cwl"
-        ])
-
-        if get_setting('cwl_autoload', True):
-            texroot = get_tex_root(view)
-            if texroot:
-                get_packages(os.path.split(texroot)[0], texroot, packages)
-
-        if not packages:
-            return
-
-        completions = get_cwl_completions().get_completions(
-            packages, environment=True
-        )
-
+        completions = get_cwl_completions().get_completions(env=True)
         if prefix:
             completions = [c for c in completions if c[1].startswith(prefix)]
 

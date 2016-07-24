@@ -516,7 +516,8 @@ LaTeXTools supports the `LaTeX-cwl` autocompletion package. If the package is in
 
 The following settings are provided:
 
-* `cwl_list`: a list of paths to the `cwl` files
+* `cwl_list`: a list of `cwl` files to load
+* `cwl_autoload`: controls loading completions based on packages in the current document *in addition* to those specified in the `cwl_list`. Defaults to `true`, so you only need to set this if you want to *disable* this behavior.
 * `command_completion`: when to show that cwl completion popup. The possible values are:
 	* `prefixed` (default): show completions only if the current word is prefixed with a `\`
 	* `always`: always show cwl completions
@@ -548,10 +549,9 @@ The following options are currently available (defaults in parentheses):
 - `cwl_autoload` (`true`): whether to load cwl completions based on packages (see the LaTeX-cwl feature) 
 - `cwl_completion` (`prefixed`): when to activate the cwl completion poput (see LaTeX-cwl feature above)
 - `cwl_list` (`[ "tex.cwl", "latex-209.cwl", "latex-document.cwl", "latex-l2tabu.cwl", "latex-mathsymbols.cwl"]`): list of cwl files to load
-- `keep_focus` (`true`): if `true`, after compiling a tex file, ST retains the focus; if `false`, the PDF viewer gets the focus. Also note that you can *temporarily* toggle this behavior with `C-l,t,f`. **Note**: If you are on either Windows or Linux you may need to adjust the `sublime_executable` setting for this to work properly. See the **Platform settings** below.
-- `forward_sync` (`true`): if `true`, after compiling a tex file, the PDF viewer is asked to sync to the position corresponding to the current cursor location in ST. You can also *temporarily* toggle this behavior with `C-l,t,s`.
-- `build_finished_message_length` (`2.0`): the number of seconds to display the notification about the completion of the build in the status bar.
-- `temp_files_exts`: list of file extensions to be considered temporary, and hence deleted using the `C-l, backspace` command.
+- `keep_focus` (`true`): if `true`, after compiling a tex file, ST retains the focus; if `false`, the PDF viewer gets the focus. Also note that you can *temporarily* toggle this behavior with `C-l,t,f`. **Note**: If you are on either Windows or Linux you may need to adjust the `sublime_executable` setting for this to work properly. See the **Platform settings** below. This can also be overridden via a key-binding by passing a `keep_focus` argument to `jump_to_pdf`.
+- `forward_sync` (`true`): if `true`, after compiling a tex file, the PDF viewer is asked to sync to the position corresponding to the current cursor location in ST. You can also *temporarily* toggle this behavior with `C-l,t,s`. This can also be overridden via a key-binding by passing a `forward_sync` argument to `jump_to_pdf`.
+- `build_finished_message_length` (`2.0`): the number of seconds to display the notification about the completion of the build in the status bar.ile extensions to be considered temporary, and hence deleted using the `C-l, backspace` command.
 - `temp_files_ignored_folders`: subdirectories to skip when deleting temp files.
 * `tex_file_exts` (`['.tex']`): a list of extensions that should be considered TeX documents. Any extensions in this list will be treated exactly the same as `.tex` files. See the section on [Support for non-`.tex` files](#support-for-non-tex-files).
 * `latextools_set_syntax` (`true`): if `true` LaTeXTools will automatically set the syntax to `LaTeX` when opening or saving any file with an extension in the `tex_file_exts` list.
