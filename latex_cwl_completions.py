@@ -14,7 +14,9 @@ if sublime.version() < '3000':
     from latex_cite_completions import (
         OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     )
-    from latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
+    from latex_ref_completions import (
+        OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
+    )
     from latex_input_completions import get_input_completion_matcher
     from getRegion import getRegion
     from getTeXRoot import get_tex_root
@@ -26,13 +28,17 @@ else:
     from .latex_cite_completions import (
         OLD_STYLE_CITE_REGEX, NEW_STYLE_CITE_REGEX, match
     )
-    from .latex_ref_completions import OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
+    from .latex_ref_completions import (
+        OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
+    )
     from .latex_input_completions import get_input_completion_matcher
     from .getRegion import getRegion
     from .getTeXRoot import get_tex_root
     from .latextools_utils import get_setting
     from .latextools_utils import analysis
     from .latextools_utils import utils
+
+__all__ = ['get_cwl_completions', 'is_cwl_available']
 
 # Do not do completions in these environments
 ENV_DONOT_AUTO_COM = [
@@ -247,10 +253,10 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             return []
 
         point_before = point - len(prefix)
-        char_before = view.substr(getRegion(point_before - 1, point_before))
+        char_before = view.substr(get_Region(point_before - 1, point_before))
         is_prefixed = char_before == "\\"
 
-        line = view.substr(getRegion(view.line(point).begin(), point_before))
+        line = view.substr(get_Region(view.line(point).begin(), point_before))
         line = line[::-1]
         is_env = bool(BEGIN_END_BEFORE_REGEX.match(line))
 
@@ -445,7 +451,12 @@ def cwl_parsing_handler(callback):
 # whether it is in a .sublime-package file or an expanded directory
 if _ST3:
     def get_cwl_package_files():
-        results = sublime.find_resources('*.cwl')
+        results = [
+            r for r in
+            sublime.find_resources('*.cwl')
+            if (r.startswith('Packages/User/cwl/') or
+                r.startswith('Packages.LaTeX-cwl/'))
+        ]
         return(results, True) if results else ([], False)
 else:
     def get_cwl_package_files():
@@ -455,7 +466,10 @@ else:
 
         if os.path.exists(package_path):
             results = glob.glob(os.path.join(
-                packages_path, '*', '*.cwl'
+                packages_path, 'LaTeX-cwl', '*.cwl'
+            ))
+            results += glob.glob(os.path.join(
+                packages_path, 'User', 'cwl', '*.cwl'
             ))
             return (results, False)
 
