@@ -247,10 +247,10 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             return []
 
         point_before = point - len(prefix)
-        char_before = view.substr(get_Region(point_before - 1, point_before))
+        char_before = view.substr(getRegion(point_before - 1, point_before))
         is_prefixed = char_before == "\\"
 
-        line = view.substr(get_Region(view.line(point).begin(), point_before))
+        line = view.substr(getRegion(view.line(point).begin(), point_before))
         line = line[::-1]
         is_env = bool(BEGIN_END_BEFORE_REGEX.match(line))
 
