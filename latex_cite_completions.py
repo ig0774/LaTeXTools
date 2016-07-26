@@ -173,7 +173,7 @@ NEW_STYLE_CITE_REGEX = re.compile(
                 (?:[\.\*\?]){0,2}(?:\)[^(]*\(){0,2}
                 seti(?:C|c(?!lov)[a-z]*[A-Z]?))|
             (?:(?P<prefix8>[^{},]*)(?:,[^{},]*)*\{(?:\][^\[]*\[){0,2}
-                (?:[\.\*\?]){0,2}(?!\*?teser|elyts)(?P<fancy_cite>[a-zX\*]*?)
+                (?:[\.\*\?]){0,2}(?!\*?teser|elyts)(?P<fancy_cite>[a-z\*]*?)
                 eti(?:C|c(?!lov|m\\)[a-z]*[A-Z]?))|
             (?:(?P<prefix9>[^{},]*)(?:,[^{},]*)*\{(?:\][^\[]*\[)?
                 (?:>[^<]*<)?(?:(?:PN)?(?:raey|rohtua)|PN|A)?etic
@@ -403,7 +403,7 @@ class CiteFillAllHelper(FillAllHelper):
 
         completions = [
             (
-                prefix + formatted_entry(c),
+                formatted_entry(c),
                 c['keyword']
             ) for c in completions
         ]
