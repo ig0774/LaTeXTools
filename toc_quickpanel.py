@@ -13,10 +13,15 @@ else:
 
 _section_commands = [
     "chapter",
+    "addchap",
     "section",
+    "addsec",
     "subsection",
+    "addsubsec",
     "subsubsection",
-    "paragraph"
+    "addsubsubsec",
+    "paragraph",
+    "subparagraph"
 ]
 
 _label_commands = [
@@ -35,13 +40,26 @@ _indentations = {
 
 def _make_caption(com):
     indent = _indentations.get(com.command, 0)
+    command = {
+        "addchap": "chapter",
+        "addsec": "section",
+        "addsubsec": "subsection",
+        "addsubsubsec": "subsubsection"
+    }.get(com.command, com.command)
+
     short = {
+        "subsection": "ssec",
         "subsubsection": "sss",
+        "subparagraph": "sp",
         "label": "L"
-    }.get(com.command, com.command[0:3])
+    }.get(command, command[0:3])
+
     short = short.title()
 
-    return ("  " * indent) + short + com.star + " " + com.args
+    return ''.join([
+        ("  " * indent), short, com.star, " ",
+        (com.optargs or com.args)
+    ])
 
 
 class show_toc_quickpanel(quickpanel.CancelEntriesQuickpanel):
