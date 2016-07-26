@@ -18,6 +18,9 @@ if sublime.version() < '3000':
         OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     )
     from latex_input_completions import get_input_completion_matcher
+    from latex_own_command_completions import (
+        get_own_command_completion, get_own_env_completion
+    )
     from getRegion import getRegion
     from getTeXRoot import get_tex_root
     from latextools_utils import get_setting
@@ -32,6 +35,9 @@ else:
         OLD_STYLE_REF_REGEX, NEW_STYLE_REF_REGEX
     )
     from .latex_input_completions import get_input_completion_matcher
+    from .latex_own_command_completions import (
+        get_own_command_completion, get_own_env_completion
+    )
     from .getRegion import getRegion
     from .getTeXRoot import get_tex_root
     from .latextools_utils import get_setting
@@ -294,9 +300,11 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
 
         # load the completions for the document
         if is_env:
-            completions = CWL_COMPLETIONS.get_completions(env=True)
+            completions = CWL_COMPLETIONS.get_completions(env=True) + \
+                get_own_env_completion(view)
         else:
-            completions = CWL_COMPLETIONS.get_completions()
+            completions = CWL_COMPLETIONS.get_completions() + \
+                get_own_command_completion(view)
 
         # autocompleting with slash already on line
         # this is necessary to work around a short-coming in ST where having
@@ -395,7 +403,7 @@ def _is_snippet(completion_entry):
     is a sublime snippet
     """
     completion_result = completion_entry[1]
-    return completion_result[0] == '\\' and '${1:' in completion_result
+    return completion_result[0] == '\\' and '{' in completion_result
 
 
 # -- Internal Parsing API --
