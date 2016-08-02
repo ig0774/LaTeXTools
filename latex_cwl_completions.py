@@ -296,7 +296,7 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             if match(rex, line) is not None:
                 return []
 
-        if match(get_input_completion_matcher(), line) is not None:
+        if get_input_completion_matcher()(line) is not None:
             return []
 
         # load the completions for the document
