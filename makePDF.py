@@ -292,7 +292,8 @@ class CmdThread ( threading.Thread ):
 							cmd,
 							env=env,
 							use_texpath=False,
-							preexec_fn=os.setsid if self.caller.plat != 'windows' else None
+							preexec_fn=os.setsid if self.caller.plat != 'windows' else None,
+							cwd=self.caller.tex_dir
 						)
 					except:
 						if self.caller.hide_panel_level != 'always':
@@ -360,12 +361,21 @@ class CmdThread ( threading.Thread ):
 			log_file_base = self.caller.tex_base + ".log"
 			if self.caller.aux_directory is None:
 				if self.caller.output_directory is None:
-					log_file = log_file_base
+					log_file = os.path.join(
+						self.caller.tex_dir,
+						log_file_base
+					)
 				else:
 					log_file = os.path.join(
 						self.caller.output_directory,
 						log_file_base
 					)
+
+					if not os.path.exists(log_file):
+						log_file = os.path.join(
+							self.caller.tex_dir,
+							log_file_base
+						)
 			else:
 				log_file = os.path.join(
 					self.caller.aux_directory,
@@ -373,7 +383,8 @@ class CmdThread ( threading.Thread ):
 				)
 
 				if not os.path.exists(log_file):
-					if (self.caller.output_directory is not None and
+					if (
+						self.caller.output_directory is not None and
 						self.caller.output_directory != self.caller.aux_directory
 					):
 						log_file = os.path.join(
@@ -382,7 +393,10 @@ class CmdThread ( threading.Thread ):
 						)
 
 					if not os.path.exists(log_file):
-						log_file = log_file_base
+						log_file = os.path.join(
+							self.caller.tex_dir,
+							log_file_base
+						)
 
 			# CHANGED 12-10-27. OK, here's the deal. We must open in binary mode
 			# on Windows because silly MiKTeX inserts ASCII control characters in
@@ -586,7 +600,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			return
 
 		self.tex_base = get_jobname(view)
-		tex_dir = os.path.dirname(self.file_name)
+		self.tex_dir = os.path.dirname(self.file_name)
 
 		if not is_tex_file(self.file_name):
 			sublime.error_message("%s is not a TeX source file: cannot compile." % (os.path.basename(view.file_name()),))
@@ -598,7 +612,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 
 		output_view_settings = self.output_view.settings()
 		output_view_settings.set("result_file_regex", file_regex)
-		output_view_settings.set("result_base_dir", tex_dir)
+		output_view_settings.set("result_base_dir", self.tex_dir)
 		output_view_settings.set("line_numbers", False)
 		output_view_settings.set("gutter", False)
 		output_view_settings.set("scroll_past_end", False)
@@ -751,7 +765,6 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			self.path = expand_vars(path)
 		else:
 			self.path = get_texpath() or expand_vars(os.environ['PATH'])
-		os.chdir(tex_dir)
 		thread = CmdThread(self)
 		thread.start()
 		print(threading.active_count())
