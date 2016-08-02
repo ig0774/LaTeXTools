@@ -348,7 +348,11 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
 # -- Internal API --
 # run to see if cwl completions should be enabled
 def _check_if_cwl_enabled():
-    view = sublime.active_window().active_view()
+    try:
+        view = sublime.active_window().active_view()
+    except AttributeError:
+        return
+
     if view is None or not view.score_selector(0, "text.tex.latex"):
         return
 
