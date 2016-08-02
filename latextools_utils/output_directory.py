@@ -276,12 +276,14 @@ def resolve_to_absolute_path(root, value, root_path):
     )
 
     if os.path.isabs(result):
-        return os.path.normpath(result)
+        return os.path.realpath(os.path.normpath(result))
     else:
-        return os.path.normpath(
-            os.path.join(
-                root_path,
-                result
+        return os.path.realpath(
+            os.path.normpath(
+                os.path.join(
+                    root_path,
+                    result
+                )
             )
         )
 
