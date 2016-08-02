@@ -11,50 +11,24 @@ else:
     from latextools_utils import analysis, get_setting, quickpanel
 
 
-_section_commands = [
-    "chapter",
-    "addchap",
-    "section",
-    "addsec",
-    "subsection",
-    "addsubsec",
-    "subsubsection",
-    "addsubsubsec",
-    "paragraph",
-    "subparagraph"
-]
-
-_label_commands = [
-    "label"
-]
-
-_indentations = {
-    "chapter": 0,
-    "section": 1,
-    "subsection": 2,
-    "subsubsection": 3,
-    "paragraph": 4,
-    "label": 0
-}
-
-
-def _make_caption(com):
-    indent = _indentations.get(com.command, 0)
-    command = {
-        "addchap": "chapter",
-        "addsec": "section",
-        "addsubsec": "subsection",
-        "addsubsubsec": "subsubsection"
-    }.get(com.command, com.command)
-
+def _make_caption(toc_indentations, com, indent_offset):
+    indent = toc_indentations.get(com.command, 0)
+    # lower the indent with the offset
+    indent = max(0, indent - indent_offset)
     short = {
         "subsection": "ssec",
         "subsubsection": "sss",
+        "addsubsection": "ssec",
+        "addsubsubsection": "sss",
         "subparagraph": "sp",
+        "minisec": "msec",
         "label": "L"
-    }.get(command, command[0:3])
+    }.get(com.command, com.command[0:3])
 
     short = short.title()
+    # special handling for koma script
+    if short.lower() == "add":
+        short = "+" + com.command[3:6].title()
 
     return ''.join([
         ("  " * indent), short, com.star, " ",
@@ -69,14 +43,24 @@ class show_toc_quickpanel(quickpanel.CancelEntriesQuickpanel):
 
     def __init__(self, ana):
         # retrieve the labels and the sections
-        labels = ana.filter_commands(_section_commands + _label_commands)
+        toc_section_commands = get_setting("toc_section_commands", [])
+        toc_indentations = get_setting("toc_indentations", {})
+        toc_labels = get_setting("toc_labels", [])
+
+        labels = ana.filter_commands(toc_section_commands + toc_labels)
         # filter the labels and sections to only get the labels
         # (faster than an additional query)
-        secs = [c for c in labels if c.command in _section_commands]
+        secs = [c for c in labels if c.command in toc_section_commands]
 
         # create the user readably captions
-        caption_secs = list(map(_make_caption, secs))
-        caption_labels = list(map(_make_caption, labels))
+        # get the minimal indent (to lower the minimal section indent to 0)
+        max_indent_value = max(toc_indentations.values())
+        indent_offset = min(toc_indentations.get(com.command, max_indent_value)
+                            for com in secs)
+        caption_secs = [_make_caption(toc_indentations, s, indent_offset)
+                        for s in secs]
+        caption_labels = [_make_caption(toc_indentations, l, indent_offset)
+                          for l in labels]
 
         self.__only_sec = True
         # init the superclass with a copy of the section elements
