@@ -173,7 +173,7 @@ def get_file_list(root, types, filter_exts=[], output_directory=None,
     for dir_name, dirs, files in os.walk(path, followlinks=True):
         handled_directories.add(os.path.realpath(dir_name))
         files = [f for f in files if f[0] != '.' and file_match(f)]
-        dirs = [d for d in dirs if d[0] != '.' and dir_match(d)]
+        dirs[:] = [d for d in dirs if d[0] != '.' and dir_match(d)]
         for f in files:
             full_path = os.path.join(dir_name, f)
             # Exclude image file have the same name of root file,
