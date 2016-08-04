@@ -376,4 +376,6 @@ def _get_root_hash(root):
     if root is None:
         return None
 
+    root = os.path.realpath(root)
+
     return hashlib.md5(root.encode('utf-8')).hexdigest()
