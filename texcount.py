@@ -50,15 +50,14 @@ class TexcountCommand(sublime_plugin.TextCommand):
         command.append(os.path.basename(tex_root))
 
         try:
-            res_split = check_output(command, cwd=cwd).splitlines()
+            result = check_output(command, cwd=cwd)
+            res_split = result.splitlines()
             self.view.window().show_quick_panel(
                 res_split[1:4] + res_split[9:], None
             )
         except CalledProcessError as e:
             sublime.error_message(
-                'Error while running TeXCount: {0}'.format(
-                    str(e.output)
-                )
+                'Error while running TeXCount: {0}'.format(e.output or e)
             )
         except OSError:
             sublime.error_message(
@@ -69,4 +68,4 @@ class TexcountCommand(sublime_plugin.TextCommand):
 
     def is_visible(self, *args):
         view = self.view
-        return bool(view.score_selector(0, "text.tex"))
+        return bool(view.score_selector(0, 'text.tex.latex'))

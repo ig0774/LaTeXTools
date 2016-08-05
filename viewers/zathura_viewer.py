@@ -7,9 +7,6 @@ from latextools_utils.external_command import (
 from latextools_utils.sublime_utils import get_sublime_exe
 from latextools_utils.system import which
 
-import subprocess
-import sys
-
 
 class ZathuraViewer(BaseViewer):
 
@@ -70,7 +67,7 @@ class ZathuraViewer(BaseViewer):
         external_command(['wmctrl', '-a', window_id, '-i'], use_texpath=False)
 
     def _focus_xdotool(self, pid):
-        subprocess.external_command(
+        external_command(
             ['xdotool', 'search', '--pid', pid,
              '--class', 'Zathura', 'windowactivate', '%2'],
             use_texpath=False

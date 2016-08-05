@@ -765,6 +765,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			self.path = expand_vars(path)
 		else:
 			self.path = get_texpath() or expand_vars(os.environ['PATH'])
+
 		thread = CmdThread(self)
 		thread.start()
 		print(threading.active_count())

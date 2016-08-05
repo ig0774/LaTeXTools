@@ -40,6 +40,7 @@ LOAD_ORDER = [
     'latextools_utils.cache',
     'latextools_utils.external_command',
     'latextools_utils.quickpanel',
+    'latextools_utils.external_command',
 
     # use the preceeding
     'latextools_utils.analysis',
