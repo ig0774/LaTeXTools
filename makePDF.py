@@ -867,14 +867,12 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 			if get_setting('clean_on_build', False):
 				self.window.run_command("delete_temp_files")
 
+
 class DoOutputEditCommand(sublime_plugin.TextCommand):
 	def run(self, edit, data, selection_was_at_end):
 		self.view.insert(edit, self.view.size(), data)
 		if selection_was_at_end:
 		    self.view.show(self.view.size())
-
-
-
 
 
 class DoFinishEditCommand(sublime_plugin.TextCommand):
@@ -883,9 +881,6 @@ class DoFinishEditCommand(sublime_plugin.TextCommand):
 		reg = sublime.Region(0)
 		self.view.sel().add(reg)
 		self.view.show(reg)
-
-
-
 
 
 def plugin_loaded():
