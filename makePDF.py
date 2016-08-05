@@ -439,7 +439,7 @@ class CmdThread ( threading.Thread ):
 
 			try:
 				(errors, warnings, badboxes) = parseTeXlog.parse_tex_log(
-					data, self.caller.tex_dir,
+					data, self.caller.tex_dir
 				)
 				content = [""]
 				if errors:
