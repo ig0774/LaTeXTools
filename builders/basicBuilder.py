@@ -219,6 +219,7 @@ class BasicBuilder(PdfBuilder):
             # now we modify cwd to be the output directory
             # NOTE this cwd is not reused by any of the other command
             cwd = output_directory
+        env['PATH'] = get_texpath()
 
         command.append(self.job_name)
         return external_command(
