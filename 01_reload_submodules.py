@@ -4,7 +4,6 @@
 # that uses any imports from any of those modules, hence the name.
 #
 
-import importlib
 import sublime
 import sys
 import traceback
@@ -22,6 +21,9 @@ if sublime.version() > '3000':
 LOAD_ORDER = [
     'latextools_plugin_internal',
     'latextools_plugin',
+
+    # reloaded here so that makePDF imports the current version
+    'parseTeXlog',
 
     # base module
     'latextools_utils',
@@ -55,9 +57,7 @@ EXTERNAL_LOAD_ORDER = [
     'latex_chars'
 ]
 
-
-for suffix in LOAD_ORDER:
-    mod = MOD_PREFIX + suffix
+for mod in EXTERNAL_LOAD_ORDER:
     try:
         if mod in sys.modules and sys.modules[mod] is not None:
             reload(sys.modules[mod])
@@ -66,7 +66,8 @@ for suffix in LOAD_ORDER:
     except:
         traceback.print_exc()
 
-for mod in EXTERNAL_LOAD_ORDER:
+for suffix in LOAD_ORDER:
+    mod = MOD_PREFIX + suffix
     try:
         if mod in sys.modules and sys.modules[mod] is not None:
             reload(sys.modules[mod])
