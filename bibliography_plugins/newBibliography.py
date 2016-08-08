@@ -6,9 +6,14 @@ from bibtex.tex import tokenize_list
 
 import latex_chars
 from latextools_utils import bibcache
+from latextools_utils.subfiles import walk_subfiles
+
+from kpsewhich import kpsewhich
 
 import codecs
 from collections import Mapping
+import os
+import re
 import sublime
 import traceback
 
