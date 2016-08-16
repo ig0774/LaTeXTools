@@ -31,8 +31,8 @@ if sublime.version() < '3000':
     # we are on ST2 and Python 2.X
     _ST3 = False
     import getTeXRoot
-    from latex_fill_all import FillAllHelper
     from latextools_utils import get_setting
+    from latextools_utils.internal_types import FillAllHelper
     import latextools_plugin
     from latextools_utils import bibformat
 
@@ -469,11 +469,11 @@ class CiteFillAllHelper(FillAllHelper):
             NEW_STYLE_CITE_REGEX.match(line)
         )
 
+    def matches_fancy_prefix(self, line):
+        return bool(OLD_STYLE_CITE_REGEX.match(line))
+
     def is_enabled(self):
         return get_setting('cite_auto_trigger', True)
-
-    def supports_fancy_prefix(self):
-        return True
 
 
 def _is_prefix(lower_prefix, entry):
