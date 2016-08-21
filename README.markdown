@@ -608,7 +608,7 @@ This section refers to setting that can be found in a platform-specific block fo
 	* `env` (unset): a dictionary of key-values corresponding to environment variables that should be set for the environment the build is run in. Note that `env`, if it is set, must be set at the platform-specific level, e.g., under the `osx`, `windows`, or `linux` keys. This is useful for setting, e.g., `TEXINPUTS`.
 	* In addition, there can be platform-specific settings. An important one for Windows is `distro`, which must be set to either `miktex` or `texlive`.
 
-### Build Panel Settings
+### Build Panel and Phantoms Settings
 - `highlight_build_panel` (`true`): if `true` the build panel will have a syntax applied to highlight any errors and warnings. Otherwise, the standard output panel configuration will be used.
 - `hide_build_panel` (`"no_badboxes"`): controls whether or not the build panel is show after a build. Possible values:
 	* `"always"` - hide the panel even if the build failed
@@ -619,6 +619,11 @@ This section refers to setting that can be found in a platform-specific block fo
 Any other value will be interpretted as the default.
 - `display_bad_boxes` (`false`): if `true` LaTeXTools will display any bad boxes encountered after a build. Note that this is disabled by default.
 - `build_finished_message_length` (`2.0`): the number of seconds to display the notification about the completion of the build in the status bar.
+- `show_error_phantoms` (`"warnings"`) *ST3, Build 3118+ only*: controls which errors are displayed via phantoms. Possible values are:
+	* `"none" - don't show any phantoms at all
+	* `"errors"` - only show errors, which breaks the compilation
+	* `"warnings" - show errors and warnings
+	* `"badboxes" - show errors, warnings, and badboxes
 
 ### Viewer settings
 
