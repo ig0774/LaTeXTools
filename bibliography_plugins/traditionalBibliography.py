@@ -1,6 +1,9 @@
 from latextools_plugin import LaTeXToolsPlugin
 
 from kpsewhich import kpsewhich
+
+from external import latex_chars
+
 from latextools_utils import bibcache
 from latextools_utils.subfiles import walk_subfiles
 
@@ -38,6 +41,7 @@ multip = re.compile(
     re.IGNORECASE | re.UNICODE
 )
 
+# LaTeX -> Unicode decoder
 latex_chars.register()
 
 class TraditionalBibliographyPlugin(LaTeXToolsPlugin):
