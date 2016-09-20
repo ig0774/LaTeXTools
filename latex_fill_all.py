@@ -53,24 +53,7 @@ class LatexFillHelper(object):
     # word_separators
     #
     # defines non-word characters; see get_current_word
-    NON_WORD_CHARACTERS = u'/\\()"\':,.;<>~!@#$%^&*|+=\\[\\]{}`~?' + (
-        u'\u0080-\u00bf'  # LATIN-1 PUNCTUATION
-        u'\u2013-\u206f'  # GENERAL PUNCTUATION (w/o spaces or hyphens)
-        u'\u20a0-\u20cf'  # CURRENCY SYMBOLS
-        u'\u2190-\u21ff'  # ARROWS
-        u'\u2200-\u22ff'  # MATHEMATICAL OPERATORS
-        u'\u2300-\u23ff'  # MISC TECHNICAL
-        u'\u27c0-\u27ef'  # MISC MATHEMATICAL SYMBOLS-A
-        u'\u27f0-\u27ff'  # SUPPLEMENTAL ARROWS-A
-        u'\u2935-\u297f'  # SUPPLEMENTAL ARROWS-B
-        u'\u2980-\u29ff'  # MISC MATHEMATICAL SYMBOLS-B
-        u'\u2a00-\u2aff'  # SUPPLEMENTAL MATHEMATICAL OPERATORS
-        u'\u2b00-\u2bff'  # MISC SYMBOLS AND ARROWS
-        u'\u2e00-\u2e44'  # SUPPLEMENTAL PUNCTUATION
-        u'\u3000-\u3020'  # CJK PUNCTUATION / BRACKETS
-        u'\ufe30-\ufe4f'  # CJK COMPATIBILITY FORMS
-        u'\U0001f800-\U0001f8ff'  # SUPPLEMENTAL ARROWS-C
-    ) + r'\s'
+    NON_WORD_CHARACTERS = u'/\\()"\':,.;<>~!@#$%^&*|+=\\[\\]{}`~?\\s'
 
     WORD_SEPARATOR_RX = re.compile(
         r'([^' + NON_WORD_CHARACTERS + r']*)',
@@ -651,11 +634,11 @@ class LatexFillAllEventListener(
         completion type, e.g. "lt_fill_all_cite", etc.
         '''
         # quick exit conditions
+        if not key.startswith("lt_fill_all_"):
+            return None
         for sel in view.sel():
             point = sel.b
-            if (
-                view.score_selector(point, "text.tex.latex") == 0
-            ):
+            if not view.score_selector(point, "text.tex.latex"):
                 return None
 
         # load the plugins
@@ -710,9 +693,7 @@ class LatexFillAllEventListener(
 
     def on_query_completions(self, view, prefix, locations):
         for location in locations:
-            if (
-                view.score_selector(location, "text.tex.latex") == 0
-            ):
+            if not view.score_selector(location, "text.tex.latex"):
                 return
 
         completion_types = self.get_completion_types()
@@ -883,9 +864,7 @@ class LatexFillAllCommand(
 
         for sel in view.sel():
             point = sel.b
-            if (
-                view.score_selector(point, "text.tex.latex") == 0
-            ):
+            if not view.score_selector(point, "text.tex.latex"):
                 self.complete_brackets(view, edit, insert_char)
                 return
 
@@ -1018,10 +997,6 @@ class LatexFillAllCommand(
         # inserting a comma or bracket; otherwise, it must've been a keypress
         if insert_char and not completion_type.is_enabled():
             self.complete_brackets(view, edit, insert_char)
-            return
-
-        selector = completion_type.get_supported_scope_selector()
-        if not self.score_selector(view, selector):
             return
 
         # we are not adding a bracket or comma, we do not have a fancy prefix

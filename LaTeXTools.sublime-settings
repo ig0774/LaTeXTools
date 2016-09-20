@@ -401,7 +401,6 @@
 	// "hide_build_panel" is equivalent to "no_warnings"
 	"display_bad_boxes": false,
 
-
 	// OPTION: "show_error_phantoms"
 	// (ST3, Build 3118+ only)
 	// level to show error phantoms in the file
@@ -411,31 +410,6 @@
 	// "warnings" (default, show errors and warnings)
 	// "badboxes" (show errors, warnings, and badboxes)
 	"show_error_phantoms": "warnings",
-
-// ------------------------------------------------------------------
-// Build panel settings
-// ------------------------------------------------------------------
-	// OPTION: "highlight_build_panel"
-	// adds syntax highlighting to the build panel so that errors, warnings, etc.
-	// show up in different colors; if set to false, the panel will be left as-is.
-	"highlight_build_panel": true,
-
-
-	// OPTION: "hide_build_panel"
-	// level to hide the build panel after the build is finished
-	// Possible values are:
-	// "always" (hide the panel even if the build failed),
-	// "no_errors" (only hide the panel if the build was successful even with warnings),
-	// "no_warnings" (only hide the panel if no warnings occur)
-	// "no_badboxes" (only hide the panel if no badbox messages occur when badboxes are enabled) and
-	// "never" (default, never hide the build panel)
-	"hide_build_panel": "no_badboxes",
-
-	// OPTION: "display_bad_boxes"
-	// controls whether or not to display any bad boxes in the build output
-	// if this is not set to true, the setting "no_badboxes" for
-	// "hide_build_panel" is equivalent to "no_warnings"
-	"display_bad_boxes": false,
 
 	// number of seconds to display the "build succeeded" or "build failed"
 	// message
