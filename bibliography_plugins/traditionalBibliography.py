@@ -7,8 +7,6 @@ from external import latex_chars
 from latextools_utils import bibcache
 from latextools_utils.subfiles import walk_subfiles
 
-import latex_chars
-
 import codecs
 import os
 import re
