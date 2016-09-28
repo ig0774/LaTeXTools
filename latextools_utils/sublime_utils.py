@@ -22,6 +22,8 @@ except ImportError:
 
 __all__ = ['normalize_path', 'get_project_file_name']
 
+_ST3 = sublime.version() >= '3000'
+
 # used by get_sublime_exe()
 SUBLIME_VERSION = re.compile(r'Build (\d{4})', re.UNICODE)
 
@@ -286,7 +288,7 @@ QUOTE = re.compile(r'(?<![^\\]\\)"')
 NEWLINE = re.compile(r'\r?\n')
 
 
-def parse_json_with_comments(filename):
+def _parse_json_with_comments(filename):
     with codecs.open(filename, 'r', 'utf-8', 'ignore') as f:
         content = f.read()
 
@@ -342,3 +344,12 @@ def parse_json_with_comments(filename):
         new_content.append(content[index:])
 
     return json.loads(''.join(new_content))
+
+
+if _ST3:
+    def parse_json_with_comments(filename):
+        with codecs.open(filename, 'r', 'utf-8', 'ignore') as f:
+            content = f.read()
+        return sublime.decode_value(content)
+else:
+    parse_json_with_comments = _parse_json_with_comments
