@@ -552,13 +552,8 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 	# parameters
 	def run(
 		self, file_regex="", program=None, builder=None, command=None,
-<<<<<<< HEAD
-		env=None, path=None, update_phantoms_only=False, hide_phantoms_only=False,
-		**kwargs
-=======
 		env=None, path=None, script_commands=None, update_phantoms_only=False,
 		hide_phantoms_only=False, **kwargs
->>>>>>> alternative_builders
 	):
 		if update_phantoms_only:
 			if self.show_errors_inline:
@@ -725,11 +720,7 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		self.output_directory = get_output_directory(self.file_name)
 
 		# Read the env option (platform specific)
-<<<<<<< HEAD
-		builder_platform_settings = builder_settings.get(self.plat)
-=======
 		builder_platform_settings = builder_settings.get(self.plat, {})
->>>>>>> alternative_builders
 
 		if env is not None:
 			self.env = env
@@ -781,15 +772,9 @@ class make_pdfCommand(sublime_plugin.WindowCommand):
 		# Now get the tex binary path from prefs, change directory to
 		# that of the tex root file, and run!
 		if path is not None:
-<<<<<<< HEAD
 			self.path = expand_vars(path)
 		else:
 			self.path = get_texpath() or expand_vars(os.environ['PATH'])
-=======
-			self.path = path
-		else:
-			self.path = platform_settings.get('texpath', None)
->>>>>>> alternative_builders
 
 		thread = CmdThread(self)
 		thread.start()
