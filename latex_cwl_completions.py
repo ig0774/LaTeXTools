@@ -495,7 +495,7 @@ def parse_line_as_environment(line):
 
 
 def parse_line_as_command(line):
-    return line, command_to_snippet(line)
+    return command_to_snippet(line)
 
 
 # actually does the parsing of the cwl files
@@ -528,10 +528,19 @@ def parse_cwl_file(cwl, s, parse_line=parse_line_as_command):
         # tracking purposes, but we can ignore it
         line = line.split('#', 1)[0]
 
+        # trailing spaces aren't relevant (done here in case they precede)
+        # a # char
+        line = line.rstrip()
+
         result = parse_line(line)
         if result is None:
             continue
-        (keyword, insertion) = result
+        keyword, insertion = result
+
+        # pad the keyword with spaces; this is to keep the size of the
+        # autocompletions consistent regardless of the returned results
+        keyword = keyword.ljust(50)
+
         item = (u'%s\t%s' % (keyword, method), insertion)
         completions.append(item)
 
