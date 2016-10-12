@@ -51,6 +51,7 @@ LOAD_ORDER = [
     'latextools_utils.external_command',
     'latextools_utils.subfiles',
     'latextools_utils.tex_directives',
+    'latextools_utils.ana_utils',
     'latextools_utils.bibcache',
     'latextools_utils.output_directory'
 ]
