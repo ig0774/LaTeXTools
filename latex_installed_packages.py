@@ -9,7 +9,6 @@ import json
 from collections import defaultdict
 
 from functools import partial
-from subprocess import CalledProcessError
 import threading
 import traceback
 
@@ -18,12 +17,16 @@ if sublime.version() < '3000':
     _ST3 = False
     strbase = basestring
 
-    from latextools_utils.external_command import check_output
+    from latextools_utils.external_command import (
+        check_output, CalledProcessError
+    )
 else:
     _ST3 = True
     strbase = str
 
-    from .latextools_utils.external_command import check_output
+    from .latextools_utils.external_command import (
+        check_output, CalledProcessError
+    )
 
 __all__ = ['LatexGenPkgCacheCommand']
 

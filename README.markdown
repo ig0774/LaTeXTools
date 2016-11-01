@@ -10,14 +10,18 @@ Additional contributors (*thank you thank you thank you*): first of all, Wallace
 
 *If you have contributed and I haven't acknowledged you, email me!*
 
-*Latest revision:* v3.11.2 (2016-09-28).
+*Latest revision:* v3.12.3 (2016-11-01).
 
 *Headline features*:
 
-* Less obtrusive build panel
-* Improved outline view (`C-r`)
-* Auto-completions for magic comments
-* Phantoms are used to display error messsages (dev versions only)
+- Live-preview math equations while writing them (ST3 only)
+- Hover over included graphics to show them in a popup (ST3 only)
+- LaTeX build variants (`C-shift-b`) now supports alternative and more flexible builders
+- Jump to label usages are added to jump-to-anywhere
+- Added a command to search for LaTeX-commands in the whole document 
+- Added support for the glossary package
+- Improvements in CWL completions for environments
+- Added a command to check your system setup
 
 ## Introduction
 
@@ -165,6 +169,25 @@ As an alternative, to using the `%!TEX root = <master file name>` syntax, if you
 ```
 
 Note that if you specify a relative path as the `TEXroot` in the project file, the path is determined *relative to the location of the project file itself*. It may be less ambiguous to specify an absolute path to the `TEXroot` if possible.
+
+### Previewing
+
+**For technical reasons, all preview functions are only available in Sublime Text Build 3118 and newer.**
+
+LaTeXTools has the ability to preview parts of the document using phantoms or popups. These functions rely on [Ghostscript](http://www.ghostscript.com/) and [ImageMagick](http://www.imagemagick.org) being installed and available on your `texpath`.
+Ensure to install the `convert` command with ImageMagick. On Windows you should enable the *Install legacy utilities* check box.
+
+#### Math-Live preview
+
+While editing math equations this will preview the result using phantoms.
+By default this will only preview the currently edited environment, but you can also preview all math environments.
+
+#### Preview images
+
+You can preview images included via the `\includegraphics` command.
+By default you can just hover over the image and a popup will appear to show the image.
+You can click on buttons to open the image or the folder, which contains the image.
+It is also possible to show all images at once via phantoms.
 
 ### Spell-checking
 
@@ -557,7 +580,9 @@ The following options are currently available (defaults in parentheses):
 - `cwl_autoload` (`true`): whether to load cwl completions based on packages (see the LaTeX-cwl feature) 
 - `cwl_completion` (`prefixed`): when to activate the cwl completion poput (see LaTeX-cwl feature above)
 - `cwl_list` (`["latex-document.cwl", "tex.cwl", "latex-dev", "latex-209.cwl", "latex-l2tabu.cwl", "latex-mathsymbols.cwl"]`): list of cwl files to load
-- `keep_focus` (`true`): if `true`, after compiling a tex file, ST retains the focus; if `false`, the PDF viewer gets the focus. Also note that you can *temporarily* toggle this behavior with `C-l,t,f`. **Note**: If you are on either Windows or Linux you may need to adjust the `sublime_executable` setting for this to work properly. See the **Platform settings** below. This can also be overridden via a key-binding by passing a `keep_focus` argument to `jump_to_pdf`.
+- `keep_focus` (`true`): if `true`, after compiling a tex file, ST retains the focus; if `false`, the PDF viewer gets the focus. Also note that you can *temporarily* toggle this behavior with `C-l,t,f`.This can also be overridden via a key-binding by passing a `keep_focus` argument to `jump_to_pdf`.
+ **Note**: In general, `keep_focus` set to `true` tries to mean "do not *change* the focus". This isn't always possible, since several of the viewers will steal focus by default. In those circumstances, LaTeXTools tries to actively return the focus to Sublime. To disable this, set the `disable_focus_hack` setting to `true`.
+ **Note**: If you are on either Windows or Linux you may need to adjust the `sublime_executable` setting for this to work properly. See the **Platform settings** below.
 - `forward_sync` (`true`): if `true`, after compiling a tex file, the PDF viewer is asked to sync to the position corresponding to the current cursor location in ST. You can also *temporarily* toggle this behavior with `C-l,t,s`. This can also be overridden via a key-binding by passing a `forward_sync` argument to `jump_to_pdf`.
 - `build_finished_message_length` (`2.0`): the number of seconds to display the notification about the completion of the build in the status bar.ile extensions to be considered temporary, and hence deleted using the `C-l, backspace` command.
 - `temp_files_ignored_folders`: subdirectories to skip when deleting temp files.
@@ -566,6 +591,34 @@ The following options are currently available (defaults in parentheses):
 * `use_biblatex`: (`false`): if `true` LaTeXTools will use BibLaTeX defaults for editing `.bib` files. If `false`, LaTeXTools will use BibTeX defaults. See the section on [Support for Editing Bibliographies](#support-for-editing-bibliographies) for details.
 * `tex_spellcheck_paths` (`{}`): A mapping from the locales to the paths of the dictionaries. See the section [Spell-checking](#spell-checking).
 * `word_count_sub_level` (`"none"`): controls the level at which subcounts of words can be generated. Valid values are: `"none"`, `"part"`, `"chapter"`, and `"section"`.
+
+### Preview Settings
+
+#### Math-Live Preview Settings
+
+- `preview_math_mode` (`"selected"`): The mode to preview math environments, possible values are:
+  + `"all"`:       to show a phantom for each math environment
+  + `"selected"`:  to show a phantom only for the currently selected math environment
+  + `"none"`:      to disable math live preview
+- `preview_math_latex_compile_program` (`"pdflatex"`): The program to compile the latex template files, possible values are `"pdflatex"`, `"xelatex"`, `"lualatex"`, `"latex"`.
+- `preview_math_color` (`""`): The color of the text in the preview math phantoms. The format can either be RGB based "#RRGGBB" (e.g. `"#FFFF00"`)
+or a color name (e.g. `"yellow"`) If it is the empty string `""` it will be guessed based in the color scheme.
+- `preview_math_background_color` (`""`): The background color of the preview math phantoms. In contrast to the foreground color you may also edit your colorscheme to change this. The format can either be RGB(A) based `"#RRGGBB"` (e.g. `"#0000FF"` or `"#0000FF50"`) or a color name (e.g. `"blue"`). If it is the empty string `""` the default color will be used.
+- `preview_math_template_packages`: An array containing the used packages for the template as latex code.
+- `preview_math_template_preamble` (`""`): An string of the remaining preamble (not packages) for the file, which generates the math live preview. Can also be an array, with an string for each line (as in the packages). This is useful, if you define math commands or operators on your own. You may change this per project basis.
+- `preview_math_density` (`300`): The density of the preview image. The higher the density the bigger the phantom.
+- `preview_math_scale_quotient` (`2`): If the image is not sharp enough increase this scale to get a better resolution. However also change the density by the same factor to keep the size.
+
+#### Preview Image Settings
+
+- "preview_image_mode": "hover",
+   The preview mode for image preview, possible values are:
+  + `"all"`:       to show a phantom for each includegraphics command
+  + `"selected"`:  to show a phantom only for the currently selected `\includegraphics` command
+  + `"hover"`:     to show a popup if you hover over an includegraphics command
+  + `"none"`:      to disable image preview
+- `preview_popup_image_size` (`200`) and `preview_phantom_image_size` (`150`): The image size in the preview image popup and phantoms. These are the outer dimensions of the maximal size. The image will be scaled down to fit into these dimensions. It can either be an number or an array, which consist of two numbers (x and y), e.g. [200, 150].
+- `preview_image_scale_quotient` (`1`): Increase this number to get a better resolution on high dpi displays. Control the thumbnail image size, which will be generated to preview images, that are not natively supported (like pdf files). E.g. a image size of 300 with a scale quotient of 2 will create a thumbnail with the size 600, which is scaled down in the popup.
 
 ### Platform-Specific Settings
 
@@ -634,6 +687,8 @@ Any other value will be interpretted as the default.
  * `viewer` (`""`): the viewer you want to use. Leave blank (`""`) or set to `"default"`for the platform-specific viewer. Can also be set to `"preview"` if you want to use Preview on OS X, `"okular"` if you want to use Okular on Linux, `"zathura"` is you want to use Zathura on Linux, or `"command"` to run arbitrary commands. For details on the `"command"` option, see the section on the [Command Viewer](#command-viewer).
  * `viewer_settings`: these are viewer-specific settings. Please see the section on [Viewers](#viewers) or the documentation on [Alternate Viewers](#alternate-viewers) for details of what should be set here.
  * `open_pdf_on_build` (`true`): Controls whether LaTeXTools will automatically open the configured PDF viewer on a successful build. If set to `false`, the PDF viewer will only be launched if explicitly requested using `C-l,v` or `C-l,j`.
+ * `disable_focus_hack` (`false`): if `true`, the focus hack that LaTeXTools uses to return focus to Sublime in some circumstances will not be run. **Note**: This does not mean that the *viewer* won't steal the focus, only that LaTeXTools won't try to steal the focus back.
+
 
 ### Bibliographic references settings
 
@@ -912,6 +967,10 @@ If you are interested in developing your own builder, please see [our page on th
 
 The Preview.app viewer is very straight-forward. It simply launches Preview.app with the relevant PDF file. Please note that Preview.app *does not* support forward or reverse sync, so you will not have that functionality available. Nevertheless, if you want to avoid installing another PDF viewer, this may be an acceptable option.
 
+### Evince
+
+Strictly speaking, of course, Evince is the default viewer on Linux and its behavior is mostly described above. However, there is one feature that's been added that's unique to Evince. If the `bring_evince_forward` setting in the `viewer_settings` block is set to `true` and `keep_focus` remains set to `true`, Evince will first be brought to the foreground and then focus will be returned ST. 
+
 ### Okular
 
 The Okular viewer is quite similar to the Evince viewer and should work out of the box. However, for forward sync (i.e. from Sublime to Okular) to work properly, the PDF document *must* be opened in Okular's unique session. If it is not, each forward sync command will open a new copy of the PDF. This also means that you can only have a single PDF document opened by LaTeXTools at a time. If, when the Okular viewer is run, you get a message which reads `There's already a unique Okular instance running. This instance won't be the unique one.`, you will need to adjust your `sync_wait` settings, increasing the value until the error stops. See the [Linux](#linux2) platform settings.
@@ -982,6 +1041,10 @@ The local cache also has a lifespan, after which it will be invalidated. The lif
             self.display("done.\n")
 
 ## Troubleshooting
+
+### System Check
+
+To aid in troubleshooting a range of issues, we have added a feature that wil check your current system setup to give you an idea of what your current configuration looks like to LaTeXTools. In particular, it tests for key environment variables, the availability of key executables, the selected builder and the selected viewer. This command can be run by invoking **LaTeXTools: Check system** from the **Command Palette**. If it is run with a LaTeX document as the visible window, the information provided will reflect the settings for the current project.
 
 ### Path issues
 

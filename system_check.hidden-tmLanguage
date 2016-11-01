@@ -19,39 +19,14 @@
 			<string>comment.other.latextools-system-check.header</string>
 		</dict>
 		<dict>
-			<key>begin</key>
-			<string>^(?=(?:Variable|Program\s+Location|Builder)\s+.+$)</string>
-			<key>end</key>
-			<string>^\n$</string>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>match</key>
-					<string>(?:Variable|Program\s+Location|Builder)\s+.+$</string>
-					<key>name</key>
-					<string>comment.other.latextools-system-check.header</string>
-				</dict>
-				<dict>
-					<key>include</key>
-					<string>$self</string>
-				</dict>
-			</array>
+			<key>match</key>
+			<string>^(?:Variable|Program\s+Location|Builder|Viewer|LaTeX Output Setting)\s+.+$</string>
+			<key>name</key>
+			<string>comment.other.latextools-system-check.header</string>
 		</dict>
 		<dict>
 			<key>match</key>
 			<string>^(?:TeX Root|LaTeX Engine|LaTeX Options)\s*$</string>
-			<key>name</key>
-			<string>comment.other.latextools-system-check.header</string>
-		</dict>
-		<dict>
-			<key>match</key>
-			<string>^Builder\s+Status\s*$</string>
-			<key>name</key>
-			<string>comment.other.latextools-system-check.header</string>
-		</dict>
-		<dict>
-			<key>match</key>
-			<string>^Builder Setting\s+Value\s*$</string>
 			<key>name</key>
 			<string>comment.other.latextools-system-check.header</string>
 		</dict>

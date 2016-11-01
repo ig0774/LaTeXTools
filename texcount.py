@@ -4,15 +4,18 @@ import sublime
 import sublime_plugin
 
 import os
-from subprocess import CalledProcessError
 
 if sublime.version() < '3000':
     from latextools_utils import get_setting
-    from latextools_utils.external_command import check_output
+    from latextools_utils.external_command import (
+        check_output, CalledProcessError
+    )
     from getTeXRoot import get_tex_root
 else:
     from .latextools_utils import get_setting
-    from .latextools_utils.external_command import check_output
+    from .latextools_utils.external_command import (
+        check_output, CalledProcessError
+    )
     from .getTeXRoot import get_tex_root
 
 

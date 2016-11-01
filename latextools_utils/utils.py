@@ -108,7 +108,6 @@ def get_file_content(file_name, encoding="utf8", ignore=True,
 class TimeoutError(Exception):
     pass
 
-
 __sentinel__ = object()
 
 

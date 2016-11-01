@@ -42,7 +42,7 @@ import sys
 from shlex import split
 
 import subprocess
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 
 try:
     from latextools_utils.settings import get_setting
@@ -161,6 +161,12 @@ def external_command(command, cwd=None, shell=False, env=None,
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
+        # encode cwd in the file system encoding; this is necessary to support
+        # some non-ASCII paths; see PR #878. Thanks to anamewing for the
+        # suggested fix
+        if not _ST3 and cwd:
+            cwd = cwd.encode(sys.getfilesystemencoding())
+
     if stdin is __sentinel__:
         stdin = None
 
@@ -269,7 +275,7 @@ def check_call(command, cwd=None, shell=False, env=None,
     )
 
     if returncode:
-        e = subprocess.CalledProcessError(
+        e = CalledProcessError(
             returncode,
             command
         )
@@ -308,7 +314,7 @@ def check_output(command, cwd=None, shell=False, env=None,
     )
 
     if returncode:
-        e = subprocess.CalledProcessError(
+        e = CalledProcessError(
             returncode,
             command
         )

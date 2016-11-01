@@ -10,18 +10,9 @@ contexts:
   main:
     - match: "-{3,}"
       scope: comment.other.latextools-system-check.header
-    - match: ^(?=(?:Variable|Program\s+Location|Builder)\s+.+$)
-      push:
-        - match: ^\n$
-          pop: true
-        - match: (?:Variable|Program\s+Location|Builder)\s+.+$
-          scope: comment.other.latextools-system-check.header
-        - include: main
+    - match: ^(?:Variable|Program\s+Location|Builder|Viewer|LaTeX Output Setting)\s+.+$
+      scope: comment.other.latextools-system-check.header
     - match: ^(?:TeX Root|LaTeX Engine|LaTeX Options)\s*$
-      scope: comment.other.latextools-system-check.header
-    - match: ^Builder\s+Status\s*$
-      scope: comment.other.latextools-system-check.header
-    - match: ^Builder Setting\s+Value\s*$
       scope: comment.other.latextools-system-check.header
     - match: \bavailable\b
       scope: markup.inserted.latextools-system-check.available
