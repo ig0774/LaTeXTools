@@ -5,11 +5,6 @@ implementations registered with latextools_plugin and configured using the
 
 At present, there is one supported method on custom plugins.
 
-`find_bibliography_files`:
-    This method should take a single argument, the full path the to root
-    document and return a list of absolute filenames for the various
-    bibliography files to be used. This list will be passed to `get_entries`.
-
 `get_entries`:
     This method should take a sequence of bib_files and return a sequence of
     Mapping-like objects where the key corresponds to a Bib(La)TeX key and
@@ -33,8 +28,10 @@ if sublime.version() < '3000':
     import getTeXRoot
     from latextools_utils import get_setting
     from latextools_utils.internal_types import FillAllHelper
+    from latextools_utils.subfiles import walk_subfiles
     import latextools_plugin
     from latextools_utils import bibformat
+    from kpsewhich import kpsewhich
 
     # reraise implementation from 6
     exec("""def reraise(tp, value, tb=None):
@@ -47,8 +44,11 @@ else:
     from . import getTeXRoot
     from .latex_fill_all import FillAllHelper
     from .latextools_utils import get_setting
+    from .latextools_utils.subfiles import walk_subfiles
     from . import latextools_plugin
     from .latextools_utils import bibformat
+    from .kpsewhich import kpsewhich
+
 
     # reraise implementation from 6
     def reraise(tp, value, tb=None):
@@ -188,6 +188,61 @@ def match(rex, str):
     else:
         return None
 
+# recursively search all linked tex files to find all
+# included bibliography tags in the document and extract
+# the absolute filepaths of the bib files
+def find_bibliography_files(root_file):
+        bib_files = []
+
+        rootdir = os.path.dirname(root_file)
+
+        for content in walk_subfiles(rootdir, root_file):
+            # While these commands only allow a single resource as their
+            # argument...
+            resources = re.findall(
+                r'\\addbibresource(?:\[[^\]]+\])?\{([^\}]+\.bib)\}', content
+            )
+            resources += re.findall(
+                r'\\addglobalbib(?:\[[^\]]+\])?\{([^\}]+\.bib)\}', content
+            )
+            resources += re.findall(
+                r'\\addsectionbib(?:\[[^\]]+\])?\{([^\}]+\.bib)\}', content
+            )
+
+            # ... these can have a comma-separated list of resources as their
+            # argument.
+            multi_resources = re.findall(
+                r'\\begin\{refsection\}\[([^\]]+)\]', content
+            )
+            multi_resources += re.findall(
+                r'\\bibliography\{([^\}]+)\}', content
+            )
+            multi_resources += re.findall(
+                r'\\nobibliography\{([^\}]+)\}', content
+            )
+
+            for multi_resource in multi_resources:
+                for res in multi_resource.split(','):
+                    res = res.strip()
+                    if res[-4:].lower() != '.bib':
+                        res = res + '.bib'
+                    resources.append(res)
+
+            # extract absolute filepath for each bib file
+            for res in resources:
+                # We join with rootdir, the dir of the master file
+                candidate_file = os.path.normpath(os.path.join(rootdir, res))
+                # if the file doesn't exist, search the default tex paths
+                if not os.path.exists(candidate_file):
+                    candidate_file = kpsewhich(res, 'mlbib')
+
+                if (
+                    candidate_file is not None and
+                    os.path.exists(candidate_file)
+                ):
+                    bib_files.append(candidate_file)
+        return bib_files
+
 def run_plugin_command(command, *args, **kwargs):
     '''
     This function is intended to run a command against a user-configurable list
@@ -310,7 +365,7 @@ def get_cite_completions(view):
         raise NoBibFilesError()
 
     print(u"TEX root: " + repr(root))
-    bib_files = run_plugin_command('find_bibliography_files', root)
+    bib_files = find_bibliography_files(root)
 
     # remove duplicate bib files
     bib_files = list(set(bib_files))
