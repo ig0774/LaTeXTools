@@ -241,14 +241,6 @@ def execute_command(command, cwd=None, shell=False, env=None,
 
     Raises OSError if the executable is not found
     '''
-    def convert_stream(stream):
-        if stream is None:
-            return u''
-        else:
-            return u'\n'.join(
-                re.split(r'\r?\n', stream.decode('utf-8', 'ignore').rstrip())
-            )
-
     p = external_command(
         command,
         cwd=cwd,
@@ -352,3 +344,24 @@ def check_output(command, cwd=None, shell=False, env=None,
         raise e
 
     return stdout
+
+
+def convert_stream(stream):
+    '''
+    Takes a stream object (bytearray or string) and converts it to a unicode
+    encoded string with line-endings normalized
+    '''
+    if stream is None:
+        return u''
+    else:
+        return u'\n'.join(re.split(r'\r?\n', _decode(stream).rstrip()))
+
+
+_FS_ENCODING = sys.getfilesystemencoding()
+
+if _ST3:
+    def _decode(stream):
+        return stream.decode(_FS_ENCODING, 'ignore')
+else:
+    def _decode(stream):
+        return unicode(stream, _FS_ENCODING, 'ignore')
