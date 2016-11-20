@@ -10,6 +10,7 @@ import types
 import sublime
 import sublime_plugin
 
+from ..parseTeXlog import parse_tex_log
 
 from ..latextools_utils import cache, get_setting
 from ..latextools_utils.external_command import execute_command
@@ -24,6 +25,9 @@ exports = ["MathPreviewPhantomListener"]
 # generated images as expired
 _version = 1
 
+# use this variable to disable the plugin for a session
+# (until ST is restarted)
+_IS_ENABLED = True
 
 try:
     import mdpopups
@@ -41,7 +45,7 @@ except:
 
 # the default and usual template for the latex file
 default_latex_template = """
-\\documentclass[preview,border=.2pt]{standalone}
+\\documentclass[preview,border=0.3pt]{standalone}
 % import xcolor if available and not already present
 \\IfFileExists{xcolor.sty}{\\usepackage{xcolor}}{}%
 <<packages>>
@@ -100,6 +104,8 @@ def plugin_loaded():
 
 
 def plugin_unloaded():
+    global _IS_ENABLED
+    _IS_ENABLED = False
     _lt_settings.clear_on_change("lt_preview_math_main")
 
 
@@ -147,15 +153,54 @@ def _create_image(latex_program, latex_document, base_name, color,
         ])
 
     err_file_path = image_path + _ERROR_EXTENSION
+    err_log = []
     if not pdf_exists:
-        with open(err_file_path, "w") as f:
-            f.write(
-                "Failed to run '{latex_program}' to create pdf to preview."
-                .format(**locals())
-            )
+        err_log.append(
+            "Failed to run '{latex_program}' to create pdf to preview."
+            .format(**locals())
+        )
+        err_log.append("")
+        err_log.append("")
+
+        log_file = os.path.join(temp_path, base_name + ".log")
+        log_exists = os.path.exists(log_file)
+
+        if not log_exists:
+            err_log.append("No log file found.")
+        else:
+            with open(log_file, "rb") as f:
+                log_data = f.read()
+            try:
+                errors, warnings, _ = parse_tex_log(log_data, temp_path)
+            except:
+                err_log.append("Error while parsing log file.")
+                errors = warnings = []
+            if errors:
+                err_log.append("Errors:")
+                err_log.extend(errors)
+            if warnings:
+                err_log.append("Warnings:")
+                err_log.extend(warnings)
+            err_log.append("")
+
+        err_log.append("LaTeX document:")
+        err_log.append("-----BEGIN DOCUMENT-----")
+        err_log.append(latex_document)
+        err_log.append("-----END DOCUMENT-----")
+
+        if log_exists:
+            err_log.append("")
+            log_content = log_data.decode("utf8", "ignore")
+            err_log.append("Log file:")
+            err_log.append("-----BEGIN LOG-----")
+            err_log.append(log_content)
+            err_log.append("-----END LOG-----")
     elif not os.path.exists(image_path):
+        err_log.append("Failed to convert pdf to png to preview.")
+
+    if err_log:
         with open(err_file_path, "w") as f:
-            f.write("Failed to convert pdf to png to preview.")
+            f.write("\n".join(err_log))
 
     # cleanup created files
     for ext in ["tex", "aux", "log", "pdf", "dvi"]:
@@ -229,10 +274,18 @@ def _wrap_html(html_content, color=None, background_color=None):
 
 def _generate_error_html(view, image_path, style_kwargs):
     content = "ERROR: "
-    with open(image_path + _ERROR_EXTENSION, "r") as f:
-        content += f.read()
+    err_file = image_path + _ERROR_EXTENSION
+    with open(err_file, "r") as f:
+        content += f.readline()
 
     html_content = html.escape(content, quote=False)
+    html_content += (
+        '<br>'
+        '<a href="check_system">(Check System)</a> '
+        '<a href="report-{err_file}">(Show Report)</a> '
+        '<a href="disable">(Disable)</a>'
+        .format(**locals())
+    )
 
     html_content = _wrap_html(html_content, **style_kwargs)
     return html_content
@@ -457,6 +510,35 @@ class MathPreviewPhantomListener(sublime_plugin.ViewEventListener,
     # METHODS
     #########
 
+    def on_navigate(self, href):
+        global _IS_ENABLED
+        if href == "check_system":
+            self.view.window().run_command("latextools_system_check")
+        elif href == "disable":
+            answer = sublime.yes_no_cancel_dialog(
+                "The math-live preview will be temporary disabled until "
+                "you restart Sublime Text. If you want to disable it "
+                "permanent open your LaTeXTools settings and set "
+                "\"preview_math_mode\" to \"none\".",
+                yes_title="Open LaTeXTools settings",
+                no_title="Disable for this session"
+            )
+            if answer == sublime.DIALOG_CANCEL:
+                # do nothing
+                return
+            _IS_ENABLED = False
+            self.update_phantoms()
+            if answer == sublime.DIALOG_YES:
+                self.view.window().run_command("open_latextools_user_settings")
+        elif href.startswith("report-"):
+            file_path = href[len("report-"):]
+            if not os.path.exists(file_path):
+                sublime.error_message(
+                    "Report file missing: {0}.".format(file_path)
+                )
+                return
+            self.view.window().open_file(file_path)
+
     def reset_phantoms(self):
         self.delete_phantoms()
         self.update_phantoms()
@@ -496,7 +578,11 @@ class MathPreviewPhantomListener(sublime_plugin.ViewEventListener,
 
         new_phantoms = []
         job_args = []
-        if self.visible_mode == "all":
+        if not _IS_ENABLED or self.visible_mode == "none":
+            if not self.phantoms:
+                return
+            scopes = []
+        elif self.visible_mode == "all":
             scopes = view.find_by_selector(
                 "text.tex.latex meta.environment.math")
         elif self.visible_mode == "selected":
@@ -504,10 +590,6 @@ class MathPreviewPhantomListener(sublime_plugin.ViewEventListener,
                 "text.tex.latex meta.environment.math")
             scopes = [scope for scope in math_scopes
                       if any(scope.contains(sel) for sel in view.sel())]
-        elif self.visible_mode == "none":
-            if not self.phantoms:
-                return
-            scopes = []
         else:
             self.visible_mode = "none"
             scopes = []
@@ -589,7 +671,8 @@ class MathPreviewPhantomListener(sublime_plugin.ViewEventListener,
                     _cancel_image_jobs(view.id(), p)
                 html_content = _generate_html(view, image_path, style_kwargs)
                 p.id = view.add_phantom(
-                    self.key, region, html_content, layout, on_navigate=None)
+                    self.key, region, html_content, layout,
+                    on_navigate=self.on_navigate)
                 new_phantoms.append(p)
                 continue
             # if neither the file nor the phantom exists, create a
@@ -597,7 +680,7 @@ class MathPreviewPhantomListener(sublime_plugin.ViewEventListener,
             elif p.id is None:
                 p.id = view.add_phantom(
                     self.key, region, _wrap_html("\u231B", **style_kwargs),
-                    layout, on_navigate=None)
+                    layout, on_navigate=self.on_navigate)
 
             job_args.append({
                 "latex_document": latex_document,
@@ -643,24 +726,28 @@ class MathPreviewPhantomListener(sublime_plugin.ViewEventListener,
             scope_end = scope.end()
             line_reg = view.line(scope_end)
             after_reg = sublime.Region(scope_end, line_reg.end())
-            after_str = view.substr(line_reg)
+            after_str = view.substr(after_reg)
             m = re.match(r"\\end\{([^\}]+?)(\*?)\}", after_str)
             if m:
                 env = m.group(1)
 
-        # strip the content
+        # create the opening and closing string
         if offset:
+            open_str = content[:offset]
+            close_str = content[-offset:]
+            # strip those strings from the content
             content = content[offset:-offset]
-        content = content.strip()
-
-        # create the wrap string
-        open_str = "\\("
-        close_str = "\\)"
-        if env:
+        elif env:
             star = "*" if env not in self.no_star_env or m.group(2) else ""
             # add a * to the env to avoid numbers in the resulting image
             open_str = "\\begin{{{env}{star}}}".format(**locals())
             close_str = "\\end{{{env}{star}}}".format(**locals())
+        else:
+            open_str = "\\("
+            close_str = "\\)"
+
+        # strip the content
+        content = content.strip()
 
         # wrap content plus invisible mathstrut to ensure minimum height
         document_content = (
@@ -730,7 +817,8 @@ class MathPreviewPhantomListener(sublime_plugin.ViewEventListener,
         # erase the old and add the new phantom
         view.erase_phantom_by_id(p.id)
         p.id = view.add_phantom(
-            self.key, p.region, html_content, p.layout, on_navigate=None)
+            self.key, p.region, html_content, p.layout,
+            on_navigate=self.on_navigate)
 
         # update the phantoms update time
         p.update_time = update_time
