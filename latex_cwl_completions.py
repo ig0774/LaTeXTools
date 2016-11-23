@@ -298,11 +298,11 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
 
         # load the completions for the document
         if is_env:
-            completions = CWL_COMPLETIONS.get_completions(env=True) + \
-                get_own_env_completion(view)
+            completions = CWL_COMPLETIONS.get_completions(env=True).extend(
+                get_own_env_completion(view) or [])
         else:
-            completions = CWL_COMPLETIONS.get_completions() + \
-                get_own_command_completion(view)
+            completions = CWL_COMPLETIONS.get_completions().extend(
+                get_own_command_completion(view) or [])
 
         # autocompleting with slash already on line
         # this is necessary to work around a short-coming in ST where having a
