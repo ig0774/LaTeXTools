@@ -42,12 +42,8 @@ else:
     )
     from .latextools_utils.six import strbase, reraise
     from . import latextools_plugin
-    from .latextools_utils import bibformat
     from .kpsewhich import kpsewhich
 
-
-import os
-import sys
 import re
 
 import traceback
@@ -551,7 +547,6 @@ def plugin_loaded():
     latextools_plugin.add_plugin_path(
         os_path.join(
             sublime.packages_path(), 'LaTeXTools', 'bibliography_plugins'))
-
 
 
 # ensure plugin_loaded() called on ST2

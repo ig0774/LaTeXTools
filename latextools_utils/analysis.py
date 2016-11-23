@@ -10,17 +10,14 @@ if sublime.version() < '3000':
     _ST3 = False
     from latextools_utils import utils
     from latextools_utils.cache import LocalCache
+    from latextools_utils.six import strbase
     from latextools_utils.tex_directives import get_tex_root
 else:
     _ST3 = True
     from . import utils
     from .cache import LocalCache
+    from .six import strbase
     from .tex_directives import get_tex_root
-
-if _ST3:
-    strbase = str
-else:
-    strbase = basestring
 
 # because we cannot natively pickle sublime.Region in ST2
 # we provide the ability to pickle
@@ -263,8 +260,7 @@ def get_analysis(tex_root):
         raise TypeError("tex_root must be a string or view")
 
     result = LocalCache(tex_root).cache(
-        'analysis', lambda: analyze_document(tex_root)
-    )
+        'analysis', partial(analyze_document, tex_root))
     return result
 
 
