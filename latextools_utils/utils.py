@@ -184,11 +184,14 @@ class ThreadPool(object):
     Returned results are similar to multiprocessing.pool.AsyncResult'''
 
     def __init__(self, processes=None):
+        self._task_queue = Queue()
+        self._result_queue = Queue()
+        # used to indicate if the ThreadPool should be stopped
+        self._should_stop = threading.Event()
+
         # default value is two less than the number of CPU cores to handle
         # the supervisor thread and result thread
         self._processes = max(processes or (cpu_count() or 3) - 2, 1)
-        self._task_queue = Queue()
-        self._result_queue = Queue()
         self._workers = []
         self._populate_pool()
 
@@ -205,14 +208,14 @@ class ThreadPool(object):
         self._supervisor.name = u'{0!r} supervisor'.format(self)
         self._supervisor.start()
 
-        # used to indicate if the ThreadPool should be stopped
-        self._should_stop = threading.Event()
-
     # - Public API
     def apply_async(self, func, args=(), kwargs={}):
         job = next(self._job_counter)
         self._task_queue.put((job, (func, args, kwargs)))
         return _ThreadPoolResult(job, self._result_cache)
+
+    def is_running(self):
+        return not self._should_stop.is_set()
 
     def terminate(self):
         '''Stops this thread pool. Note stopping is not immediate. If you
@@ -229,7 +232,7 @@ class ThreadPool(object):
     # this is the supervisory task, which will clear workers that have stopped
     # and start fresh workers
     def _maintain_pool(self):
-        while not self._should_stop.is_set():
+        while self.is_running():
             cleared_processes = False
             for i in reversed(range(len(self._workers))):
                 w = self._workers[i]
@@ -256,7 +259,7 @@ class ThreadPool(object):
         self._result_handler.join()
 
     def _handle_results(self):
-        while not self._should_stop.is_set():
+        while True:
             result = self._result_queue.get()
             if result is None:
                 break
@@ -284,7 +287,7 @@ class _ThreadPoolWorker(threading.Thread):
 
     def run(self):
         while True:
-            task = self.next_task()
+            task = self._task_queue.get()
             if task is None:
                 break
 
