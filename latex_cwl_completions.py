@@ -334,13 +334,19 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
 
 # -- Internal API --
 # run to see if cwl completions should be enabled
-CWL_PACKAGE_PATHS = [os.path.join(sublime.packages_path(), 'LaTeX-cwl')]
-if _ST3:
-    # add to the front as this is most likely to exist
-    CWL_PACKAGE_PATHS.insert(0, os.path.join(
-        sublime.installed_packages_path(), 'LaTeX-cwl.sublime-package'
-    ))
-CWL_PACKAGE_PATHS.append(os.path.join(sublime.packages_path(), 'User', 'cwl'))
+CWL_PACKAGE_PATHS = []
+
+
+def _create_cwl_packages_paths():
+    global CWL_PACKAGE_PATHS
+    CWL_PACKAGE_PATHS = [os.path.join(sublime.packages_path(), 'LaTeX-cwl')]
+    if _ST3:
+        # add to the front as this is most likely to exist
+        CWL_PACKAGE_PATHS.insert(0, os.path.join(
+            sublime.installed_packages_path(), 'LaTeX-cwl.sublime-package'
+        ))
+    CWL_PACKAGE_PATHS.append(
+        os.path.join(sublime.packages_path(), 'User', 'cwl'))
 
 
 def _check_if_cwl_enabled(view=None):
@@ -458,6 +464,9 @@ else:
             for p in CWL_PACKAGE_PATHS
         ]
 
+        # flatten the results
+        results = [i for sublist in results for i in sublist]
+
         return (results, False)
 
 
@@ -526,6 +535,7 @@ def parse_cwl_file(cwl, s, parse_line=parse_line_as_command):
 # its better to do it here because its more stable across reloads
 def plugin_loaded():
     global CWL_COMPLETIONS
+    _create_cwl_packages_paths()
     if CWL_COMPLETIONS is None:
         CWL_COMPLETIONS = CwlCompletions()
 
