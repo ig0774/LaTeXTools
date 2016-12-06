@@ -55,8 +55,7 @@ class NoBibFilesError(Exception):
 
 class BibParsingError(Exception):
 
-    def __init__(self, filename="", message=""):
-        super(BibParsingError, self).__init__(message)
+    def __init__(self, filename=""):
         self.filename = filename
 
 
@@ -504,7 +503,10 @@ class CiteFillAllHelper(FillAllHelper):
 
         def formatted_entry(entry):
             try:
-                return entry["<panel_formatted>"]
+                result = entry["<panel_formatted>"]
+                if isinstance(result, tuple):
+                    result = list(result)
+                return result
             except:
                 return [
                     bibformat.format_entry(s, entry)
@@ -547,6 +549,7 @@ def plugin_loaded():
     latextools_plugin.add_plugin_path(
         os_path.join(
             sublime.packages_path(), 'LaTeXTools', 'bibliography_plugins'))
+
 
 
 # ensure plugin_loaded() called on ST2

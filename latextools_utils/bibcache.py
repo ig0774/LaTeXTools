@@ -6,14 +6,16 @@ import sublime
 if sublime.version() < '3000':
     _ST3 = False
     from latextools_utils import bibformat, cache, get_setting
+    from external.frozendict import frozendict
     from latextools_utils.system import make_dirs
 else:
     _ST3 = True
     from . import bibformat, cache, get_setting
+    from ..external.frozendict import frozendict
     from .six import long
     from .system import make_dirs
 
-_VERSION = 1
+_VERSION = 2
 
 
 class BibCache(cache.InstanceTrackingCache, cache.GlobalCache):
@@ -72,6 +74,7 @@ class BibCache(cache.InstanceTrackingCache, cache.GlobalCache):
         self._pool.apply_async(_write_bib_cache)
 
         formatted_entries = self._create_formatted_entries(bib_entries)
+
         with self._write_lock:
             self._objects[self.formatted_cache_name] = formatted_entries
             self._dirty = True
@@ -118,8 +121,7 @@ class BibCache(cache.InstanceTrackingCache, cache.GlobalCache):
     def _get_bib_cache(self):
         try:
             cache_mtime = os.path.getmtime(
-                os.path.join(self.cache_path, self.cache_name)
-            )
+                os.path.join(self.cache_path, self.cache_name))
 
             bib_mtime = os.path.getmtime(self.bib_file)
         except:
@@ -131,8 +133,10 @@ class BibCache(cache.InstanceTrackingCache, cache.GlobalCache):
         bib_entries = self._read(self.cache_name)
         formatted_entries = self._create_formatted_entries(bib_entries)
         with self._write_lock:
-            self._objects[self.formatted_entries] = formatted_entries
+            self._objects[self.formatted_cache_name] = formatted_entries
             self._dirty = True
+        self._schedule_save()
+
         return formatted_entries
 
     def _create_formatted_entries(self, bib_entries):
@@ -140,23 +144,24 @@ class BibCache(cache.InstanceTrackingCache, cache.GlobalCache):
         autocomplete_format = get_setting("cite_autocomplete_format")
         panel_format = get_setting("cite_panel_format")
 
-        meta_data = {
-            "cache_time": long(time.time()),
-            "version": _VERSION,
-            "autocomplete_format": autocomplete_format,
-            "panel_format": panel_format
-        }
-        formatted_entries = [
-            {
+        meta_data = frozendict(
+            cache_time=long(time.time()),
+            version=_VERSION,
+            autocomplete_format=autocomplete_format,
+            panel_format=panel_format
+        )
+
+        formatted_entries = tuple(
+            frozendict(**{
                 "keyword": entry["keyword"],
                 "<prefix_match>": bibformat.create_prefix_match_str(entry),
-                "<panel_formatted>": [
+                "<panel_formatted>": tuple(
                     bibformat.format_entry(s, entry) for s in panel_format
-                ],
+                ),
                 "<autocomplete_formatted>":
                     bibformat.format_entry(autocomplete_format, entry)
-            }
+            })
             for entry in bib_entries
-        ]
+        )
 
         return meta_data, formatted_entries

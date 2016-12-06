@@ -1,6 +1,7 @@
 import sublime
 import codecs
 import itertools
+import sys
 import threading
 import time
 
@@ -16,8 +17,10 @@ except ImportError:
 
 if sublime.version() < '3000':
     _ST3 = False
+    from latextools_utils.six import reraise
 else:
     _ST3 = True
+    from .six import reraise
 
 
 def run_after_loading(view, func):
@@ -265,9 +268,12 @@ class ThreadPool(object):
                 break
 
             job, _result = result
-            result_handler = self._result_cache.get(job)
-            if result_handler:
-                result_handler._set_result(_result)
+            try:
+                result_handler = self._result_cache.get(job)
+                if result_handler:
+                    result_handler._set_result(_result)
+            finally:
+                self._result_queue.task_done()
 
     # creates and adds worker threads
     def _populate_pool(self):
@@ -294,10 +300,15 @@ class _ThreadPoolWorker(threading.Thread):
             job = task[0]
             func, args, kwargs = task[1]
 
+            if args is None:
+                args = ()
+            if kwargs is None:
+                kwargs = {}
+
             try:
                 self._result_queue.put((job, func(*args, **kwargs)))
-            except Exception as e:
-                self._result_queue.put((job, e))
+            except Exception:
+                self._result_queue.put((job, sys.exc_info()))
             finally:
                 self._task_queue.task_done()
 
@@ -322,8 +333,13 @@ class _ThreadPoolResult(object):
         if not self.ready():
             raise TimeoutError
 
-        if isinstance(self._value, Exception):
-            raise self._value
+        # handle an exception, which is passed as a sys.exc_info tuple
+        if (
+            isinstance(self._value, tuple) and
+            len(self._value) == 3 and
+            issubclass(self._value[0], Exception)
+        ):
+            reraise(*self._value)
         else:
             return self._value
 
@@ -331,5 +347,6 @@ class _ThreadPoolResult(object):
         callback(self.get(timeout))
 
     def _set_result(self, _value):
+        self._value = _value
         self._ready.set()
         del self._result_cache[self._job]
