@@ -440,8 +440,11 @@ class objectview(object):
     def __setattr__(self, attr, value):
         raise TypeError('cannot set value on an objectview')
 
-    def copy(self):
-        return objectview(self._d.copy())
+    def copy(self, **add_or_replace):
+        new_dict = self._d.copy()
+        if add_or_replace:
+            new_dict.update(**add_or_replace)
+        return objectview(new_dict)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
