@@ -252,6 +252,10 @@ class Analysis(object):
         self.__frozen = True
 
 
+    def __copy__(self):
+        return self
+
+
 def get_analysis(tex_root):
     """
     Returns an analysis of the document using a cache
