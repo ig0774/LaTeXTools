@@ -77,6 +77,10 @@ _RE_COMMENT = re.compile(
 # the analysis will walk recursively into the included files
 # i.e. the 'args' field of the command
 _input_commands = ["input", "include", "subfile", "loadglsentries"]
+_import_commands = [
+    "import", "subimport", "includefrom", "subincludefrom",
+    "inputfrom", "subinputfrom"
+]
 
 
 # FLAGS
@@ -126,12 +130,31 @@ class Analysis(object):
         self._all_commands = []
         self._command_cache = {}
 
+        self._import_base_paths = {}
+
         self.__finished = False
         self.__frozen = False
+
+        self._finished = False
 
     def tex_root(self):
         """The tex root of the analysis"""
         return self._tex_root
+
+    def tex_base_path(self, file_path):
+        """
+        The folder in which the file is seen by the latex compiler.
+        This is usually the folder of the tex root, but can change if
+        the import package is used.
+        Use this instead of the tex root path to implement functions
+        like the \input command completion.
+        """
+        file_path = os.path.normpath(file_path)
+        try:
+            base_path = self._import_base_paths[file_path]
+        except KeyError:
+            base_path, _ = os.path.split(self._tex_root)
+        return base_path
 
     def content(self, file_name):
         """
@@ -249,8 +272,8 @@ class Analysis(object):
         self._content = frozendict(**self._content)
         self._raw_content = frozendict(**self._raw_content)
         self._all_commands = tuple(c for c in self._all_commands)
+        self._import_base_paths = frozenset(**self._import_base_paths)
         self.__frozen = True
-
 
     def __copy__(self):
         return self
@@ -316,7 +339,7 @@ def analyze_document(tex_root):
 
 
 def _analyze_tex_file(tex_root, file_name=None, process_file_stack=[],
-                      ana=None):
+                      ana=None, import_path=None):
     # init ana and the file name
     if not ana:
         ana = Analysis(tex_root)
@@ -333,7 +356,21 @@ def _analyze_tex_file(tex_root, file_name=None, process_file_stack=[],
         print(process_file_stack)
         return ana
 
-    base_path, _ = os.path.split(tex_root)
+    if not import_path:
+        base_path, _ = os.path.split(tex_root)
+    else:
+        base_path = import_path
+
+    # store import path at the base path, such that it can be accessed
+    if import_path:
+        if file_name in ana._import_base_paths:
+            if ana._import_base_paths[file_name] != import_path:
+                print(
+                    "Warning: '{0}' is imported twice. "
+                    "Cannot handle this correctly in the analysis."
+                )
+        else:
+            ana._import_base_paths[file_name] = base_path
 
     # read the content from the file
     try:
@@ -373,6 +410,21 @@ def _analyze_tex_file(tex_root, file_name=None, process_file_stack=[],
             process_file_stack.append(file_name)
             open_file = os.path.join(base_path, g("args"))
             _analyze_tex_file(tex_root, open_file, process_file_stack, ana)
+            process_file_stack.pop()
+        elif (g("command") in _import_commands and g("args") is not None and
+                g("args2") is not None):
+            if g("command").startswith("sub"):
+                next_import_path = os.path.join(base_path, g("args"))
+            else:
+                next_import_path = g("args")
+            # normalize the path
+            next_import_path = os.path.normpath(next_import_path)
+            open_file = os.path.join(next_import_path, g("args2"))
+
+            process_file_stack.append(file_name)
+            _analyze_tex_file(
+                tex_root, open_file, process_file_stack, ana,
+                import_path=next_import_path)
             process_file_stack.pop()
 
         # don't parse further than \end{document}
