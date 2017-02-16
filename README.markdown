@@ -10,7 +10,7 @@ Additional contributors (*thank you thank you thank you*): first of all, Wallace
 
 *If you have contributed and I haven't acknowledged you, email me!*
 
-*Latest revision:* v3.12.11 (2016-12-04).
+*Latest revision:* v3.12.16 (2017-02-08).
 
 *Headline features*:
 
@@ -165,7 +165,7 @@ Recent versions of MikTeX add themselves to your path automatically, but in case
 
 #### Install TeXLive
 
-You need to install TeXlive. We highly recommend installing the version directly from TUG, which can be found [here](https://www.tug.org/texlive/acquire-netinstall.html) rather than the version included with your distribution, as your distribution may be out of date (maintain a TeX distribution is a time-consuming task).  In particular, if you are on Ubuntu, note that `apt-get install texlive` will get you a working but incomplete setup. For example, it will *not* install `latexmk`, which is essential to LaTeXTools. You need to install it via `apt-get install latexmk`. You can use the **LaTeXTools: Check System** command to ensure that the expected binaries are found.
+You need to install TeXlive. We highly recommend installing the version directly from TUG, which can be found [here](https://www.tug.org/texlive/acquire-netinstall.html) rather than the version included with your distribution, as your distribution may be out of date (maintaining a TeX distribution is a time-consuming task).  In particular, if you are on Ubuntu, note that `apt-get install texlive` will get you a working but incomplete setup. For example, it will *not* install `latexmk`, which is essential to LaTeXTools. You need to install it via `apt-get install latexmk`. You can use the **LaTeXTools: Check System** command to ensure that the expected binaries are found.
 
 #### Setup ImageMagick and Ghostscript
 
@@ -867,7 +867,7 @@ Each command can use the following variables which will be expanded before it is
 |`$file`   | The full path to the main file, e.g., _C:\\Files\\document.tex_|
 |`$file_name`| The name of the main file, e.g., _document.tex_|
 |`$file_ext`| The extension portion of the main file, e.g., _tex_|
-|`$file_base_name`| The name portion of the main file without the, e.g., _document_|
+|`$file_base_name`| The name portion of the main file without the extension, e.g., _document_|
 |`$file_path`| The directory of the main file, e.g., _C:\\Files_|
 |`$aux_directory`| The auxiliary directory set via a `%!TEX` directive or the settings|
 |`$output_directory`| The output directory set via a `%!TEX` directive or the settings|
