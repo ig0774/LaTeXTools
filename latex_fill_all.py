@@ -196,9 +196,15 @@ class LatexFillHelper(object):
                 'smart_bracket_scan_full_document', False)
             candidates = self.candidates = {}
 
-        if self.use_full_scan:
+        if not self.use_full_scan:
             # always clear the candidates when not using a full scan
             candidates = {}
+            # when not using a full scan, get the number of lines to
+            # look-behind
+            try:
+                look_around = int(get_setting('smart_bracket_look_around', 5))
+            except ValueError:
+                look_around = 5
 
         if candidates is None:
             try:
@@ -214,17 +220,15 @@ class LatexFillHelper(object):
 
         if self.use_full_scan:
             prefix = view.substr(getRegion(0, start))
+            prefix_start = 0
+            suffix_end = view.size()
         else:
-            # when not using a full scan, get the number of lines to
-            # look-behind
-            try:
-                look_behind = int(get_setting('smart_bracket_look_behind', 5))
-            except ValueError:
-                look_behind = 5
+            prefix_start = view.lines(
+                getRegion(0, start))[-look_around].begin()
+            suffix_end = view.lines(
+                getRegion(end, view.size()))[look_around].end()
 
-            prefix_lines = view.lines(getRegion(0, start))[-look_behind:]
-            prefix = view.substr(getRegion(
-                prefix_lines[0].begin(), start))
+            prefix = view.substr(getRegion(prefix_start, start))
 
         open_bracket, last_index = None, -1
         for char in self.MATCH_CHARS:
@@ -245,17 +249,28 @@ class LatexFillHelper(object):
         if open_bracket not in candidates:
             # find all open / close brackets in the current buffer,
             # removing all comments
-            candidates[open_bracket] = [
-                c for c in view.find_all(
-                    re.escape(open_bracket) + '|' +
-                    re.escape(close_bracket)
-                )
-                if view.score_selector(c.begin(), 'comment') == 0
-            ]
+            candidates[open_bracket] = results = []
+
+            start = prefix_start
+            re_str = re.escape(open_bracket) + '|' + re.escape(close_bracket)
+            while True:
+                c = view.find(re_str, start)
+                if c is None:
+                    break
+
+                if c.end() > suffix_end:
+                    break
+
+                if view.score_selector(c.begin(), 'comment') != 0:
+                    start = c.end()
+                    continue
+
+                results.append(c)
+                start = c.end()
 
         for candidate in candidates[open_bracket]:
             if view.substr(candidate) == open_bracket:
-                if candidate.begin() > end:
+                if len(open_brackets) == 0 and candidate.begin() > end:
                     break
 
                 open_brackets.append(candidate)

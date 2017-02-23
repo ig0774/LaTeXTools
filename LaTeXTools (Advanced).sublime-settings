@@ -188,6 +188,8 @@
 	"smart_bracket_scan_full_document": false,
 
 	// this setting determines the number of lines that smart bracket
-	// auto triggering will look behind each selection
-	"smart_bracket_look_behind": 5
+	// auto triggering will look around each selection. by default, smart
+	// bracket auto triggering looks 5 lines before the selection and 5 lines
+	// after
+	"smart_bracket_look_around": 5
 }
