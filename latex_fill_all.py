@@ -141,7 +141,7 @@ class LatexFillHelper(object):
                             new_regions.append(
                                 getRegion(
                                     sel.begin(),
-                                    word_region.end() +len(close_bracket)))
+                                    word_region.end() + len(close_bracket)))
                     else:
                         new_regions.append(sel)
 
@@ -223,10 +223,17 @@ class LatexFillHelper(object):
             prefix_start = 0
             suffix_end = view.size()
         else:
-            prefix_start = view.lines(
-                getRegion(0, start))[-look_around].begin()
-            suffix_end = view.lines(
-                getRegion(end, view.size()))[look_around].end()
+            prefix_lines = view.lines(getRegion(0, start))
+            if len(prefix_lines) >= look_around:
+                prefix_start = prefix_lines[-look_around].begin()
+            else:
+                prefix_start = prefix_lines[0].begin()
+
+            suffix_lines = view.lines(getRegion(end, view.size()))
+            if len(suffix_lines) >= look_around:
+                suffix_end = suffix_lines[look_around].end()
+            else:
+                suffix_end = suffix_lines[-1].end()
 
             prefix = view.substr(getRegion(prefix_start, start))
 
@@ -254,8 +261,11 @@ class LatexFillHelper(object):
             start = prefix_start
             re_str = re.escape(open_bracket) + '|' + re.escape(close_bracket)
             while True:
+                if start >= suffix_end:
+                    break
+
                 c = view.find(re_str, start)
-                if c is None:
+                if c is None or c.begin() == -1:
                     break
 
                 if c.end() > suffix_end:
@@ -266,6 +276,7 @@ class LatexFillHelper(object):
                     continue
 
                 results.append(c)
+
                 start = c.end()
 
         for candidate in candidates[open_bracket]:
@@ -525,7 +536,7 @@ class LatexFillHelper(object):
                 value
             )
 
-            if sel.empty:
+            if sel.empty():
                 start_point = end_point = start_point + len(value)
             else:
                 end_point = start_point + len(value)

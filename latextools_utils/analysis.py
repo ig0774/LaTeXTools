@@ -135,8 +135,6 @@ class Analysis(object):
         self.__finished = False
         self.__frozen = False
 
-        self._finished = False
-
     def tex_root(self):
         """The tex root of the analysis"""
         return self._tex_root

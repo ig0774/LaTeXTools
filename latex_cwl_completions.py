@@ -279,6 +279,13 @@ class LatexCwlCompletion(sublime_plugin.EventListener):
             return []
 
         # Do not do completions in actions
+        if (
+            latex_input_completions.TEX_INPUT_FILE_REGEX not in
+            ENV_DONOT_AUTO_COM
+        ):
+            ENV_DONOT_AUTO_COM.append(
+                latex_input_completions.TEX_INPUT_FILE_REGEX)
+
         for rex in ENV_DONOT_AUTO_COM:
             if match(rex, line) is not None:
                 return []
