@@ -16,8 +16,9 @@
                         "children":
                         [
                             {
-                                "command": "open_latextools_readme_file",
-                                "caption": "README"
+                                "command": "open_url",
+                                "args": {"url": "https://latextools.readthedocs.io/"},
+                                "caption": "Documentation"
                             },
                             { "caption": "-" },
                             {
