@@ -2,7 +2,6 @@
 # ST2/ST3 compat
 from __future__ import print_function
 import sublime
-import sublime_plugin
 
 import os
 import re
