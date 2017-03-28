@@ -1,6 +1,7 @@
 import sublime
 import codecs
 import itertools
+import os
 import sys
 import threading
 import time
@@ -8,7 +9,31 @@ import time
 try:
     from os import cpu_count
 except ImportError:
-    from multiprocessing import cpu_count
+    try:
+        from multiprocessing import cpu_count
+    # ST2 compat where _multiprocessing isn't included
+    # Note: these implementations are not as fast or correct as the
+    # pre-compiled versions
+    except ImportError:
+        if sublime.platform() == 'windows':
+            def cpu_count():
+                try:
+                    return int(os.environ['NUMBER_OF_PROCESSORS'])
+                except (ValueError, KeyError):
+                    return 0
+        elif sublime.platform() == 'osx':
+            def cpu_count():
+                try:
+                    with os.popen('/sbin/sysctl -n hw.cpu') as p:
+                        return int(p.read())
+                except ValueError:
+                    return 0
+        else:
+            def cpu_count():
+                try:
+                    return os.sysconf('SC_NPROCESSORS_ONLN')
+                except (ValueError, OSError, AttributeError):
+                    return 0
 
 try:
     from Queue import Queue
@@ -160,7 +185,10 @@ def run_on_main_thread(func, timeout=10, default_value=__sentinel__):
 
     def _get_result():
         with condition:
-            _get_result.result = func()
+            try:
+                _get_result.result = func()
+            except Exception:
+                _get_result.result = sys.exc_info()
             condition.notify()
 
     sublime.set_timeout(_get_result, 0)
@@ -172,6 +200,12 @@ def run_on_main_thread(func, timeout=10, default_value=__sentinel__):
             raise TimeoutError('Timeout while waiting for {0}'.format(func))
         else:
             return default_value
+
+    # if the result is an exception, re-raise it
+    if (isinstance(_get_result.result, tuple) and
+        len(_get_result.result) == 3 and
+            issubclass(_get_result.result[0], BaseException)):
+        reraise(*_get_result.result)
 
     return _get_result.result
 
@@ -192,9 +226,11 @@ class ThreadPool(object):
         # used to indicate if the ThreadPool should be stopped
         self._should_stop = threading.Event()
 
-        # default value is two less than the number of CPU cores to handle
-        # the supervisor thread and result thread
-        self._processes = max(processes or (cpu_count() or 3) - 2, 1)
+        if processes and processes > 0:
+            self._processes = processes
+        else:
+            # defaults to one less than the number of CPU cores
+            self._processes = max(cpu_count() - 1, 1)
         self._workers = []
         self._populate_pool()
 
