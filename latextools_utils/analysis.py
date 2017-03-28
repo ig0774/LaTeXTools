@@ -270,7 +270,7 @@ class Analysis(object):
         self._content = frozendict(**self._content)
         self._raw_content = frozendict(**self._raw_content)
         self._all_commands = tuple(c for c in self._all_commands)
-        self._import_base_paths = frozenset(**self._import_base_paths)
+        self._import_base_paths = frozendict(**self._import_base_paths)
         self.__frozen = True
 
     def __copy__(self):
