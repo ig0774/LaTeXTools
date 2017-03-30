@@ -486,7 +486,7 @@ class Cache(object):
                 self._save_queue.pop()
             else:
                 self._save_queue = []
-                sublime.set_timeout(self.save_async, 0)
+                self.save_async()
 
     # ensure cache is saved to disk when removed from memory
     def __del__(self):
