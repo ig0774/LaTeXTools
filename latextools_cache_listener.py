@@ -69,10 +69,12 @@ class LatextoolsAnalysisUpdater(LatextoolsCacheUpdater):
         self.add_step(partial(self._run_analysis, tex_root))
 
     def _run_analysis(self, tex_root):
+        ana = analysis.analyze_document(tex_root)
+
         local_cache = LocalCache(tex_root)
         with local_cache._write_lock:
             local_cache.invalidate()
-            local_cache.set('analysis', analysis.analyze_document(tex_root))
+            local_cache.set('analysis', ana)
 
 
 class LatextoolsBibCacheUpdater(LatextoolsCacheUpdater):
