@@ -504,12 +504,12 @@ class GlobalCache(Cache):
     behaves as though there were a single object
     '''
 
-    __STATE = {}
-
     def __new__(cls, *args, **kwargs):
         # almost-singleton implementation; all instances share the same state
+        if not hasattr(cls, '_STATE'):
+            cls._STATE = {}
         inst = super(GlobalCache, cls).__new__(cls, *args, **kwargs)
-        inst.__dict__ = cls.__STATE
+        inst.__dict__ = cls._STATE
         return inst
 
     def invalidate(self, key):
@@ -579,7 +579,6 @@ class InstanceReference(object):
     used by the InstanceTrackingCache to track a reference to different
     instances that point to the same underlying data
     '''
-
     def __init__(self, *args, **kwargs):
         self._instance_data = {}
         self._ref_count = 0
@@ -615,17 +614,12 @@ class InstanceTrackingCache(Cache):
     subclasses MUST implement the _get_inst_key method
     '''
 
-    _CLASSES = set([])
-
     def __new__(cls, *args, **kwargs):
         if cls is InstanceTrackingCache:
             raise NotImplemented
 
-        InstanceTrackingCache._CLASSES.add(cls)
-
         if not hasattr(cls, '_INSTANCES'):
-            cls._INSTANCES = collections.defaultdict(
-                lambda: InstanceReference())
+            cls._INSTANCES = collections.defaultdict(lambda: InstanceReference())
 
         inst = super(InstanceTrackingCache, cls).__new__(cls, *args, **kwargs)
         inst_key = inst._get_inst_key(*args, **kwargs)
