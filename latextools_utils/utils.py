@@ -220,19 +220,18 @@ class ThreadPool(object):
 
     Returned results are similar to multiprocessing.pool.AsyncResult'''
 
-    def __init__(self, processes=None):
+    def __init__(self, max_processes=None):
         self._task_queue = Queue()
         self._result_queue = Queue()
         # used to indicate if the ThreadPool should be stopped
         self._should_stop = threading.Event()
 
-        if processes and processes > 0:
-            self._processes = processes
+        if max_processes and max_processes > 0:
+            self._max_processes = max_processes
         else:
             # defaults to one less than the number of CPU cores
-            self._processes = max(cpu_count() - 1, 1)
+            self.max_processes = max(cpu_count() - 1, 1)
         self._workers = []
-        self._populate_pool()
 
         self._job_counter = itertools.count()
         self._result_cache = {}
@@ -250,7 +249,7 @@ class ThreadPool(object):
     # - Public API
     def apply_async(self, func, args=(), kwargs={}):
         job = next(self._job_counter)
-        self._task_queue.put((job, (func, args, kwargs)))
+        self._task_queue.put((job, (func, args, kwargs)), False)
         return _ThreadPoolResult(job, self._result_cache)
 
     def is_running(self):
@@ -272,16 +271,23 @@ class ThreadPool(object):
     # and start fresh workers
     def _maintain_pool(self):
         while self.is_running():
-            cleared_processes = False
             for i in reversed(range(len(self._workers))):
                 w = self._workers[i]
                 if not w.is_alive():
                     w.join()
-                    cleared_processes = True
                     del self._workers[i]
 
-            if cleared_processes:
-                self._populate_pool()
+            if not self._task_queue.empty():
+                if len(self._workers) < self._max_processes:
+                    w = _ThreadPoolWorker(
+                        self._task_queue,
+                        self._result_queue
+                    )
+                    self._workers.append(w)
+                    w.start()
+            else:
+                for _ in range(len(self._workers)):
+                    self._task_queue.put(None, False)
 
             time.sleep(0.1)
 
@@ -310,13 +316,6 @@ class ThreadPool(object):
                     result_handler._set_result(_result)
             finally:
                 self._result_queue.task_done()
-
-    # creates and adds worker threads
-    def _populate_pool(self):
-        for _ in range(self._processes - len(self._workers)):
-            w = _ThreadPoolWorker(self._task_queue, self._result_queue)
-            self._workers.append(w)
-            w.start()
 
 
 class _ThreadPoolWorker(threading.Thread):
