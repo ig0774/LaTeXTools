@@ -214,9 +214,9 @@ class ThreadPool(object):
     '''A relatively simple ThreadPool designed to maintain a number of thread
     workers
 
-    By default, each pool manages a number of processes equal to the number
-    of CPU cores. This can be adjusted by setting the processes parameter
-    when creating the pool.
+    By default, each pool manages a number of processes up to one less than
+    the number of CPU cores. This can be adjusted by setting the processes
+    parameter when creating the pool.
 
     Returned results are similar to multiprocessing.pool.AsyncResult'''
 
@@ -248,11 +248,21 @@ class ThreadPool(object):
 
     # - Public API
     def apply_async(self, func, args=(), kwargs={}):
+        '''Similar to the built-in apply() function, but executed on a worker
+        thread rather than the calling thread. Returns a _ThreadPoolResult
+        object which can be used to obtain the results of the supplied
+        function.'''
+        if self._should_stop.is_set():
+            raise ValueError('Pool not running')
         job = next(self._job_counter)
         self._task_queue.put((job, (func, args, kwargs)), False)
         return _ThreadPoolResult(job, self._result_cache)
 
     def is_running(self):
+        '''Returns whether or not the pool is actively running. Note that
+        a False result does not necessarily indicate that the pool has
+        stopped, only that it has been instructed to stop and no further tasks
+        will be accepted.'''
         return not self._should_stop.is_set()
 
     def terminate(self):
@@ -319,6 +329,7 @@ class ThreadPool(object):
 
 
 class _ThreadPoolWorker(threading.Thread):
+    '''Worker thread from the ThreadPool. Should not be used.'''
 
     def __init__(self, task_queue, result_queue, *args, **kwargs):
         super(_ThreadPoolWorker, self).__init__(*args, **kwargs)
@@ -349,6 +360,8 @@ class _ThreadPoolWorker(threading.Thread):
 
 
 class _ThreadPoolResult(object):
+    '''Class for obtaining results from worker threads. This is modeled
+    on multiprocessing.pool.AsyncResult.'''
 
     def __init__(self, job, result_cache):
         self._ready = threading.Event()
@@ -381,6 +394,7 @@ class _ThreadPoolResult(object):
     def then(self, callback, timeout=None):
         callback(self.get(timeout))
 
+    # - Internal API
     def _set_result(self, _value):
         self._value = _value
         self._ready.set()
