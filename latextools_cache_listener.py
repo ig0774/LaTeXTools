@@ -18,7 +18,7 @@ try:
     from .latextools_utils.cache import LocalCache
     from .latextools_utils.tex_directives import get_tex_root
     from .latextools_utils.progress_indicator import ProgressIndicator
-except:
+except (ValueError, ImportError):
     from latex_cite_completions import (
         find_bib_files, run_plugin_command
     )
@@ -69,10 +69,12 @@ class LatextoolsAnalysisUpdater(LatextoolsCacheUpdater):
         self.add_step(partial(self._run_analysis, tex_root))
 
     def _run_analysis(self, tex_root):
+        ana = analysis.analyze_document(tex_root)
+
         local_cache = LocalCache(tex_root)
         with local_cache._write_lock:
             local_cache.invalidate()
-            local_cache.set('analysis', analysis.analyze_document(tex_root))
+            local_cache.set('analysis', ana)
 
 
 class LatextoolsBibCacheUpdater(LatextoolsCacheUpdater):
@@ -98,7 +100,7 @@ class LatextoolsCacheUpdateListener(
     _TEX_CACHES = {}
     _TEX_ROOT_REFS = collections.defaultdict(lambda: 0)
     _BIB_CACHES = {}
-    _UPDATING_DOCS_LOCK = threading.Lock()
+    _UPDATING_DOCS_LOCK = threading.RLock()
     _UPDATING_DOCS = set([])
 
     def on_load_async(self, view):
@@ -194,8 +196,9 @@ class LatextoolsCacheUpdateListener(
         if tex_root is None:
             return
 
-        if tex_root in self._UPDATING_DOCS:
-            return
+        with self._UPDATING_DOCS_LOCK:
+            if tex_root in self._UPDATING_DOCS:
+                return
 
         _id = view.id()
         if _id not in self._TEX_CACHES:

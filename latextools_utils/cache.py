@@ -219,11 +219,11 @@ class Cache(object):
     def __init__(self):
         # initialize state but ONLY if it hasn't already been initialized
         if not hasattr(self, '_disk_lock'):
-            self._disk_lock = threading.Lock()
+            self._disk_lock = threading.RLock()
         if not hasattr(self, '_write_lock'):
-            self._write_lock = threading.Lock()
+            self._write_lock = threading.RLock()
         if not hasattr(self, '_save_lock'):
-            self._save_lock = threading.Lock()
+            self._save_lock = threading.RLock()
         if not hasattr(self, '_objects'):
             self._objects = {}
         if not hasattr(self, '_dirty'):
@@ -326,7 +326,7 @@ class Cache(object):
 
         try:
             return self.get(key)
-        except:
+        except CacheMiss:
             result = func()
             self.set(key, result)
             return result
@@ -343,7 +343,7 @@ class Cache(object):
         def _invalidate(key):
             try:
                 self._objects[key] = _invalid_object
-            except:
+            except Exception:
                 print('error occurred while invalidating {0}'.format(key))
                 traceback.print_exc()
 
@@ -459,7 +459,10 @@ class Cache(object):
         '''
         an async version of save; does the save in a new thread
         '''
-        self._pool.apply_async(self.save, key)
+        try:
+            self._pool.apply_async(self.save, key)
+        except ValueError:
+            pass
 
     def _write(self, key, obj):
         try:
@@ -486,7 +489,7 @@ class Cache(object):
                 self._save_queue.pop()
             else:
                 self._save_queue = []
-                sublime.set_timeout(self.save_async, 0)
+                self.save_async()
 
     # ensure cache is saved to disk when removed from memory
     def __del__(self):
@@ -504,12 +507,12 @@ class GlobalCache(Cache):
     behaves as though there were a single object
     '''
 
-    __STATE = {}
-
     def __new__(cls, *args, **kwargs):
         # almost-singleton implementation; all instances share the same state
+        if not hasattr(cls, '_STATE'):
+            cls._STATE = {}
         inst = super(GlobalCache, cls).__new__(cls, *args, **kwargs)
-        inst.__dict__ = cls.__STATE
+        inst.__dict__ = cls._STATE
         return inst
 
     def invalidate(self, key):
@@ -574,6 +577,30 @@ class ValidatingCache(Cache):
     set.__doc__ = Cache.set.__doc__
 
 
+class InstanceReference(object):
+    '''
+    used by the InstanceTrackingCache to track a reference to different
+    instances that point to the same underlying data
+    '''
+    def __init__(self, *args, **kwargs):
+        self._instance_data = {}
+        self._ref_count = 0
+        self._lock = threading.RLock()
+
+    def add_ref(self):
+        with self._lock:
+            self._ref_count += 1
+            return self._ref_count
+
+    def dec_ref(self):
+        with self._lock:
+            self._ref_count -= 1
+            if self._ref_count <= 0:
+                return 0
+            else:
+                return self._ref_count
+
+
 class InstanceTrackingCache(Cache):
     '''
     an abstract class for caches that share state between different instances
@@ -590,25 +617,20 @@ class InstanceTrackingCache(Cache):
     subclasses MUST implement the _get_inst_key method
     '''
 
-    _CLASSES = set([])
-
     def __new__(cls, *args, **kwargs):
         if cls is InstanceTrackingCache:
             raise NotImplemented
 
-        InstanceTrackingCache._CLASSES.add(cls)
-
         if not hasattr(cls, '_INSTANCES'):
-            cls._INSTANCES = collections.defaultdict(lambda: {})
-            cls._REF_COUNTS = collections.defaultdict(lambda: 0)
-            cls._LOCKS = collections.defaultdict(lambda: threading.Lock())
+            cls._INSTANCES = collections.defaultdict(
+                lambda: InstanceReference())
 
         inst = super(InstanceTrackingCache, cls).__new__(cls, *args, **kwargs)
         inst_key = inst._get_inst_key(*args, **kwargs)
 
-        with cls._LOCKS[inst_key]:
-            inst.__dict__ = cls._INSTANCES[inst_key]
-            cls._REF_COUNTS[inst_key] += 1
+        with cls._INSTANCES[inst_key]._lock:
+            inst.__dict__ = cls._INSTANCES[inst_key]._instance_data
+            cls._INSTANCES[inst_key].add_ref()
 
         return inst
 
@@ -636,22 +658,19 @@ class InstanceTrackingCache(Cache):
         '''
         raise NotImplemented
 
-    # ensure the cache is written to disk when LAST copy of this instance is
-    # removed
+    # ensure the cache is written to disk when the last copy of this instance
+    # is removed
     def __del__(self):
         inst_key = self._get_inst_key()
         if inst_key is None:
             return
 
-        with self._LOCKS[inst_key]:
-            ref_count = self._REF_COUNTS[inst_key]
-            ref_count -= 1
-            self._REF_COUNTS[inst_key] = ref_count
-
-            if ref_count <= 0:
+        try:
+            if self._INSTANCES[inst_key].dec_ref() == 0:
                 self.save_async()
-                del self._REF_COUNTS[inst_key]
                 del self._INSTANCES[inst_key]
+        except KeyError:
+            pass
 
 
 class LocalCache(ValidatingCache, InstanceTrackingCache):
@@ -665,7 +684,7 @@ class LocalCache(ValidatingCache, InstanceTrackingCache):
     '''
 
     _CACHE_TIMESTAMP = "created_time_stamp"
-    _LIFE_SPAN_LOCK = threading.Lock()
+    _LIFE_SPAN_LOCK = threading.RLock()
 
     def __init__(self, tex_root):
         self.tex_root = tex_root
@@ -755,3 +774,11 @@ class LocalCache(ValidatingCache, InstanceTrackingCache):
             cls._PREV_LIFE_SPAN_STR = life_span_string
             cls._PREV_LIFE_SPAN = life_span = __parse_life_span_string()
             return life_span
+
+
+# terminates the cache threadpool
+def _terminate_cache_threadpool():
+    try:
+        Cache._pool.terminate()
+    except Exception:
+        traceback.print_exc()
