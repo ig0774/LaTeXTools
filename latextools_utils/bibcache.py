@@ -1,5 +1,6 @@
 import os
 import time
+import traceback
 
 import sublime
 
@@ -62,6 +63,7 @@ class BibCache(cache.InstanceTrackingCache, cache.GlobalCache):
                 cache.pickle.dumps(bib_entries, protocol=-1)
             except cache.pickle.PicklingError:
                 print('bib_entries must be pickleable')
+                traceback.print_exc()
             else:
                 with self._disk_lock:
                     make_dirs(self.cache_path)
@@ -86,6 +88,7 @@ class BibCache(cache.InstanceTrackingCache, cache.GlobalCache):
         except:
             result = func()
             self.set(result)
+            return result
 
     def validate_on_get(self, obj):
         if obj is None:
